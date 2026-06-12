@@ -12,8 +12,10 @@ builder.Services.AddTelerikBlazor();
 
 // Scenario-neutral engine: swapping to another scenario pack is this one line.
 builder.Services.AddSingleton(DksProposalScenario.Create());
-builder.Services.AddScoped<WorkspaceState>();
 builder.Services.AddSingleton(TimeProvider.System);
+// Singleton so demo state (drafts, filter, audit) survives full-page navigation
+// between routes. This is a single-user demo; multi-user/per-session state is roadmap.
+builder.Services.AddSingleton<WorkspaceState>();
 
 var app = builder.Build();
 

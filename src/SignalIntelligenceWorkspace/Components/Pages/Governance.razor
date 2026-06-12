@@ -56,7 +56,7 @@ else
 
 <h3 class="section-title">Audit Log</h3>
 <p class="muted">Append-only. Every AI-initiated action lands here; manual grid filtering is deliberately not audited.</p>
-<TelerikGrid Data="@State.AuditLog" Height="340px">
+<TelerikGrid Data="@State.AuditLog.ToList()" Height="340px">
     <GridColumns>
         <GridColumn Field="@nameof(AuditEntry.Timestamp)" Title="Time" Width="100px" />
         <GridColumn Field="@nameof(AuditEntry.Role)" Title="Role" Width="170px" />
