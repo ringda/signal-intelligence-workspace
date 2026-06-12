@@ -46,6 +46,19 @@ This also makes the demo reproducible: the same prompt always yields the same co
 - **Append-only audit**: every AI-initiated action writes audit rows (generation and decision). Entries are never mutated. Manual grid filtering/sorting is deliberately *not* audited — the trail tracks AI activity, not user browsing.
 - **Over-blocking is the chosen failure mode**: broad forbidden patterns (e.g. `\bsend\b`) can reject legitimate phrasings. That trade-off is intentional for a governance prototype.
 
+## Localization
+
+The interface ships in English (default) and Traditional Chinese, switchable from the EN / 繁中
+toggle in the top bar. UI chrome — navigation, headings, buttons, column titles, review-state
+labels — is localized via standard .NET resource files (`Localization/Ui.resx`,
+`Ui.zh-Hant.resx`). The switch writes a culture cookie and reloads, because the interactive-server
+render mode fixes the culture when the circuit is created.
+
+Two things stay in English by design: the scenario's mock data (the transportation-consulting
+world is an English-language market) and the audit log's decision text. Audit entries record the
+language in force when the action happened and are never rewritten — keeping them immutable is the
+point of an audit trail, so switching the UI language does not retranslate past records.
+
 ## Scenario-neutral engine
 
 All domain data lives in a `ScenarioPack` (segments, resources, themes, demo prompts). The engine never reads the scenario id. Adding a second scenario (e.g. a sales-pipeline world) is one new data file plus one DI registration line in `Program.cs`.

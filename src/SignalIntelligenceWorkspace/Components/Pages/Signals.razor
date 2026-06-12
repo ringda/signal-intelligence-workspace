@@ -2,46 +2,47 @@
 @implements IDisposable
 @inject WorkspaceState State
 @inject ScenarioPack Scenario
+@inject IStringLocalizer<Ui> L
 
-<PageTitle>Signal Themes | Signal Intelligence Workspace</PageTitle>
+<PageTitle>@L["Nav.Signals"] | @L["App.Name"]</PageTitle>
 
-<h2>Signal Themes</h2>
-<p class="muted">Market opportunity signals and customer feedback themes. Approved AI filter commands apply here.</p>
+<h2>@L["Signals.Title"]</h2>
+<p class="muted">@L["Signals.Subtitle"]</p>
 
 @if (State.AppliedThemeFilter is not null)
 {
     <div class="ai-filter-chip">
-        <span>AI filter active: Confidence = <strong>@State.AppliedThemeFilter</strong></span>
+        <span>@L["Signals.FilterActive"] <strong>@State.AppliedThemeFilter</strong></span>
         <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
                        Size="@ThemeConstants.Button.Size.Small"
-                       OnClick="@(() => State.ClearThemeFilter())">Clear</TelerikButton>
+                       OnClick="@(() => State.ClearThemeFilter())">@L["Action.Clear"]</TelerikButton>
     </div>
 }
 
 <TelerikGrid Data="@State.FilteredThemes" Sortable="true" FilterMode="@GridFilterMode.FilterMenu">
     <GridColumns>
-        <GridColumn Field="@nameof(ThemeRow.Theme)" />
-        <GridColumn Field="@nameof(ThemeRow.Segment)" Title="Market Segment" Width="180px" />
-        <GridColumn Field="@nameof(ThemeRow.Frequency)" Width="120px" />
-        <GridColumn Field="@nameof(ThemeRow.Confidence)" Width="130px" />
-        <GridColumn Field="@nameof(ThemeRow.Example)" Title="Example Feedback" />
-        <GridColumn Field="@nameof(ThemeRow.SuggestedUse)" Title="Suggested Use" />
-        <GridColumn Field="@nameof(ThemeRow.ReviewStatus)" Title="Review Status" Width="140px">
+        <GridColumn Field="@nameof(ThemeRow.Theme)" Title="@(L["Col.Theme"])" />
+        <GridColumn Field="@nameof(ThemeRow.Segment)" Title="@(L["Col.MarketSegment"])" Width="180px" />
+        <GridColumn Field="@nameof(ThemeRow.Frequency)" Title="@(L["Col.Frequency"])" Width="120px" />
+        <GridColumn Field="@nameof(ThemeRow.Confidence)" Title="@(L["Col.Confidence"])" Width="130px" />
+        <GridColumn Field="@nameof(ThemeRow.Example)" Title="@(L["Col.Example"])" />
+        <GridColumn Field="@nameof(ThemeRow.SuggestedUse)" Title="@(L["Col.SuggestedUse"])" />
+        <GridColumn Field="@nameof(ThemeRow.ReviewStatus)" Title="@(L["Col.ReviewStatus"])" Width="140px">
             <Template>
-                @(((ThemeRow)context).ReviewStatus.ToDisplay())
+                @L.State(((ThemeRow)context).ReviewStatus)
             </Template>
         </GridColumn>
     </GridColumns>
 </TelerikGrid>
 
-<h3 class="section-title">Signals by Market Segment</h3>
+<h3 class="section-title">@L["Signals.ChartTitle"]</h3>
 <TelerikChart Height="320px">
     <ChartSeriesItems>
         <ChartSeries Type="@ChartSeriesType.Column"
                      Data="@SegmentTotals"
                      Field="@nameof(SegmentTotal.Mentions)"
                      CategoryField="@nameof(SegmentTotal.Segment)"
-                     Name="Mentions" />
+                     Name="@(L["Col.Frequency"])" />
     </ChartSeriesItems>
 </TelerikChart>
 

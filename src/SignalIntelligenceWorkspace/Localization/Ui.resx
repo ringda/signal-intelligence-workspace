@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App.Name"><value>Signal Intelligence Workspace</value></data>
+  <data name="Nav.Dashboard"><value>Dashboard</value></data>
+  <data name="Nav.Governance"><value>AI Governance</value></data>
+  <data name="Nav.Signals"><value>Signal Themes</value></data>
+  <data name="Nav.Resources"><value>Resource Library</value></data>
+  <data name="Action.ResetSession"><value>Reset Session</value></data>
+  <data name="Action.ResetSession.Title"><value>Clear AI drafts, filters, and the audit log for a fresh demo run</value></data>
+  <data name="Action.ToggleNav"><value>Toggle navigation</value></data>
+  <data name="Action.Approve"><value>Approve</value></data>
+  <data name="Action.Reject"><value>Reject</value></data>
+  <data name="Action.Clear"><value>Clear</value></data>
+
+  <data name="Dashboard.Title"><value>Dashboard</value></data>
+  <data name="Dashboard.Subtitle"><value>Counts update live as AI drafts are approved or rejected on the AI Governance page.</value></data>
+  <data name="Kpi.ResourcesReady"><value>Proposal Resources Ready</value></data>
+  <data name="Kpi.ItemsNeedingReview"><value>Items Needing Review</value></data>
+  <data name="Kpi.MarketSignals"><value>Market Signals This Week</value></data>
+  <data name="Kpi.FeedbackThemes"><value>Feedback Themes</value></data>
+  <data name="Kpi.DraftsAwaiting"><value>AI Drafts Awaiting Approval</value></data>
+
+  <data name="Governance.Title"><value>AI Governance</value></data>
+  <data name="Governance.Subtitle"><value>Prompt → safe command → human review → audit trail. The assistant can only propose whitelisted commands; nothing changes data until a reviewer approves.</value></data>
+  <data name="Governance.DialogTitle"><value>AI Command Preview — Human Review Required</value></data>
+  <data name="Governance.DialogBody"><value>The assistant generated this safe command. Nothing changes until you approve.</value></data>
+  <data name="Governance.ReviewQueue"><value>Review Queue</value></data>
+  <data name="Governance.ReviewQueueEmpty"><value>No AI drafts yet. Approve a draft command above to see items here.</value></data>
+  <data name="Governance.AuditLog"><value>Audit Log</value></data>
+  <data name="Governance.AuditSubtitle"><value>Append-only. Every AI-initiated action lands here; manual grid filtering is deliberately not audited.</value></data>
+  <data name="Governance.OutputApproved"><value>Safe command generated — opened for human review. No data changed yet.</value></data>
+
+  <data name="Signals.Title"><value>Signal Themes</value></data>
+  <data name="Signals.Subtitle"><value>Market opportunity signals and customer feedback themes. Approved AI filter commands apply here.</value></data>
+  <data name="Signals.FilterActive"><value>AI filter active: Confidence =</value></data>
+  <data name="Signals.ChartTitle"><value>Signals by Market Segment</value></data>
+
+  <data name="Resources.Title"><value>Resource Library</value></data>
+  <data name="Resources.Subtitle"><value>Reusable proposal resources: past proposals, project descriptions, staff resumes, imagery, feedback notes, and market signals.</value></data>
+
+  <data name="Col.Theme"><value>Theme</value></data>
+  <data name="Col.MarketSegment"><value>Market Segment</value></data>
+  <data name="Col.Frequency"><value>Frequency</value></data>
+  <data name="Col.Confidence"><value>Confidence</value></data>
+  <data name="Col.Example"><value>Example Feedback</value></data>
+  <data name="Col.SuggestedUse"><value>Suggested Use</value></data>
+  <data name="Col.ReviewStatus"><value>Review Status</value></data>
+  <data name="Col.ResourceType"><value>Resource Type</value></data>
+  <data name="Col.Title"><value>Title</value></data>
+  <data name="Col.ClientProject"><value>Client / Project</value></data>
+  <data name="Col.Status"><value>Status</value></data>
+  <data name="Col.Owner"><value>Owner</value></data>
+  <data name="Col.LastUpdated"><value>Last Updated</value></data>
+  <data name="Col.ReviewState"><value>Review State</value></data>
+  <data name="Col.Time"><value>Time</value></data>
+  <data name="Col.Role"><value>Role</value></data>
+  <data name="Col.Prompt"><value>Prompt</value></data>
+  <data name="Col.GeneratedCommand"><value>Generated Command</value></data>
+  <data name="Col.Decision"><value>Decision</value></data>
+  <data name="Col.Reason"><value>Reason</value></data>
+
+  <data name="State.Drafted"><value>Drafted</value></data>
+  <data name="State.NeedsReview"><value>Needs Review</value></data>
+  <data name="State.Approved"><value>Approved</value></data>
+  <data name="State.Rejected"><value>Rejected</value></data>
+</root>

@@ -2,32 +2,30 @@
 @implements IDisposable
 @inject WorkspaceState State
 @inject ScenarioPack Scenario
+@inject IStringLocalizer<Ui> L
 
-<PageTitle>AI Governance | Signal Intelligence Workspace</PageTitle>
+<PageTitle>@L["Nav.Governance"] | @L["App.Name"]</PageTitle>
 
-<h2>AI Governance</h2>
-<p class="muted">
-    Prompt &rarr; safe command &rarr; human review &rarr; audit trail.
-    The assistant can only propose whitelisted commands; nothing changes data until a reviewer approves.
-</p>
+<h2>@L["Governance.Title"]</h2>
+<p class="muted">@L["Governance.Subtitle"]</p>
 
 <TelerikAIPrompt OnPromptRequest="@OnPromptRequest" PromptSuggestions="@Suggestions" />
 
-<TelerikDialog @bind-Visible="@DialogVisible" Title="AI Command Preview — Human Review Required" Width="560px">
+<TelerikDialog @bind-Visible="@DialogVisible" Title="@(L["Governance.DialogTitle"])" Width="560px">
     <DialogContent>
-        <p>The assistant generated this safe command. Nothing changes until you approve.</p>
+        <p>@L["Governance.DialogBody"]</p>
         <pre class="command-json">@PendingJson</pre>
     </DialogContent>
     <DialogButtons>
-        <TelerikButton OnClick="@Approve">Approve</TelerikButton>
-        <TelerikButton OnClick="@Reject">Reject</TelerikButton>
+        <TelerikButton OnClick="@Approve">@L["Action.Approve"]</TelerikButton>
+        <TelerikButton OnClick="@Reject">@L["Action.Reject"]</TelerikButton>
     </DialogButtons>
 </TelerikDialog>
 
-<h3 class="section-title">Review Queue</h3>
+<h3 class="section-title">@L["Governance.ReviewQueue"]</h3>
 @if (State.ReviewItems.Count == 0)
 {
-    <p class="muted">No AI drafts yet. Approve a draft command above to see items here.</p>
+    <p class="muted">@L["Governance.ReviewQueueEmpty"]</p>
 }
 else
 {
@@ -37,7 +35,7 @@ else
             <CardHeader>
                 <CardTitle>@item.Title</CardTitle>
                 <CardSubTitle>
-                    <span class="badge @BadgeClass(item.State)">@item.State.ToDisplay()</span>
+                    <span class="badge @BadgeClass(item.State)">@L.State(item.State)</span>
                     <span class="muted"> · @item.SourceCommand · @item.CreatedAt</span>
                 </CardSubTitle>
             </CardHeader>
@@ -46,24 +44,24 @@ else
             </CardBody>
             <CardActions>
                 <TelerikButton OnClick="@(() => State.SetReviewState(item.Id, ReviewState.Approved))"
-                               Enabled="@IsActionable(item.State)">Approve</TelerikButton>
+                               Enabled="@IsActionable(item.State)">@L["Action.Approve"]</TelerikButton>
                 <TelerikButton OnClick="@(() => State.SetReviewState(item.Id, ReviewState.Rejected))"
-                               Enabled="@IsActionable(item.State)">Reject</TelerikButton>
+                               Enabled="@IsActionable(item.State)">@L["Action.Reject"]</TelerikButton>
             </CardActions>
         </TelerikCard>
     }
 }
 
-<h3 class="section-title">Audit Log</h3>
-<p class="muted">Append-only. Every AI-initiated action lands here; manual grid filtering is deliberately not audited.</p>
+<h3 class="section-title">@L["Governance.AuditLog"]</h3>
+<p class="muted">@L["Governance.AuditSubtitle"]</p>
 <TelerikGrid Data="@State.AuditLog.ToList()" Height="340px">
     <GridColumns>
-        <GridColumn Field="@nameof(AuditEntry.Timestamp)" Title="Time" Width="100px" />
-        <GridColumn Field="@nameof(AuditEntry.Role)" Title="Role" Width="170px" />
-        <GridColumn Field="@nameof(AuditEntry.Prompt)" Title="Prompt" />
-        <GridColumn Field="@nameof(AuditEntry.GeneratedCommand)" Title="Generated Command" />
-        <GridColumn Field="@nameof(AuditEntry.Decision)" Title="Decision" Width="210px" />
-        <GridColumn Field="@nameof(AuditEntry.Reason)" Title="Reason" />
+        <GridColumn Field="@nameof(AuditEntry.Timestamp)" Title="@(L["Col.Time"])" Width="100px" />
+        <GridColumn Field="@nameof(AuditEntry.Role)" Title="@(L["Col.Role"])" Width="170px" />
+        <GridColumn Field="@nameof(AuditEntry.Prompt)" Title="@(L["Col.Prompt"])" />
+        <GridColumn Field="@nameof(AuditEntry.GeneratedCommand)" Title="@(L["Col.GeneratedCommand"])" />
+        <GridColumn Field="@nameof(AuditEntry.Decision)" Title="@(L["Col.Decision"])" Width="210px" />
+        <GridColumn Field="@nameof(AuditEntry.Reason)" Title="@(L["Col.Reason"])" />
     </GridColumns>
 </TelerikGrid>
 
@@ -81,13 +79,13 @@ else
             case ParseOutcome.Allowed:
                 PendingJson = CommandFormatter.ToJson(result.Command!);
                 DialogVisible = true;
-                args.Output = "Safe command generated — opened for human review. No data changed yet.";
+                args.Output = L["Governance.OutputApproved"];
                 break;
             case ParseOutcome.Forbidden:
-                args.Output = $"Blocked by policy ({result.BlockedRuleName}): {result.Reason} The attempt was logged to the audit trail.";
+                args.Output = $"Blocked by policy ({result.BlockedRuleName}): {result.Reason}";
                 break;
             default:
-                args.Output = $"{result.Reason} The attempt was logged to the audit trail.";
+                args.Output = result.Reason ?? string.Empty;
                 break;
         }
     }

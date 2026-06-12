@@ -2,27 +2,28 @@
 @page "/home"
 @implements IDisposable
 @inject WorkspaceState State
+@inject IStringLocalizer<Ui> L
 
-<PageTitle>Dashboard | Signal Intelligence Workspace</PageTitle>
+<PageTitle>@L["Nav.Dashboard"] | @L["App.Name"]</PageTitle>
 
-<h2>Dashboard</h2>
-<p class="muted">Counts update live as AI drafts are approved or rejected on the AI Governance page.</p>
+<h2>@L["Dashboard.Title"]</h2>
+<p class="muted">@L["Dashboard.Subtitle"]</p>
 
 <TelerikTileLayout Columns="5" RowHeight="150px">
     <TileLayoutItems>
-        <TileLayoutItem HeaderText="Proposal Resources Ready">
+        <TileLayoutItem HeaderText="@L["Kpi.ResourcesReady"]">
             <Content><div class="kpi">@State.ResourcesReady</div></Content>
         </TileLayoutItem>
-        <TileLayoutItem HeaderText="Items Needing Review">
+        <TileLayoutItem HeaderText="@L["Kpi.ItemsNeedingReview"]">
             <Content><div class="kpi">@State.ItemsNeedingReview</div></Content>
         </TileLayoutItem>
-        <TileLayoutItem HeaderText="Market Signals This Week">
+        <TileLayoutItem HeaderText="@L["Kpi.MarketSignals"]">
             <Content><div class="kpi">@State.MarketSignalsThisWeek</div></Content>
         </TileLayoutItem>
-        <TileLayoutItem HeaderText="Feedback Themes">
+        <TileLayoutItem HeaderText="@L["Kpi.FeedbackThemes"]">
             <Content><div class="kpi">@State.FeedbackThemeCount</div></Content>
         </TileLayoutItem>
-        <TileLayoutItem HeaderText="AI Drafts Awaiting Approval">
+        <TileLayoutItem HeaderText="@L["Kpi.DraftsAwaiting"]">
             <Content><div class="kpi">@State.DraftsAwaitingApproval</div></Content>
         </TileLayoutItem>
     </TileLayoutItems>

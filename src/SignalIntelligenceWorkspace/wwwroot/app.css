@@ -66,6 +66,33 @@ h1:focus {
     flex: 1;
 }
 
+.lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    font-size: 0.9rem;
+}
+
+.lang-link {
+    color: #5f6b73;
+    text-decoration: none;
+    padding: 2px 4px;
+}
+
+.lang-link:hover {
+    color: #1c5d99;
+}
+
+.lang-active {
+    color: #1c5d99;
+    font-weight: 700;
+}
+
+.lang-sep {
+    color: #c4ccd1;
+}
+
 .page-body {
     padding: 20px 24px 40px;
     max-width: 1280px;

@@ -2,19 +2,27 @@
 @layout TelerikLayout
 @inject WorkspaceState State
 @inject ScenarioPack Scenario
+@inject IStringLocalizer<Ui> L
+@inject NavigationManager Nav
+@using System.Globalization
 
 <div class="topbar">
     <TelerikButton Icon="@SvgIcon.Menu"
                    FillMode="@ThemeConstants.Button.FillMode.Flat"
                    OnClick="@(() => DrawerExpanded = !DrawerExpanded)"
-                   Title="Toggle navigation" />
+                   Title="@L["Action.ToggleNav"]" />
     <div class="topbar-titles">
-        <span class="app-name">Signal Intelligence Workspace</span>
+        <span class="app-name">@L["App.Name"]</span>
         <span class="scenario-name">@Scenario.DisplayTitle</span>
     </div>
     <span class="topbar-spacer"></span>
-    <TelerikButton OnClick="@(() => State.ResetSession())" Title="Clear AI drafts, filters, and the audit log for a fresh demo run">
-        Reset Session
+    <div class="lang-switch">
+        <a class="lang-link @(IsEn ? "lang-active" : "")" href="@CultureUrl("en")">EN</a>
+        <span class="lang-sep">/</span>
+        <a class="lang-link @(IsEn ? "" : "lang-active")" href="@CultureUrl("zh-Hant")">繁中</a>
+    </div>
+    <TelerikButton OnClick="@(() => State.ResetSession())" Title="@L["Action.ResetSession.Title"]">
+        @L["Action.ResetSession"]
     </TelerikButton>
 </div>
 
@@ -38,13 +46,22 @@
 @code {
     private bool DrawerExpanded { get; set; } = true;
 
-    private List<NavItem> NavItems { get; } =
-    [
-        new NavItem { Text = "Dashboard", Icon = SvgIcon.Home, Url = "/" },
-        new NavItem { Text = "AI Governance", Icon = SvgIcon.Sparkles, Url = "/governance" },
-        new NavItem { Text = "Signal Themes", Icon = SvgIcon.Eye, Url = "/signals" },
-        new NavItem { Text = "Resource Library", Icon = SvgIcon.Folder, Url = "/resources" },
-    ];
+    private bool IsEn => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en";
+
+    private List<NavItem> NavItems => new()
+    {
+        new NavItem { Text = L["Nav.Dashboard"], Icon = SvgIcon.Home, Url = "/" },
+        new NavItem { Text = L["Nav.Governance"], Icon = SvgIcon.Sparkles, Url = "/governance" },
+        new NavItem { Text = L["Nav.Signals"], Icon = SvgIcon.Eye, Url = "/signals" },
+        new NavItem { Text = L["Nav.Resources"], Icon = SvgIcon.Folder, Url = "/resources" },
+    };
+
+    private string CultureUrl(string culture)
+    {
+        var current = Nav.ToBaseRelativePath(Nav.Uri);
+        var redirect = Uri.EscapeDataString("/" + current);
+        return $"/culture/set?culture={culture}&redirectUri={redirect}";
+    }
 
     public class NavItem
     {

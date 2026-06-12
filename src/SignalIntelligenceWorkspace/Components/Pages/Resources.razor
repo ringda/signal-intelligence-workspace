@@ -1,10 +1,11 @@
 @page "/resources"
 @inject ScenarioPack Scenario
+@inject IStringLocalizer<Ui> L
 
-<PageTitle>Resource Library | Signal Intelligence Workspace</PageTitle>
+<PageTitle>@L["Nav.Resources"] | @L["App.Name"]</PageTitle>
 
-<h2>Resource Library</h2>
-<p class="muted">Reusable proposal resources: past proposals, project descriptions, staff resumes, imagery, feedback notes, and market signals.</p>
+<h2>@L["Resources.Title"]</h2>
+<p class="muted">@L["Resources.Subtitle"]</p>
 
 <TelerikGrid Data="@Scenario.Resources"
              Sortable="true"
@@ -16,16 +17,16 @@
         <GridToolBarSearchBoxTool />
     </GridToolBar>
     <GridColumns>
-        <GridColumn Field="@nameof(ResourceRow.ResourceType)" Title="Resource Type" Width="170px" />
-        <GridColumn Field="@nameof(ResourceRow.Title)" />
-        <GridColumn Field="@nameof(ResourceRow.ClientProject)" Title="Client / Project" />
-        <GridColumn Field="@nameof(ResourceRow.MarketSegment)" Title="Market Segment" Width="180px" />
-        <GridColumn Field="@nameof(ResourceRow.Status)" Width="120px" />
-        <GridColumn Field="@nameof(ResourceRow.Owner)" Width="140px" />
-        <GridColumn Field="@nameof(ResourceRow.LastUpdated)" Title="Last Updated" Width="140px" DisplayFormat="{0:yyyy-MM-dd}" />
-        <GridColumn Field="@nameof(ResourceRow.ReviewState)" Title="Review State" Width="140px">
+        <GridColumn Field="@nameof(ResourceRow.ResourceType)" Title="@(L["Col.ResourceType"])" Width="170px" />
+        <GridColumn Field="@nameof(ResourceRow.Title)" Title="@(L["Col.Title"])" />
+        <GridColumn Field="@nameof(ResourceRow.ClientProject)" Title="@(L["Col.ClientProject"])" />
+        <GridColumn Field="@nameof(ResourceRow.MarketSegment)" Title="@(L["Col.MarketSegment"])" Width="180px" />
+        <GridColumn Field="@nameof(ResourceRow.Status)" Title="@(L["Col.Status"])" Width="120px" />
+        <GridColumn Field="@nameof(ResourceRow.Owner)" Title="@(L["Col.Owner"])" Width="140px" />
+        <GridColumn Field="@nameof(ResourceRow.LastUpdated)" Title="@(L["Col.LastUpdated"])" Width="140px" DisplayFormat="{0:yyyy-MM-dd}" />
+        <GridColumn Field="@nameof(ResourceRow.ReviewState)" Title="@(L["Col.ReviewState"])" Width="140px">
             <Template>
-                @(((ResourceRow)context).ReviewState.ToDisplay())
+                @L.State(((ResourceRow)context).ReviewState)
             </Template>
         </GridColumn>
     </GridColumns>

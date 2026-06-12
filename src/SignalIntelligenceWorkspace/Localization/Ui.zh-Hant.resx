@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="App.Name"><value>訊號情報工作台</value></data>
+  <data name="Nav.Dashboard"><value>儀表板</value></data>
+  <data name="Nav.Governance"><value>AI 治理</value></data>
+  <data name="Nav.Signals"><value>訊號主題</value></data>
+  <data name="Nav.Resources"><value>資源庫</value></data>
+  <data name="Action.ResetSession"><value>重置工作階段</value></data>
+  <data name="Action.ResetSession.Title"><value>清除 AI 草稿、篩選與稽核紀錄，重新開始一輪示範</value></data>
+  <data name="Action.ToggleNav"><value>切換導覽列</value></data>
+  <data name="Action.Approve"><value>核准</value></data>
+  <data name="Action.Reject"><value>退回</value></data>
+  <data name="Action.Clear"><value>清除</value></data>
+
+  <data name="Dashboard.Title"><value>儀表板</value></data>
+  <data name="Dashboard.Subtitle"><value>當 AI 草稿在「AI 治理」頁被核准或退回時，下列數字會即時更新。</value></data>
+  <data name="Kpi.ResourcesReady"><value>可用提案資源</value></data>
+  <data name="Kpi.ItemsNeedingReview"><value>待審核項目</value></data>
+  <data name="Kpi.MarketSignals"><value>本週市場訊號</value></data>
+  <data name="Kpi.FeedbackThemes"><value>回饋主題</value></data>
+  <data name="Kpi.DraftsAwaiting"><value>待核准 AI 草稿</value></data>
+
+  <data name="Governance.Title"><value>AI 治理</value></data>
+  <data name="Governance.Subtitle"><value>提示 → 安全指令 → 人工審核 → 稽核紀錄。助理只能提出白名單內的指令；在審核者核准前不會更動任何資料。</value></data>
+  <data name="Governance.DialogTitle"><value>AI 指令預覽 — 需人工審核</value></data>
+  <data name="Governance.DialogBody"><value>助理產生了這個安全指令。在你核准之前不會更動任何資料。</value></data>
+  <data name="Governance.ReviewQueue"><value>審核佇列</value></data>
+  <data name="Governance.ReviewQueueEmpty"><value>尚無 AI 草稿。核准上方的草稿指令後，項目會出現在這裡。</value></data>
+  <data name="Governance.AuditLog"><value>稽核紀錄</value></data>
+  <data name="Governance.AuditSubtitle"><value>僅供附加、不可竄改。每個由 AI 發起的動作都會記錄於此；手動篩選表格則刻意不列入稽核。</value></data>
+  <data name="Governance.OutputApproved"><value>已產生安全指令 — 已開啟供人工審核。尚未更動任何資料。</value></data>
+
+  <data name="Signals.Title"><value>訊號主題</value></data>
+  <data name="Signals.Subtitle"><value>市場機會訊號與客戶回饋主題。核准後的 AI 篩選指令會套用在這裡。</value></data>
+  <data name="Signals.FilterActive"><value>AI 篩選生效中：信心度 =</value></data>
+  <data name="Signals.ChartTitle"><value>各市場區隔的訊號量</value></data>
+
+  <data name="Resources.Title"><value>資源庫</value></data>
+  <data name="Resources.Subtitle"><value>可重複使用的提案資源：過往提案、專案說明、人員履歷、影像素材、回饋筆記與市場訊號。</value></data>
+
+  <data name="Col.Theme"><value>主題</value></data>
+  <data name="Col.MarketSegment"><value>市場區隔</value></data>
+  <data name="Col.Frequency"><value>出現次數</value></data>
+  <data name="Col.Confidence"><value>信心度</value></data>
+  <data name="Col.Example"><value>回饋範例</value></data>
+  <data name="Col.SuggestedUse"><value>建議用途</value></data>
+  <data name="Col.ReviewStatus"><value>審核狀態</value></data>
+  <data name="Col.ResourceType"><value>資源類型</value></data>
+  <data name="Col.Title"><value>標題</value></data>
+  <data name="Col.ClientProject"><value>客戶 / 專案</value></data>
+  <data name="Col.Status"><value>狀態</value></data>
+  <data name="Col.Owner"><value>負責人</value></data>
+  <data name="Col.LastUpdated"><value>最後更新</value></data>
+  <data name="Col.ReviewState"><value>審核狀態</value></data>
+  <data name="Col.Time"><value>時間</value></data>
+  <data name="Col.Role"><value>角色</value></data>
+  <data name="Col.Prompt"><value>提示</value></data>
+  <data name="Col.GeneratedCommand"><value>產生的指令</value></data>
+  <data name="Col.Decision"><value>決定</value></data>
+  <data name="Col.Reason"><value>原因</value></data>
+
+  <data name="State.Drafted"><value>草稿</value></data>
+  <data name="State.NeedsReview"><value>待審核</value></data>
+  <data name="State.Approved"><value>已核准</value></data>
+  <data name="State.Rejected"><value>已退回</value></data>
+</root>
