@@ -1,0 +1,7 @@
+﻿node_modules/
+bin/
+obj/
+.vs/
+*.user
+telerik-license.txt
+**/telerik-license.txt

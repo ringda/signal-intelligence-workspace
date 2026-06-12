@@ -1,0 +1,8 @@
+﻿{
+  "mcpServers": {
+    "telerikblazor": {
+      "command": "dnx",
+      "args": ["Telerik.Blazor.MCP", "--yes"]
+    }
+  }
+}
