@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.SignalR;
 using SignalIntelligenceWorkspace.Components;
+using SignalIntelligenceWorkspace.Services;
+using SignalIntelligenceWorkspace.Services.Scenarios;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddTelerikBlazor();
+
+// Scenario-neutral engine: swapping to another scenario pack is this one line.
+builder.Services.AddSingleton(DksProposalScenario.Create());
+builder.Services.AddScoped<WorkspaceState>();
+builder.Services.AddSingleton(TimeProvider.System);
 
 var app = builder.Build();
 
