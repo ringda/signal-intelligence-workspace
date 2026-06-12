@@ -35,3 +35,118 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+/* ---- Signal Intelligence Workspace ---- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e0e5e8;
+}
+
+.topbar-titles {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.app-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.scenario-name {
+    color: #5f6b73;
+    font-size: 0.82rem;
+}
+
+.topbar-spacer {
+    flex: 1;
+}
+
+.page-body {
+    padding: 20px 24px 40px;
+    max-width: 1280px;
+}
+
+.muted {
+    color: #5f6b73;
+}
+
+.kpi {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 4px 0;
+}
+
+.command-json {
+    background: #f4f6f7;
+    border: 1px solid #e0e5e8;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.ai-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #e8f1fb;
+    border: 1px solid #b9d7f3;
+    border-radius: 999px;
+    padding: 4px 8px 4px 14px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.badge-drafted {
+    background: #e8f1fb;
+    color: #1c5d99;
+}
+
+.badge-needsreview {
+    background: #fdf3dc;
+    color: #8a6116;
+}
+
+.badge-approved {
+    background: #e2f4e5;
+    color: #1f7a33;
+}
+
+.badge-rejected {
+    background: #fbe5e5;
+    color: #a33030;
+}
+
+.review-card {
+    margin-bottom: 12px;
+}
+
+.draft-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #fafbfc;
+    border: 1px solid #eef1f3;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 8px 0 0;
+}
+
+.section-title {
+    margin: 28px 0 8px;
+}

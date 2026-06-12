@@ -1,0 +1,123 @@
+@page "/governance"
+@implements IDisposable
+@inject WorkspaceState State
+@inject ScenarioPack Scenario
+
+<PageTitle>AI Governance | Signal Intelligence Workspace</PageTitle>
+
+<h2>AI Governance</h2>
+<p class="muted">
+    Prompt &rarr; safe command &rarr; human review &rarr; audit trail.
+    The assistant can only propose whitelisted commands; nothing changes data until a reviewer approves.
+</p>
+
+<TelerikAIPrompt OnPromptRequest="@OnPromptRequest" PromptSuggestions="@Suggestions" />
+
+<TelerikDialog @bind-Visible="@DialogVisible" Title="AI Command Preview — Human Review Required" Width="560px">
+    <DialogContent>
+        <p>The assistant generated this safe command. Nothing changes until you approve.</p>
+        <pre class="command-json">@PendingJson</pre>
+    </DialogContent>
+    <DialogButtons>
+        <TelerikButton OnClick="@Approve">Approve</TelerikButton>
+        <TelerikButton OnClick="@Reject">Reject</TelerikButton>
+    </DialogButtons>
+</TelerikDialog>
+
+<h3 class="section-title">Review Queue</h3>
+@if (State.ReviewItems.Count == 0)
+{
+    <p class="muted">No AI drafts yet. Approve a draft command above to see items here.</p>
+}
+else
+{
+    @foreach (var item in State.ReviewItems)
+    {
+        <TelerikCard Class="review-card">
+            <CardHeader>
+                <CardTitle>@item.Title</CardTitle>
+                <CardSubTitle>
+                    <span class="badge @BadgeClass(item.State)">@item.State.ToDisplay()</span>
+                    <span class="muted"> · @item.SourceCommand · @item.CreatedAt</span>
+                </CardSubTitle>
+            </CardHeader>
+            <CardBody>
+                <pre class="draft-body">@item.Body</pre>
+            </CardBody>
+            <CardActions>
+                <TelerikButton OnClick="@(() => State.SetReviewState(item.Id, ReviewState.Approved))"
+                               Enabled="@IsActionable(item.State)">Approve</TelerikButton>
+                <TelerikButton OnClick="@(() => State.SetReviewState(item.Id, ReviewState.Rejected))"
+                               Enabled="@IsActionable(item.State)">Reject</TelerikButton>
+            </CardActions>
+        </TelerikCard>
+    }
+}
+
+<h3 class="section-title">Audit Log</h3>
+<p class="muted">Append-only. Every AI-initiated action lands here; manual grid filtering is deliberately not audited.</p>
+<TelerikGrid Data="@State.AuditLog" Height="340px">
+    <GridColumns>
+        <GridColumn Field="@nameof(AuditEntry.Timestamp)" Title="Time" Width="100px" />
+        <GridColumn Field="@nameof(AuditEntry.Role)" Title="Role" Width="170px" />
+        <GridColumn Field="@nameof(AuditEntry.Prompt)" Title="Prompt" />
+        <GridColumn Field="@nameof(AuditEntry.GeneratedCommand)" Title="Generated Command" />
+        <GridColumn Field="@nameof(AuditEntry.Decision)" Title="Decision" Width="210px" />
+        <GridColumn Field="@nameof(AuditEntry.Reason)" Title="Reason" />
+    </GridColumns>
+</TelerikGrid>
+
+@code {
+    private bool DialogVisible;
+    private string PendingJson = string.Empty;
+
+    private List<string> Suggestions => Scenario.DemoPrompts.ToList();
+
+    private void OnPromptRequest(AIPromptPromptRequestEventArgs args)
+    {
+        var result = State.SubmitPrompt(args.Prompt);
+        switch (result.Outcome)
+        {
+            case ParseOutcome.Allowed:
+                PendingJson = CommandFormatter.ToJson(result.Command!);
+                DialogVisible = true;
+                args.Output = "Safe command generated — opened for human review. No data changed yet.";
+                break;
+            case ParseOutcome.Forbidden:
+                args.Output = $"Blocked by policy ({result.BlockedRuleName}): {result.Reason} The attempt was logged to the audit trail.";
+                break;
+            default:
+                args.Output = $"{result.Reason} The attempt was logged to the audit trail.";
+                break;
+        }
+    }
+
+    private void Approve()
+    {
+        State.ApprovePending();
+        DialogVisible = false;
+    }
+
+    private void Reject()
+    {
+        State.RejectPending();
+        DialogVisible = false;
+    }
+
+    private static bool IsActionable(ReviewState state) =>
+        state is ReviewState.Drafted or ReviewState.NeedsReview;
+
+    private static string BadgeClass(ReviewState state) => state switch
+    {
+        ReviewState.Drafted => "badge-drafted",
+        ReviewState.NeedsReview => "badge-needsreview",
+        ReviewState.Approved => "badge-approved",
+        _ => "badge-rejected",
+    };
+
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

@@ -1,0 +1,32 @@
+@page "/resources"
+@inject ScenarioPack Scenario
+
+<PageTitle>Resource Library | Signal Intelligence Workspace</PageTitle>
+
+<h2>Resource Library</h2>
+<p class="muted">Reusable proposal resources: past proposals, project descriptions, staff resumes, imagery, feedback notes, and market signals.</p>
+
+<TelerikGrid Data="@Scenario.Resources"
+             Sortable="true"
+             Groupable="true"
+             FilterMode="@GridFilterMode.FilterMenu"
+             Pageable="true"
+             PageSize="10">
+    <GridToolBar>
+        <GridToolBarSearchBoxTool />
+    </GridToolBar>
+    <GridColumns>
+        <GridColumn Field="@nameof(ResourceRow.ResourceType)" Title="Resource Type" Width="170px" />
+        <GridColumn Field="@nameof(ResourceRow.Title)" />
+        <GridColumn Field="@nameof(ResourceRow.ClientProject)" Title="Client / Project" />
+        <GridColumn Field="@nameof(ResourceRow.MarketSegment)" Title="Market Segment" Width="180px" />
+        <GridColumn Field="@nameof(ResourceRow.Status)" Width="120px" />
+        <GridColumn Field="@nameof(ResourceRow.Owner)" Width="140px" />
+        <GridColumn Field="@nameof(ResourceRow.LastUpdated)" Title="Last Updated" Width="140px" DisplayFormat="{0:yyyy-MM-dd}" />
+        <GridColumn Field="@nameof(ResourceRow.ReviewState)" Title="Review State" Width="140px">
+            <Template>
+                @(((ResourceRow)context).ReviewState.ToDisplay())
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</TelerikGrid>

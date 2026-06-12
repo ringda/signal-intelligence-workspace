@@ -1,10 +1,55 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @layout TelerikLayout
+@inject WorkspaceState State
+@inject ScenarioPack Scenario
 
-@Body
+<div class="topbar">
+    <TelerikButton Icon="@SvgIcon.Menu"
+                   FillMode="@ThemeConstants.Button.FillMode.Flat"
+                   OnClick="@(() => DrawerExpanded = !DrawerExpanded)"
+                   Title="Toggle navigation" />
+    <div class="topbar-titles">
+        <span class="app-name">Signal Intelligence Workspace</span>
+        <span class="scenario-name">@Scenario.DisplayTitle</span>
+    </div>
+    <span class="topbar-spacer"></span>
+    <TelerikButton OnClick="@(() => State.ResetSession())" Title="Clear AI drafts, filters, and the audit log for a fresh demo run">
+        Reset Session
+    </TelerikButton>
+</div>
+
+<TelerikDrawer Data="@NavItems"
+               @bind-Expanded="@DrawerExpanded"
+               MiniMode="true"
+               Mode="@DrawerMode.Push">
+    <DrawerContent>
+        <div class="page-body">
+            @Body
+        </div>
+    </DrawerContent>
+</TelerikDrawer>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+@code {
+    private bool DrawerExpanded { get; set; } = true;
+
+    private List<NavItem> NavItems { get; } =
+    [
+        new NavItem { Text = "Dashboard", Icon = SvgIcon.Home, Url = "/" },
+        new NavItem { Text = "AI Governance", Icon = SvgIcon.Sparkles, Url = "/governance" },
+        new NavItem { Text = "Signal Themes", Icon = SvgIcon.Eye, Url = "/signals" },
+        new NavItem { Text = "Resource Library", Icon = SvgIcon.Folder, Url = "/resources" },
+    ];
+
+    public class NavItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public ISvgIcon? Icon { get; set; }
+        public string Url { get; set; } = string.Empty;
+    }
+}

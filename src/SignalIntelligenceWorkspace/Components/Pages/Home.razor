@@ -1,6 +1,37 @@
 @page "/"
 @page "/home"
+@implements IDisposable
+@inject WorkspaceState State
 
 <PageTitle>Dashboard | Signal Intelligence Workspace</PageTitle>
 
 <h2>Dashboard</h2>
+<p class="muted">Counts update live as AI drafts are approved or rejected on the AI Governance page.</p>
+
+<TelerikTileLayout Columns="5" RowHeight="150px">
+    <TileLayoutItems>
+        <TileLayoutItem HeaderText="Proposal Resources Ready">
+            <Content><div class="kpi">@State.ResourcesReady</div></Content>
+        </TileLayoutItem>
+        <TileLayoutItem HeaderText="Items Needing Review">
+            <Content><div class="kpi">@State.ItemsNeedingReview</div></Content>
+        </TileLayoutItem>
+        <TileLayoutItem HeaderText="Market Signals This Week">
+            <Content><div class="kpi">@State.MarketSignalsThisWeek</div></Content>
+        </TileLayoutItem>
+        <TileLayoutItem HeaderText="Feedback Themes">
+            <Content><div class="kpi">@State.FeedbackThemeCount</div></Content>
+        </TileLayoutItem>
+        <TileLayoutItem HeaderText="AI Drafts Awaiting Approval">
+            <Content><div class="kpi">@State.DraftsAwaitingApproval</div></Content>
+        </TileLayoutItem>
+    </TileLayoutItems>
+</TelerikTileLayout>
+
+@code {
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}

@@ -1,0 +1,62 @@
+@page "/signals"
+@implements IDisposable
+@inject WorkspaceState State
+@inject ScenarioPack Scenario
+
+<PageTitle>Signal Themes | Signal Intelligence Workspace</PageTitle>
+
+<h2>Signal Themes</h2>
+<p class="muted">Market opportunity signals and customer feedback themes. Approved AI filter commands apply here.</p>
+
+@if (State.AppliedThemeFilter is not null)
+{
+    <div class="ai-filter-chip">
+        <span>AI filter active: Confidence = <strong>@State.AppliedThemeFilter</strong></span>
+        <TelerikButton FillMode="@ThemeConstants.Button.FillMode.Flat"
+                       Size="@ThemeConstants.Button.Size.Small"
+                       OnClick="@(() => State.ClearThemeFilter())">Clear</TelerikButton>
+    </div>
+}
+
+<TelerikGrid Data="@State.FilteredThemes" Sortable="true" FilterMode="@GridFilterMode.FilterMenu">
+    <GridColumns>
+        <GridColumn Field="@nameof(ThemeRow.Theme)" />
+        <GridColumn Field="@nameof(ThemeRow.Segment)" Title="Market Segment" Width="180px" />
+        <GridColumn Field="@nameof(ThemeRow.Frequency)" Width="120px" />
+        <GridColumn Field="@nameof(ThemeRow.Confidence)" Width="130px" />
+        <GridColumn Field="@nameof(ThemeRow.Example)" Title="Example Feedback" />
+        <GridColumn Field="@nameof(ThemeRow.SuggestedUse)" Title="Suggested Use" />
+        <GridColumn Field="@nameof(ThemeRow.ReviewStatus)" Title="Review Status" Width="140px">
+            <Template>
+                @(((ThemeRow)context).ReviewStatus.ToDisplay())
+            </Template>
+        </GridColumn>
+    </GridColumns>
+</TelerikGrid>
+
+<h3 class="section-title">Signals by Market Segment</h3>
+<TelerikChart Height="320px">
+    <ChartSeriesItems>
+        <ChartSeries Type="@ChartSeriesType.Column"
+                     Data="@SegmentTotals"
+                     Field="@nameof(SegmentTotal.Mentions)"
+                     CategoryField="@nameof(SegmentTotal.Segment)"
+                     Name="Mentions" />
+    </ChartSeriesItems>
+</TelerikChart>
+
+@code {
+    private List<SegmentTotal> SegmentTotals => Scenario.Segments
+        .Select(s => new SegmentTotal(
+            s,
+            Scenario.Themes.Where(t => t.Segment == s).Sum(t => t.Frequency)))
+        .ToList();
+
+    public sealed record SegmentTotal(string Segment, int Mentions);
+
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.Changed -= OnStateChanged;
+}
