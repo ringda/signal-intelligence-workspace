@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal-to-Application Intelligence - Static Prototype</title>
+  <style>
+    :root {
+      --bg: #f6f8f9;
+      --panel: #ffffff;
+      --panel-soft: #f9fbfb;
+      --ink: #172426;
+      --muted: #607176;
+      --line: #dbe4e6;
+      --teal: #0b7777;
+      --teal-soft: #e5f5f3;
+      --blue: #2f6fbd;
+      --blue-soft: #eaf1fb;
+      --amber: #b76e00;
+      --amber-soft: #fff4df;
+      --red: #b34343;
+      --red-soft: #faeaea;
+      --green: #407f46;
+      --green-soft: #e9f6ec;
+      --shadow: 0 10px 28px rgba(22, 39, 42, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", Arial, "Noto Sans TC", sans-serif;
+      line-height: 1.45;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: #ffffff;
+      border-right: 1px solid var(--line);
+      padding: 22px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #0f696a;
+      color: white;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .nav-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav-item {
+      border: 0;
+      background: transparent;
+      color: #314246;
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      background: var(--teal-soft);
+      color: #075c5c;
+      font-weight: 700;
+    }
+
+    .nav-note {
+      margin-top: 32px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .main {
+      padding: 24px 28px 34px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 32px;
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 980px;
+      font-size: 15px;
+    }
+
+    .tagline {
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: #33484d;
+      box-shadow: var(--shadow);
+      font-weight: 700;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-pad {
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 4px 0 0;
+    }
+
+    .source-pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--panel-soft);
+      white-space: nowrap;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric {
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      min-height: 112px;
+    }
+
+    .metric.primary {
+      background: #0b6668;
+      color: white;
+      border-color: #0b6668;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      min-height: 34px;
+    }
+
+    .metric.primary .metric-label {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 850;
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+
+    .metric-detail {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric.primary .metric-detail {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .funnel {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .funnel-step {
+      position: relative;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      min-height: 96px;
+    }
+
+    .funnel-step::after {
+      content: "->";
+      position: absolute;
+      right: -12px;
+      top: 38px;
+      color: var(--muted);
+      font-weight: 800;
+      z-index: 1;
+    }
+
+    .funnel-step:last-child::after {
+      display: none;
+    }
+
+    .funnel-k {
+      color: var(--teal);
+      font-weight: 850;
+      font-size: 22px;
+    }
+
+    .funnel-label {
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .funnel-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.22fr) minmax(360px, 0.78fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      width: 240px;
+      color: var(--ink);
+      background: white;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 840px;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      background: var(--panel-soft);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr.app-row {
+      cursor: pointer;
+    }
+
+    tr.app-row:hover,
+    tr.app-row.selected {
+      background: #eef8f7;
+    }
+
+    .company {
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .role {
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: #c7e7cd;
+    }
+
+    .badge.teal {
+      background: var(--teal-soft);
+      color: var(--teal);
+      border-color: #c8e9e6;
+    }
+
+    .badge.amber {
+      background: var(--amber-soft);
+      color: var(--amber);
+      border-color: #f0d8a8;
+    }
+
+    .badge.blue {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: #c9d9f0;
+    }
+
+    .badge.red {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: #edc9c9;
+    }
+
+    .score {
+      display: grid;
+      gap: 5px;
+      min-width: 108px;
+    }
+
+    .bar {
+      height: 7px;
+      border-radius: 999px;
+      background: #e6ecee;
+      overflow: hidden;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: var(--teal);
+    }
+
+    .bar.amber > span {
+      background: var(--amber);
+    }
+
+    .detail {
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-hero {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .detail-company {
+      font-size: 22px;
+      font-weight: 850;
+      margin: 0;
+    }
+
+    .detail-title {
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .detail-body {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .evidence {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 13px;
+      background: var(--panel-soft);
+    }
+
+    .evidence h3 {
+      margin: 0 0 7px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .evidence p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .flow-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: var(--panel-soft);
+      min-height: 128px;
+    }
+
+    .flow-step {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .flow-title {
+      margin-top: 6px;
+      font-weight: 850;
+    }
+
+    .flow-count {
+      margin-top: 8px;
+      font-size: 20px;
+      font-weight: 850;
+      color: var(--teal);
+    }
+
+    .flow-status {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .mapping-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mapping {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: var(--panel-soft);
+    }
+
+    .mapping strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .mapping span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .rule-loop {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .rule-node {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px;
+      background: white;
+      font-size: 12px;
+      min-height: 88px;
+    }
+
+    .rule-node b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .dist-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .dist-row {
+      display: grid;
+      grid-template-columns: 142px minmax(0, 1fr) 54px;
+      align-items: center;
+      gap: 9px;
+      font-size: 12px;
+    }
+
+    .dist-label {
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 12px;
+      padding-bottom: 10px;
+    }
+
+    @media (max-width: 1180px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        display: none;
+      }
+
+      .workspace,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-grid,
+      .funnel,
+      .flow-grid,
+      .mapping-grid,
+      .rule-loop {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .main {
+        padding: 18px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .tagline {
+        white-space: normal;
+      }
+
+      .metric-grid,
+      .funnel,
+      .flow-grid,
+      .mapping-grid,
+      .rule-loop {
+        grid-template-columns: 1fr;
+      }
+
+      .funnel-step::after {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Prototype navigation">
+      <div class="brand">
+        <div class="brand-mark">SI</div>
+        <div>
+          <div class="brand-title">Signal-to-Application<br>Intelligence</div>
+          <div class="brand-subtitle">Static HM prototype</div>
+        </div>
+      </div>
+      <nav class="nav-group">
+        <button class="nav-item active"><span>01</span><span>Cockpit</span></button>
+        <button class="nav-item"><span>02</span><span>Pipeline</span></button>
+        <button class="nav-item"><span>03</span><span>Follow-up</span></button>
+        <button class="nav-item"><span>04</span><span>Learning loop</span></button>
+      </nav>
+      <div class="nav-note">
+        Based on live DB fields from <b>core.jobs</b>, <b>core.applications</b>,
+        <b>core.descriptions</b>, and <b>core.cockpit_*</b> views. Connection
+        secrets are not embedded.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">HM-facing static prototype</div>
+          <h1>Signal-to-Application Intelligence</h1>
+          <p class="subtitle">
+            A job-market signal cockpit that shows how I turn high-volume inputs into
+            prioritized applications, tailored evidence, stakeholder follow-up, and
+            write-back rules. This is the Marketing Analysis story: scattered signals
+            become structured decision context.
+          </p>
+        </div>
+        <div class="tagline">Scales judgment, not blind activity</div>
+      </header>
+
+      <section class="metric-grid" aria-label="Live DB scale">
+        <div class="metric primary">
+          <div class="metric-label">Live job signals in core.jobs</div>
+          <div class="metric-value">20,925</div>
+          <div class="metric-detail">AI-screened opportunity pool</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">JD text records in core.descriptions</div>
+          <div class="metric-value">11,166</div>
+          <div class="metric-detail">Searchable source material</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Application records</div>
+          <div class="metric-value">386</div>
+          <div class="metric-detail">Workflow rows with artifact status</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Applied applications</div>
+          <div class="metric-value">200</div>
+          <div class="metric-detail">Tracked through pa_status</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">People-calibrated rows</div>
+          <div class="metric-value">106</div>
+          <div class="metric-detail">Stakeholder context before tailoring</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Interview signal rows</div>
+          <div class="metric-value">1</div>
+          <div class="metric-detail">Outcome signal tracked, not guessed</div>
+        </div>
+      </section>
+
+      <section class="panel panel-pad" aria-label="Signal funnel">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">From job-market noise to governed next action</h2>
+            <p class="section-note">
+              The first screen should make the HM feel the pipeline: broad market input,
+              structured judgment, human checkpoint, and write-back learning.
+            </p>
+          </div>
+          <div class="source-pill">DB snapshot: 2026-06-16, America/Los_Angeles</div>
+        </div>
+        <div class="funnel">
+          <div class="funnel-step">
+            <div class="funnel-k">20,925</div>
+            <div class="funnel-label">Job signals</div>
+            <div class="funnel-note">core.jobs, status-scored by fit and risk</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-k">11,166</div>
+            <div class="funnel-label">JD texts</div>
+            <div class="funnel-note">raw descriptions become searchable context</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-k">386</div>
+            <div class="funnel-label">Application rows</div>
+            <div class="funnel-note">only worth-tracking roles enter pipeline</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-k">262</div>
+            <div class="funnel-label">Tailored</div>
+            <div class="funnel-note">pt_status=done: judgment turned into artifact</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-k">200</div>
+            <div class="funnel-label">Applied</div>
+            <div class="funnel-note">pa_status=applied plus source write-back</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Application cockpit">
+        <div class="panel panel-pad">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Application pipeline as decision records</h2>
+              <p class="section-note">
+                This grid uses the actual DB vocabulary: match score, win score,
+                routing brief, tailoring, resume package, apply status, and people calibration.
+              </p>
+            </div>
+            <div class="toolbar">
+              <input id="search" class="search" type="search" placeholder="Filter company or role">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Company / Role</th>
+                  <th>Decision</th>
+                  <th>Evidence score</th>
+                  <th>Workflow state</th>
+                  <th>People calibration</th>
+                  <th>Next action</th>
+                </tr>
+              </thead>
+              <tbody id="applicationRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="panel detail" aria-label="Selected application detail">
+          <div class="detail-hero">
+            <div>
+              <h2 id="detailCompany" class="detail-company"></h2>
+              <div id="detailTitle" class="detail-title"></div>
+            </div>
+            <div id="detailBadge"></div>
+          </div>
+          <div class="detail-body">
+            <div class="evidence">
+              <h3>Why worth pursuing</h3>
+              <p id="detailWhy"></p>
+            </div>
+            <div class="evidence">
+              <h3>Human judgment encoded as workflow</h3>
+              <p id="detailWorkflow"></p>
+            </div>
+            <div class="evidence">
+              <h3>Marketing / GTM translation</h3>
+              <p id="detailTranslation"></p>
+            </div>
+            <div class="evidence">
+              <h3>Next action</h3>
+              <p id="detailNext"></p>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel panel-pad" aria-label="Today pipeline steps">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Today's operating rhythm from core.cockpit_today_pipeline_steps</h2>
+            <p class="section-note">
+              This is not just a status tracker. Each step is a checkpoint where judgment
+              becomes an artifact, a record, or a next action.
+            </p>
+          </div>
+          <div class="source-pill">Today: 1 applied / target 3</div>
+        </div>
+        <div class="flow-grid">
+          <div class="flow-card">
+            <div class="flow-step">Step 1</div>
+            <div class="flow-title">Role selected</div>
+            <div class="flow-count">0 / 3</div>
+            <div class="flow-status">not started: no new slate promoted today</div>
+          </div>
+          <div class="flow-card">
+            <div class="flow-step">Step 2</div>
+            <div class="flow-title">Custom CV</div>
+            <div class="flow-count">2 / 1</div>
+            <div class="flow-status">complete: tailoring output is ahead of target</div>
+          </div>
+          <div class="flow-card">
+            <div class="flow-step">Step 3</div>
+            <div class="flow-title">Formal apply</div>
+            <div class="flow-count">1 / 3</div>
+            <div class="flow-status">in progress: application sent, more due</div>
+          </div>
+          <div class="flow-card">
+            <div class="flow-step">Step 4</div>
+            <div class="flow-title">Networking started</div>
+            <div class="flow-count">0 / 1</div>
+            <div class="flow-status">gap: follow-up surface needs stronger data</div>
+          </div>
+          <div class="flow-card">
+            <div class="flow-step">Step 5</div>
+            <div class="flow-title">Tracker written</div>
+            <div class="flow-count">1 / 1</div>
+            <div class="flow-status">complete: state write-back closed the loop</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="two-col" aria-label="Marketing analysis translation and DB proof">
+        <div class="panel panel-pad">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Marketing Analysis translation</h2>
+              <p class="section-note">
+                The job-search system is the live case; the transferable skill is
+                structured signal analysis.
+              </p>
+            </div>
+          </div>
+          <div class="mapping-grid">
+            <div class="mapping">
+              <strong>JD signals</strong>
+              <span>market / customer / campaign signals</span>
+            </div>
+            <div class="mapping">
+              <strong>Worth applying</strong>
+              <span>segment, account, or lead prioritization</span>
+            </div>
+            <div class="mapping">
+              <strong>Resume tailoring</strong>
+              <span>positioning angle and proof selection</span>
+            </div>
+            <div class="mapping">
+              <strong>Networking follow-up</strong>
+              <span>stakeholder engagement discipline</span>
+            </div>
+            <div class="mapping">
+              <strong>Interview signal</strong>
+              <span>conversion or engagement signal</span>
+            </div>
+            <div class="mapping">
+              <strong>Write-back</strong>
+              <span>playbook, scoring rule, and operating logic update</span>
+            </div>
+          </div>
+          <div class="rule-loop">
+            <div class="rule-node"><b>1. Input</b>JD / company / role signal enters the system.</div>
+            <div class="rule-node"><b>2. Judgment</b>Fit, pool, visa, level, and win risk are scored.</div>
+            <div class="rule-node"><b>3. Skill</b>The repeated judgment becomes a reusable rule.</div>
+            <div class="rule-node"><b>4. Artifact</b>Routing brief, resume, CL, or apply note is produced.</div>
+            <div class="rule-node"><b>5. Checkpoint</b>Human review gates important records and claims.</div>
+            <div class="rule-node"><b>6. Write-back</b>Outcome changes the next run's logic.</div>
+          </div>
+        </div>
+
+        <div class="panel panel-pad">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">DB fields that prove the process</h2>
+              <p class="section-note">
+                These are actual field families inspected from the live DB.
+              </p>
+            </div>
+          </div>
+          <div class="dist-list">
+            <div class="dist-row">
+              <span class="dist-label">jobs.status_code</span>
+              <div class="bar"><span style="width: 84%"></span></div>
+              <span>20.9k</span>
+            </div>
+            <div class="dist-row">
+              <span class="dist-label">applications.ps_status</span>
+              <div class="bar"><span style="width: 66%"></span></div>
+              <span>255</span>
+            </div>
+            <div class="dist-row">
+              <span class="dist-label">applications.pt_status</span>
+              <div class="bar"><span style="width: 68%"></span></div>
+              <span>262</span>
+            </div>
+            <div class="dist-row">
+              <span class="dist-label">applications.prp_status</span>
+              <div class="bar"><span style="width: 67%"></span></div>
+              <span>257</span>
+            </div>
+            <div class="dist-row">
+              <span class="dist-label">applications.pa_status</span>
+              <div class="bar"><span style="width: 52%"></span></div>
+              <span>200</span>
+            </div>
+            <div class="dist-row">
+              <span class="dist-label">people_calibration</span>
+              <div class="bar amber"><span style="width: 27%"></span></div>
+              <span>106</span>
+            </div>
+          </div>
+          <p class="small" style="margin-top: 14px;">
+            HM takeaway: this is not a memory-based job search. Every phase leaves a
+            field, artifact, timestamp, or status that can be inspected later.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel panel-pad" aria-label="Claim boundary">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Claim boundary for HM demo</h2>
+            <p class="section-note">
+              This prototype uses real DB shape and representative rows. Before sharing
+              publicly, review whether company names should be masked.
+            </p>
+          </div>
+        </div>
+        <div class="mapping-grid">
+          <div class="mapping">
+            <strong>Say</strong>
+            <span>AI screened 20,000+ opportunities under rules I defined and reviewed.</span>
+          </div>
+          <div class="mapping">
+            <strong>Do not say</strong>
+            <span>I manually read 20,000+ JDs or owned production customer CRM data.</span>
+          </div>
+          <div class="mapping">
+            <strong>Translate</strong>
+            <span>Job-market signals become a GTM signal-analysis operating system.</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">
+        Static file. No database connection, credentials, or live API calls are embedded.
+        Data values were copied from a local inspected DB snapshot for prototype purposes.
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const applications = [
+      {
+        company: "DKS Associates",
+        title: "Business Analyst Intern",
+        location: "Portland, OR",
+        decision: "recommended edge",
+        decisionTone: "green",
+        match: 8,
+        win: 7,
+        statuses: { ps: "created", pt: "done", prp: "done", pcl: "none", pa: "applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Use as HM demo anchor: marketing/BD operations, market intelligence, AI tools, and proposal workflow support.",
+        why: "This role directly asks for data analysis, AI tools/prompting, market intelligence, proposal-development workflow support, and clear insight handoff.",
+        workflow: "Routing brief created, people context calibrated, resume tailored, resume package produced, and application submitted through Paycor / DKS careers.",
+        translation: "Best Marketing Analysis bridge: messy resources and market signals become stakeholder-ready insight and workflow support."
+      },
+      {
+        company: "Valeo",
+        title: "Sales & Data Analytics Intern",
+        location: "Troy, MI",
+        decision: "recommended edge",
+        decisionTone: "green",
+        match: 8,
+        win: 7,
+        statuses: { ps: "created", pt: "done", prp: "done", pcl: "none", pa: "not applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Decide apply timing; use CRM pipeline accuracy and dashboard language as proof angle.",
+        why: "Strong B-lane sales/GTM ops internship: CRM pipeline accuracy, dashboards, RFQ/NDA/customer portal documentation, and demand/market KPI analysis.",
+        workflow: "Role routing and people calibration are complete; tailoring and resume production are done; final apply decision remains open.",
+        translation: "This maps directly to GTM analytics: customer portal signals, pipeline data, and sales dashboards become decision support."
+      },
+      {
+        company: "ByteBridge",
+        title: "Sales Operations Specialist",
+        location: "Hayward, CA",
+        decision: "on hold",
+        decisionTone: "amber",
+        match: 7,
+        win: 7,
+        statuses: { ps: "created", pt: "done", prp: "done", pcl: "not required", pa: "applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Track post-submit outcome; convert application result into source and role-pattern learning.",
+        why: "Bilingual Sales Operations role with order management, vendor coordination, CRM/ERP, reporting, and cross-functional execution.",
+        workflow: "Routing, people calibration, tailoring, resume production, and apply status all left structured DB records.",
+        translation: "Shows how a service/ops job becomes a pipeline hygiene story: open requests visible, owned, and moving through clean handoff."
+      },
+      {
+        company: "Wyld",
+        title: "Sales Data Coordinator",
+        location: "Clackamas, OR",
+        decision: "on hold",
+        decisionTone: "amber",
+        match: 8,
+        win: 7,
+        statuses: { ps: "created", pt: "done", prp: "none", pcl: "none", pa: "not applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Finish production packet or archive if role value is not strong enough.",
+        why: "Sales order lifecycle, ERP/CRM data integrity, issue resolution, and cross-functional Sales/Distribution/Inventory/Accounting coordination.",
+        workflow: "Routing brief and people calibration exist; tailoring is done; production package and application are not complete.",
+        translation: "Good example of turning messy operational records and status changes into accurate shared handoffs."
+      },
+      {
+        company: "ASUS",
+        title: "Inside Sales - Claims (Mandarin Required)",
+        location: "Fremont, CA",
+        decision: "recommended edge",
+        decisionTone: "green",
+        match: 8,
+        win: 7,
+        statuses: { ps: "created", pt: "none", prp: "none", pcl: "none", pa: "not applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Confirm whether this is a strategic AI-wave / Mandarin bridge or a lower-priority support lane.",
+        why: "Mandarin-required inside sales claims role with order review, chargeback processing, A/R deductions, workflow improvement, and cross-functional support.",
+        workflow: "The system has promoted it to routing-ready, but tailoring and apply stages are not started.",
+        translation: "Useful as a special-lane signal: Mandarin as access path, but role quality still needs business-signal judgment."
+      },
+      {
+        company: "Gravie",
+        title: "Temporary Revenue Operations Analyst",
+        location: "Remote / hybrid unknown",
+        decision: "routing ready",
+        decisionTone: "blue",
+        match: 7,
+        win: 6,
+        statuses: { ps: "created", pt: "none", prp: "none", pcl: "none", pa: "not applied" },
+        people: "calibrated / linkedin_deep",
+        next: "Decide if temporary RevOps analyst work is worth tailoring effort.",
+        why: "Revenue operations analyst title fits the GTM analytics lane, but temporary structure and work mode need review.",
+        workflow: "Routing exists; no downstream artifacts yet, which is exactly why next action needs to be visible.",
+        translation: "This is the kind of role where the tracker prevents anxiety-driven action: decide with criteria before tailoring."
+      }
+    ];
+
+    const rows = document.getElementById("applicationRows");
+    const search = document.getElementById("search");
+
+    function statusBadge(text) {
+      const clean = text.replace("_", " ");
+      const tone = text.includes("applied") || text.includes("done") || text.includes("created") ? "teal" :
+        text.includes("none") || text.includes("not") ? "amber" : "blue";
+      return `<span class="badge ${tone}">${clean}</span>`;
+    }
+
+    function renderRows(filter = "") {
+      const term = filter.trim().toLowerCase();
+      rows.innerHTML = "";
+      applications
+        .filter(app => !term || `${app.company} ${app.title}`.toLowerCase().includes(term))
+        .forEach((app, index) => {
+          const tr = document.createElement("tr");
+          tr.className = `app-row ${index === 0 ? "selected" : ""}`;
+          tr.dataset.index = String(index);
+          tr.innerHTML = `
+            <td><div class="company">${app.company}</div><div class="role">${app.title}<br>${app.location}</div></td>
+            <td><span class="badge ${app.decisionTone}">${app.decision}</span></td>
+            <td>
+              <div class="score">
+                <span>match ${app.match}/10</span>
+                <div class="bar"><span style="width:${app.match * 10}%"></span></div>
+                <span>win ${app.win}/10</span>
+                <div class="bar amber"><span style="width:${app.win * 10}%"></span></div>
+              </div>
+            </td>
+            <td>
+              ${statusBadge(`ps ${app.statuses.ps}`)}
+              ${statusBadge(`pt ${app.statuses.pt}`)}
+              ${statusBadge(`prp ${app.statuses.prp}`)}
+              ${statusBadge(`pa ${app.statuses.pa}`)}
+            </td>
+            <td>${app.people}</td>
+            <td>${app.next}</td>
+          `;
+          tr.addEventListener("click", () => {
+            document.querySelectorAll(".app-row").forEach(row => row.classList.remove("selected"));
+            tr.classList.add("selected");
+            setDetail(app);
+          });
+          rows.appendChild(tr);
+        });
+    }
+
+    function setDetail(app) {
+      document.getElementById("detailCompany").textContent = app.company;
+      document.getElementById("detailTitle").textContent = `${app.title} · ${app.location}`;
+      document.getElementById("detailBadge").innerHTML = `<span class="badge ${app.decisionTone}">${app.decision}</span>`;
+      document.getElementById("detailWhy").textContent = app.why;
+      document.getElementById("detailWorkflow").textContent = app.workflow;
+      document.getElementById("detailTranslation").textContent = app.translation;
+      document.getElementById("detailNext").textContent = app.next;
+    }
+
+    search.addEventListener("input", event => renderRows(event.target.value));
+    renderRows();
+    setDetail(applications[0]);
+  </script>
+</body>
+</html>
