@@ -9,7 +9,7 @@
 <div class="topbar">
     <TelerikButton Icon="@SvgIcon.Menu"
                    FillMode="@ThemeConstants.Button.FillMode.Flat"
-                   OnClick="@(() => DrawerExpanded = !DrawerExpanded)"
+                   OnClick="@ToggleDrawerAsync"
                    Title="@L["Action.ToggleNav"]" />
     <div class="topbar-titles">
         <span class="app-name">@L["App.Name"]</span>
@@ -26,10 +26,31 @@
     </TelerikButton>
 </div>
 
-<TelerikDrawer Data="@NavItems"
-               @bind-Expanded="@DrawerExpanded"
+<TelerikDrawer @ref="@DrawerRef"
+               Data="@NavItems"
+               Expanded="@DrawerExpanded"
+               ExpandedChanged="@OnDrawerExpandedChangedAsync"
                MiniMode="true"
                Mode="@DrawerMode.Push">
+    <Template>
+        <ul role="menubar" aria-orientation="vertical" class="k-drawer-items app-drawer-items">
+            @foreach (var item in NavItems)
+            {
+                <li @key="@item.Url" @onclick:stopPropagation>
+                    <NavLink href="@item.Url"
+                             Match="@item.Match"
+                             class="k-drawer-item app-drawer-item"
+                             ActiveClass="k-state-selected k-selected"
+                             title="@item.Text"
+                             role="menuitem"
+                             aria-label="@item.Text">
+                        <TelerikSvgIcon Icon="@item.Icon" />
+                        <span class="k-item-text">@item.Text</span>
+                    </NavLink>
+                </li>
+            }
+        </ul>
+    </Template>
     <DrawerContent>
         <div class="page-body">
             @Body
@@ -44,13 +65,15 @@
 </div>
 
 @code {
-    private bool DrawerExpanded { get; set; } = true;
+    private TelerikDrawer<NavItem>? DrawerRef { get; set; }
+    private bool DrawerExpanded { get; set; }
 
     private bool IsEn => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en";
 
     private List<NavItem> NavItems => new()
     {
-        new NavItem { Text = L["Nav.Dashboard"], Icon = SvgIcon.Home, Url = "/" },
+        new NavItem { Text = L["Nav.Dashboard"], Icon = SvgIcon.Home, Url = "/", Match = NavLinkMatch.All },
+        new NavItem { Text = L["Nav.Cockpit"], Icon = SvgIcon.Home, Url = "/cockpit" },
         new NavItem { Text = L["Nav.Governance"], Icon = SvgIcon.Sparkles, Url = "/governance" },
         new NavItem { Text = L["Nav.Signals"], Icon = SvgIcon.Eye, Url = "/signals" },
         new NavItem { Text = L["Nav.Resources"], Icon = SvgIcon.Folder, Url = "/resources" },
@@ -63,10 +86,35 @@
         return $"/culture/set?culture={culture}&redirectUri={redirect}";
     }
 
+    private async Task ToggleDrawerAsync()
+    {
+        if (DrawerRef is null)
+        {
+            DrawerExpanded = !DrawerExpanded;
+            return;
+        }
+
+        if (DrawerExpanded)
+        {
+            await DrawerRef.CollapseAsync();
+        }
+        else
+        {
+            await DrawerRef.ExpandAsync();
+        }
+    }
+
+    private Task OnDrawerExpandedChangedAsync(bool expanded)
+    {
+        DrawerExpanded = expanded;
+        return Task.CompletedTask;
+    }
+
     public class NavItem
     {
         public string Text { get; set; } = string.Empty;
         public ISvgIcon? Icon { get; set; }
         public string Url { get; set; } = string.Empty;
+        public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
     }
 }

@@ -93,6 +93,25 @@ h1:focus {
     color: #c4ccd1;
 }
 
+.app-drawer-items {
+    padding: 0;
+}
+
+.app-drawer-items li {
+    list-style: none;
+}
+
+.app-drawer-item {
+    color: inherit;
+    text-decoration: none;
+}
+
+.app-drawer-item:hover,
+.app-drawer-item:focus {
+    color: inherit;
+    text-decoration: none;
+}
+
 .page-body {
     padding: 20px 24px 40px;
     max-width: 1280px;
@@ -176,4 +195,327 @@ h1:focus {
 
 .section-title {
     margin: 28px 0 8px;
+}
+
+.cockpit-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.cockpit-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.cockpit-header h2,
+.cockpit-section-head h3 {
+    margin: 0;
+}
+
+.cockpit-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    color: #44505a;
+    font-size: 0.86rem;
+    white-space: nowrap;
+}
+
+.cockpit-band,
+.cockpit-chart-panel,
+.cockpit-grid-panel,
+.cockpit-detail-panel {
+    border: 1px solid #e3e8ec;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 16px;
+}
+
+.cockpit-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.cockpit-timeline {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.cockpit-step {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    border: 1px solid #e0e5e8;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f9fafb;
+}
+
+.cockpit-step-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-weight: 700;
+    color: #65727d;
+    background: #e8ecef;
+}
+
+.cockpit-step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cockpit-step-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.cockpit-step-count {
+    color: #65727d;
+    font-size: 0.82rem;
+}
+
+.cockpit-step-complete {
+    border-color: #1f7a33;
+    background: #f1f8f2;
+}
+
+.cockpit-step-complete .cockpit-step-marker {
+    background: #1f7a33;
+    color: white;
+}
+
+.cockpit-step-progress {
+    border-color: #c98b20;
+    background: #fff8e8;
+}
+
+.cockpit-step-progress .cockpit-step-marker {
+    background: #c98b20;
+    color: white;
+}
+
+.cockpit-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.cockpit-kpi-card {
+    border: 1px solid #e3e8ec;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fbfcfd;
+    min-height: 112px;
+}
+
+.cockpit-kpi-primary {
+    border-color: #b9d7f3;
+    background: #f4f9fe;
+}
+
+.cockpit-kpi-title {
+    color: #5f6b73;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.cockpit-kpi-value {
+    margin: 8px 0 12px;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0;
+}
+
+.cockpit-kpi-value span {
+    color: #65727d;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.cockpit-progress {
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e6ebef;
+}
+
+.cockpit-progress div {
+    height: 100%;
+    border-radius: inherit;
+    background: #1c5d99;
+}
+
+.cockpit-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(300px, 0.9fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.cockpit-detail-panel {
+    min-height: 420px;
+}
+
+.cockpit-detail-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.cockpit-detail-title span {
+    color: #4f5d66;
+}
+
+.cockpit-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    color: #5f6b73;
+    font-size: 0.86rem;
+}
+
+.cockpit-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 2px 9px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: normal;
+}
+
+.cockpit-pill-good {
+    background: #e2f4e5;
+    color: #1f7a33;
+}
+
+.cockpit-pill-watch {
+    background: #fdf3dc;
+    color: #8a6116;
+}
+
+.cockpit-pill-done {
+    background: #e8f1fb;
+    color: #1c5d99;
+}
+
+.cockpit-pill-neutral {
+    background: #eef1f3;
+    color: #44505a;
+}
+
+.cockpit-evidence-block {
+    border-top: 1px solid #eef1f3;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.cockpit-evidence-block h4 {
+    margin: 0 0 6px;
+    font-size: 0.9rem;
+}
+
+.cockpit-evidence-block p {
+    margin: 0;
+    color: #3d4951;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.cockpit-path {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 6px;
+    background: #f4f6f7;
+    color: #4f5d66;
+    font-size: 0.86rem;
+}
+
+.cockpit-path code {
+    overflow-wrap: anywhere;
+}
+
+.cockpit-loading,
+.cockpit-empty,
+.cockpit-alert {
+    border: 1px solid #e3e8ec;
+    border-radius: 8px;
+    padding: 14px;
+    background: #fbfcfd;
+    color: #5f6b73;
+}
+
+.cockpit-alert {
+    border-color: #efc1c1;
+    background: #fff5f5;
+    color: #8a2727;
+}
+
+.cockpit-meta {
+    color: #4f5d66;
+    font-size: 0.92rem;
+    text-align: center;
+}
+
+@media (max-width: 1180px) {
+    .cockpit-main {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cockpit-detail-panel {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .cockpit-timeline,
+    .cockpit-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .page-body {
+        padding: 16px;
+        max-width: none;
+    }
+
+    .cockpit-header {
+        flex-direction: column;
+    }
+
+    .cockpit-date {
+        align-items: flex-start;
+    }
+
+    .cockpit-timeline,
+    .cockpit-kpi-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -53,6 +53,7 @@
 
   <data name="App.Name"><value>訊號情報工作台</value></data>
   <data name="Nav.Dashboard"><value>儀表板</value></data>
+  <data name="Nav.Cockpit"><value>求職駕駛艙</value></data>
   <data name="Nav.Governance"><value>AI 治理</value></data>
   <data name="Nav.Signals"><value>訊號主題</value></data>
   <data name="Nav.Resources"><value>資源庫</value></data>
@@ -70,6 +71,37 @@
   <data name="Kpi.MarketSignals"><value>本週市場訊號</value></data>
   <data name="Kpi.FeedbackThemes"><value>回饋主題</value></data>
   <data name="Kpi.DraftsAwaiting"><value>待核准 AI 草稿</value></data>
+
+  <data name="Cockpit.Title"><value>每日求職駕駛艙</value></data>
+  <data name="Cockpit.Subtitle"><value>從求職真本讀取節奏、判池品質與可追溯證據。</value></data>
+  <data name="Cockpit.Loading"><value>正在讀取目前駕駛艙資料...</value></data>
+  <data name="Cockpit.Pipeline"><value>今日流程</value></data>
+  <data name="Cockpit.Kpis"><value>節奏達成</value></data>
+  <data name="Cockpit.Kpi.ApplicationsToday"><value>今日完整申請</value></data>
+  <data name="Cockpit.Kpi.ApplicationsWeek"><value>本週完整申請</value></data>
+  <data name="Cockpit.Kpi.Jd24h"><value>24h 新 JD</value></data>
+  <data name="Cockpit.Kpi.CorrectPool"><value>24h 正確人池</value></data>
+  <data name="Cockpit.ChartTitle"><value>本週每日節奏</value></data>
+  <data name="Cockpit.Chart.Applied"><value>已投遞</value></data>
+  <data name="Cockpit.Chart.Target"><value>目標</value></data>
+  <data name="Cockpit.Chart.Jds"><value>已掃 JD</value></data>
+  <data name="Cockpit.RecentJobs"><value>近期 JD 判斷</value></data>
+  <data name="Cockpit.Evidence"><value>證據</value></data>
+  <data name="Cockpit.Evidence.Empty"><value>尚未選取 JD。</value></data>
+  <data name="Cockpit.Evidence.RoleSummary"><value>角色摘要</value></data>
+  <data name="Cockpit.Evidence.HiringFocus"><value>Hiring focus</value></data>
+  <data name="Cockpit.Evidence.WinReasoning"><value>勝率推導</value></data>
+  <data name="Cockpit.Evidence.Disposition"><value>處理判斷</value></data>
+  <data name="Cockpit.Evidence.Visa"><value>簽證備註</value></data>
+  <data name="Cockpit.Evidence.Folder"><value>申請資料夾</value></data>
+  <data name="Cockpit.Evidence.None"><value>目前沒有備註。</value></data>
+  <data name="Cockpit.WinScore"><value>勝率分數</value></data>
+  <data name="Cockpit.Meta"><value>AI 做重活 · 我做判斷 · tracker 維持唯一真本</value></data>
+  <data name="Cockpit.Col.Company"><value>公司</value></data>
+  <data name="Cockpit.Col.Title"><value>職稱</value></data>
+  <data name="Cockpit.Col.Status"><value>狀態</value></data>
+  <data name="Cockpit.Col.Match"><value>匹配</value></data>
+  <data name="Cockpit.Col.Judgement"><value>判斷摘要</value></data>
 
   <data name="Governance.Title"><value>AI 治理</value></data>
   <data name="Governance.Subtitle"><value>提示 → 安全指令 → 人工審核 → 稽核紀錄。助理只能提出白名單內的指令；在審核者核准前不會更動任何資料。</value></data>

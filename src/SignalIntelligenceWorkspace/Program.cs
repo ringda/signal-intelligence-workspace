@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using SignalIntelligenceWorkspace.Components;
 using SignalIntelligenceWorkspace.Services;
+using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.Scenarios;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 // Singleton so demo state (drafts, filter, audit) survives full-page navigation
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();
+builder.Services.AddScoped<CockpitDataService>();
 
 // English default; Traditional Chinese available via the in-app toggle.
 var supportedCultures = new[] { "en", "zh-Hant" };

@@ -53,6 +53,7 @@
 
   <data name="App.Name"><value>Signal Intelligence Workspace</value></data>
   <data name="Nav.Dashboard"><value>Dashboard</value></data>
+  <data name="Nav.Cockpit"><value>Job Cockpit</value></data>
   <data name="Nav.Governance"><value>AI Governance</value></data>
   <data name="Nav.Signals"><value>Signal Themes</value></data>
   <data name="Nav.Resources"><value>Resource Library</value></data>
@@ -70,6 +71,37 @@
   <data name="Kpi.MarketSignals"><value>Market Signals This Week</value></data>
   <data name="Kpi.FeedbackThemes"><value>Feedback Themes</value></data>
   <data name="Kpi.DraftsAwaiting"><value>AI Drafts Awaiting Approval</value></data>
+
+  <data name="Cockpit.Title"><value>Daily Operating Cockpit</value></data>
+  <data name="Cockpit.Subtitle"><value>Adherence, shortlist quality, and reviewable evidence from the job-search system of record.</value></data>
+  <data name="Cockpit.Loading"><value>Loading current cockpit data...</value></data>
+  <data name="Cockpit.Pipeline"><value>Today Pipeline</value></data>
+  <data name="Cockpit.Kpis"><value>Adherence</value></data>
+  <data name="Cockpit.Kpi.ApplicationsToday"><value>Applications Today</value></data>
+  <data name="Cockpit.Kpi.ApplicationsWeek"><value>Applications This Week</value></data>
+  <data name="Cockpit.Kpi.Jd24h"><value>New JDs in 24h</value></data>
+  <data name="Cockpit.Kpi.CorrectPool"><value>Correct Pool in 24h</value></data>
+  <data name="Cockpit.ChartTitle"><value>Weekly Pace</value></data>
+  <data name="Cockpit.Chart.Applied"><value>Applied</value></data>
+  <data name="Cockpit.Chart.Target"><value>Target</value></data>
+  <data name="Cockpit.Chart.Jds"><value>JDs Scanned</value></data>
+  <data name="Cockpit.RecentJobs"><value>Recent JD Judgements</value></data>
+  <data name="Cockpit.Evidence"><value>Evidence</value></data>
+  <data name="Cockpit.Evidence.Empty"><value>No JD selected.</value></data>
+  <data name="Cockpit.Evidence.RoleSummary"><value>Role Summary</value></data>
+  <data name="Cockpit.Evidence.HiringFocus"><value>Hiring Focus</value></data>
+  <data name="Cockpit.Evidence.WinReasoning"><value>Win Reasoning</value></data>
+  <data name="Cockpit.Evidence.Disposition"><value>Disposition</value></data>
+  <data name="Cockpit.Evidence.Visa"><value>Visa Note</value></data>
+  <data name="Cockpit.Evidence.Folder"><value>Artifact Folder</value></data>
+  <data name="Cockpit.Evidence.None"><value>No current note.</value></data>
+  <data name="Cockpit.WinScore"><value>Win score</value></data>
+  <data name="Cockpit.Meta"><value>AI does the heavy work · I make the judgement · the tracker stays the system of record</value></data>
+  <data name="Cockpit.Col.Company"><value>Company</value></data>
+  <data name="Cockpit.Col.Title"><value>Title</value></data>
+  <data name="Cockpit.Col.Status"><value>Status</value></data>
+  <data name="Cockpit.Col.Match"><value>Match</value></data>
+  <data name="Cockpit.Col.Judgement"><value>Judgement</value></data>
 
   <data name="Governance.Title"><value>AI Governance</value></data>
   <data name="Governance.Subtitle"><value>Prompt → safe command → human review → audit trail. The assistant can only propose whitelisted commands; nothing changes data until a reviewer approves.</value></data>

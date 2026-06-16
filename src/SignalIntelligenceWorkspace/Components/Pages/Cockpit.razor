@@ -1,0 +1,322 @@
+@page "/cockpit"
+@implements IDisposable
+@inject CockpitDataService CockpitData
+@inject IStringLocalizer<Ui> L
+@inject PersistentComponentState ApplicationState
+@using System.Globalization
+
+<PageTitle>@L["Nav.Cockpit"] | @L["App.Name"]</PageTitle>
+
+<div class="cockpit-page">
+    <div class="cockpit-header">
+        <div>
+            <h2>@L["Cockpit.Title"]</h2>
+            <p class="muted">@L["Cockpit.Subtitle"]</p>
+        </div>
+        @if (Metrics is not null)
+        {
+            <div class="cockpit-date">
+                <span>@Metrics.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</span>
+                <span>@Metrics.MetricTimezone</span>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(LoadError))
+    {
+        <div class="cockpit-alert">@LoadError</div>
+    }
+    else if (IsLoading)
+    {
+        <div class="cockpit-loading">@L["Cockpit.Loading"]</div>
+    }
+    else
+    {
+        <section class="cockpit-band" aria-label="@L["Cockpit.Pipeline"]">
+            <div class="cockpit-section-head">
+                <h3>@L["Cockpit.Pipeline"]</h3>
+            </div>
+            <div class="cockpit-timeline">
+                @foreach (var step in PipelineSteps)
+                {
+                    <div class="cockpit-step @StepClass(step)">
+                        <div class="cockpit-step-marker">@step.StepOrder</div>
+                        <div class="cockpit-step-body">
+                            <span class="cockpit-step-label">@StepLabel(step)</span>
+                            <span class="cockpit-step-count">@step.ActualCount / @step.TargetCount</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (Metrics is not null)
+        {
+            <section class="cockpit-band" aria-label="@L["Cockpit.Kpis"]">
+                <div class="cockpit-section-head">
+                    <h3>@L["Cockpit.Kpis"]</h3>
+                </div>
+                <div class="cockpit-kpi-grid">
+                    @MetricCard(L["Cockpit.Kpi.ApplicationsToday"], Metrics.ApplicationsAppliedToday, Metrics.ApplicationsAppliedTarget, true)
+                    @MetricCard(L["Cockpit.Kpi.ApplicationsWeek"], Metrics.ApplicationsAppliedWeek, Metrics.ApplicationsAppliedWeekTarget, true)
+                    @MetricCard(L["Cockpit.Kpi.Jd24h"], Metrics.JdScanned24h, Metrics.JdScannedTarget, false)
+                    @MetricCard(L["Cockpit.Kpi.CorrectPool"], Metrics.JdCorrectPool24h, Math.Max(Metrics.JdScannedTarget, 1), false)
+                </div>
+            </section>
+        }
+
+        <section class="cockpit-main">
+            <div class="cockpit-chart-panel">
+                <div class="cockpit-section-head">
+                    <h3>@L["Cockpit.ChartTitle"]</h3>
+                </div>
+                <TelerikChart Height="300px">
+                    <ChartSeriesItems>
+                        <ChartSeries Type="@ChartSeriesType.Line"
+                                     Name="@(L["Cockpit.Chart.Applied"])"
+                                     Data="@DailySeries"
+                                     Field="@nameof(CockpitDailySeries.ApplicationsApplied)"
+                                     CategoryField="@nameof(CockpitDailySeries.Day)" />
+                        <ChartSeries Type="@ChartSeriesType.Line"
+                                     Name="@(L["Cockpit.Chart.Target"])"
+                                     Data="@DailySeries"
+                                     Field="@nameof(CockpitDailySeries.ApplicationsAppliedTarget)"
+                                     CategoryField="@nameof(CockpitDailySeries.Day)" />
+                        <ChartSeries Type="@ChartSeriesType.Line"
+                                     Name="@(L["Cockpit.Chart.Jds"])"
+                                     Data="@DailySeries"
+                                     Field="@nameof(CockpitDailySeries.JdScanned)"
+                                     CategoryField="@nameof(CockpitDailySeries.Day)" />
+                    </ChartSeriesItems>
+                    <ChartCategoryAxes>
+                        <ChartCategoryAxis Type="@ChartCategoryAxisType.Date"
+                                           BaseUnit="@ChartCategoryAxisBaseUnit.Days" />
+                    </ChartCategoryAxes>
+                    <ChartValueAxes>
+                        <ChartValueAxis Min="0" MajorUnit="1" />
+                    </ChartValueAxes>
+                </TelerikChart>
+            </div>
+
+            <div class="cockpit-grid-panel">
+                <div class="cockpit-section-head">
+                    <h3>@L["Cockpit.RecentJobs"]</h3>
+                </div>
+                <TelerikGrid Data="@RecentJobs"
+                             Height="420px"
+                             Sortable="true"
+                             FilterMode="@GridFilterMode.FilterMenu"
+                             SelectionMode="@GridSelectionMode.Single"
+                             SelectedItems="@SelectedJobs"
+                             OnRowClick="@OnRecentJobRowClick">
+                    <GridColumns>
+                        <GridColumn Field="@nameof(CockpitRecentJob.Company)" Title="@(L["Cockpit.Col.Company"])" Width="150px" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.Title)" Title="@(L["Cockpit.Col.Title"])" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.StatusCode)" Title="@(L["Cockpit.Col.Status"])" Width="140px">
+                            <Template>
+                                @{
+                                    var job = (CockpitRecentJob)context;
+                                }
+                                <span class="cockpit-pill @StatusClass(job.StatusCode)">@job.StatusCode</span>
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(CockpitRecentJob.MatchLevel)" Title="@(L["Cockpit.Col.Match"])" Width="150px" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.JudgementSummary)" Title="@(L["Cockpit.Col.Judgement"])" />
+                    </GridColumns>
+                </TelerikGrid>
+            </div>
+
+            <aside class="cockpit-detail-panel">
+                <div class="cockpit-section-head">
+                    <h3>@L["Cockpit.Evidence"]</h3>
+                </div>
+                @if (IsDetailLoading)
+                {
+                    <div class="cockpit-loading">@L["Cockpit.Loading"]</div>
+                }
+                else if (SelectedJobProcess is null)
+                {
+                    <div class="cockpit-empty">@L["Cockpit.Evidence.Empty"]</div>
+                }
+                else
+                {
+                    <div class="cockpit-detail-title">
+                        <strong>@SelectedJobProcess.Company</strong>
+                        <span>@SelectedJobProcess.Title</span>
+                    </div>
+                    <div class="cockpit-detail-meta">
+                        <span class="cockpit-pill @StatusClass(SelectedJobProcess.StatusCode)">@SelectedJobProcess.StatusCode</span>
+                        @if (!string.IsNullOrWhiteSpace(SelectedJobProcess.MatchLevel))
+                        {
+                            <span>@SelectedJobProcess.MatchLevel</span>
+                        }
+                        @if (SelectedJobProcess.WinScore is not null)
+                        {
+                            <span>@L["Cockpit.WinScore"] @SelectedJobProcess.WinScore</span>
+                        }
+                    </div>
+
+                    @EvidenceBlock(L["Cockpit.Evidence.RoleSummary"], SelectedJobProcess.PjdRoleSummary)
+                    @EvidenceBlock(L["Cockpit.Evidence.HiringFocus"], SelectedJobProcess.PjdHiringFocus)
+                    @EvidenceBlock(L["Cockpit.Evidence.WinReasoning"], SelectedJobProcess.WinReasoning)
+                    @EvidenceBlock(L["Cockpit.Evidence.Disposition"], SelectedJobProcess.DispositionNote)
+                    @EvidenceBlock(L["Cockpit.Evidence.Visa"], SelectedJobProcess.VisaNote)
+
+                    @if (!string.IsNullOrWhiteSpace(SelectedJobProcess.PipelineFolder))
+                    {
+                        <div class="cockpit-path">
+                            <span>@L["Cockpit.Evidence.Folder"]</span>
+                            <code>80-applications/@SelectedJobProcess.PipelineFolder</code>
+                        </div>
+                    }
+                }
+            </aside>
+        </section>
+
+        <div class="cockpit-meta">@L["Cockpit.Meta"]</div>
+    }
+</div>
+
+@code {
+    private const string SnapshotKey = "cockpit-summary-v1";
+    private PersistingComponentStateSubscription? _persistingSubscription;
+
+    private bool IsLoading = true;
+    private bool IsDetailLoading;
+    private string? LoadError;
+
+    private CockpitDailyMetrics? Metrics;
+    private List<CockpitDailySeries> DailySeries = [];
+    private List<CockpitPipelineStep> PipelineSteps = [];
+    private List<CockpitRecentJob> RecentJobs = [];
+    private IEnumerable<CockpitRecentJob> SelectedJobs = [];
+    private CockpitJobProcess? SelectedJobProcess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistSnapshot);
+
+        if (ApplicationState.TryTakeFromJson<CockpitSnapshot>(SnapshotKey, out var snapshot) && snapshot is not null)
+        {
+            Metrics = snapshot.Metrics;
+            DailySeries = snapshot.DailySeries;
+            PipelineSteps = snapshot.PipelineSteps;
+            RecentJobs = snapshot.RecentJobs;
+            IsLoading = false;
+            return;
+        }
+
+        await LoadSummaryAsync();
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            LoadError = null;
+
+            Metrics = await CockpitData.GetDailyMetricsAsync();
+            DailySeries = await CockpitData.GetDailySeriesAsync();
+            PipelineSteps = await CockpitData.GetTodayPipelineStepsAsync();
+            RecentJobs = await CockpitData.GetRecentJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            LoadError = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task OnRecentJobRowClick(GridRowClickEventArgs args)
+    {
+        if (args.Item is CockpitRecentJob selected)
+        {
+            await LoadJobProcessAsync(selected);
+        }
+    }
+
+    private async Task LoadJobProcessAsync(CockpitRecentJob selected)
+    {
+        SelectedJobs = [selected];
+        SelectedJobProcess = null;
+
+        try
+        {
+            IsDetailLoading = true;
+            SelectedJobProcess = await CockpitData.GetJobProcessAsync(selected.JobId);
+        }
+        finally
+        {
+            IsDetailLoading = false;
+        }
+    }
+
+    private Task PersistSnapshot()
+    {
+        ApplicationState.PersistAsJson(SnapshotKey, new CockpitSnapshot
+        {
+            Metrics = Metrics,
+            DailySeries = DailySeries,
+            PipelineSteps = PipelineSteps,
+            RecentJobs = RecentJobs,
+        });
+        return Task.CompletedTask;
+    }
+
+    private RenderFragment MetricCard(string title, long actual, int target, bool primary) => @<div class="cockpit-kpi-card @(primary ? "cockpit-kpi-primary" : "")">
+        <div class="cockpit-kpi-title">@title</div>
+        <div class="cockpit-kpi-value">@actual <span>/ @target</span></div>
+        <div class="cockpit-progress" aria-hidden="true">
+            <div style="width:@ProgressWidth(actual, target)"></div>
+        </div>
+    </div>;
+
+    private RenderFragment EvidenceBlock(string title, string? body) => @<div class="cockpit-evidence-block">
+        <h4>@title</h4>
+        <p>@(string.IsNullOrWhiteSpace(body) ? L["Cockpit.Evidence.None"] : body)</p>
+    </div>;
+
+    private static string ProgressWidth(long actual, int target)
+    {
+        if (target <= 0)
+        {
+            return "0%";
+        }
+
+        return $"{Math.Clamp((double)actual / target, 0, 1) * 100:0}%";
+    }
+
+    private string StepLabel(CockpitPipelineStep step) =>
+        CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
+            ? step.LabelZh
+            : step.LabelEn;
+
+    private static string StepClass(CockpitPipelineStep step) => step.StepStatus switch
+    {
+        "complete" => "cockpit-step-complete",
+        "in_progress" => "cockpit-step-progress",
+        _ => "cockpit-step-empty",
+    };
+
+    private static string StatusClass(string status) => status switch
+    {
+        "recommended" or "recommended_edge" => "cockpit-pill-good",
+        "on_hold" or "pending_analysis" or "pending_visa" or "visa_uncertain" => "cockpit-pill-watch",
+        "applied" => "cockpit-pill-done",
+        _ => "cockpit-pill-neutral",
+    };
+
+    public void Dispose() => _persistingSubscription?.Dispose();
+
+    private sealed class CockpitSnapshot
+    {
+        public CockpitDailyMetrics? Metrics { get; set; }
+        public List<CockpitDailySeries> DailySeries { get; set; } = [];
+        public List<CockpitPipelineStep> PipelineSteps { get; set; } = [];
+        public List<CockpitRecentJob> RecentJobs { get; set; } = [];
+    }
+}
