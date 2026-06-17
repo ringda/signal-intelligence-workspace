@@ -77,6 +77,35 @@ Run the parser tests:
 dotnet test
 ```
 
+### Optional AI-backed cockpit parsing
+
+The `/cockpit` Grid command box works without an AI key by falling back to the
+local deterministic parser. To try LLM-backed semantic parsing, configure a
+server-side provider and key.
+
+Gemini:
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "Gemini" --project src/SignalIntelligenceWorkspace
+dotnet user-secrets set "Gemini:ApiKey" "<your-gemini-api-key>" --project src/SignalIntelligenceWorkspace
+dotnet user-secrets set "Gemini:Model" "gemini-2.5-flash" --project src/SignalIntelligenceWorkspace
+```
+
+OpenAI:
+
+```powershell
+dotnet user-secrets set "Ai:Provider" "OpenAI" --project src/SignalIntelligenceWorkspace
+dotnet user-secrets set "OpenAI:ApiKey" "<your-api-key>" --project src/SignalIntelligenceWorkspace
+dotnet user-secrets set "OpenAI:Model" "gpt-5.5" --project src/SignalIntelligenceWorkspace
+```
+
+You can also use environment variables: `AI_PROVIDER`, `GEMINI_API_KEY`,
+`GEMINI_MODEL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`. If no provider is set, the
+app picks Gemini when a Gemini key exists, then OpenAI when an OpenAI key exists.
+The app sends only the user's Grid prompt and the allowed command schema to the
+configured provider, then validates the structured response before changing the
+local Grid filter state.
+
 ## What this is — and is not
 
 This is a small prototype built to **test an AI-assisted proposal / market-intelligence workflow**: how AI output should be bounded, reviewed, and recorded before it becomes reusable team material.
@@ -85,7 +114,7 @@ It is **not** a production AI tool, not an internal system of any company, and n
 
 ## Roadmap
 
-- Real LLM behind the same command validator
+- More Grid command types behind the same bounded LLM response schema
 - Second scenario pack (sales pipeline / revenue operations world)
 - Persistence across sessions
 - Multi-role review simulation (coordinator / analyst / reviewer)

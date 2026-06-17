@@ -1,9 +1,13 @@
+@page "/"
+@page "/home"
 @page "/cockpit"
 @implements IDisposable
 @inject CockpitDataService CockpitData
+@inject CockpitSemanticGridAiParser SemanticGridAiParser
 @inject IStringLocalizer<Ui> L
 @inject PersistentComponentState ApplicationState
 @using System.Globalization
+@using System.Text
 
 <PageTitle>@L["Nav.Cockpit"] | @L["App.Name"]</PageTitle>
 
@@ -99,10 +103,42 @@
             </div>
 
             <div class="cockpit-grid-panel">
-                <div class="cockpit-section-head">
-                    <h3>@L["Cockpit.RecentJobs"]</h3>
+                <div class="cockpit-grid-toolbar">
+                    <div class="cockpit-section-head">
+                        <h3>@L["Cockpit.RecentJobs"]</h3>
+                        <span class="cockpit-grid-count">@L["Cockpit.Semantic.Count", VisibleRecentJobs.Count, RecentJobs.Count]</span>
+                    </div>
+                    <div class="cockpit-semantic-row" aria-label="@L["Cockpit.Semantic.Label"]">
+                        <label class="sr-only" for="cockpit-semantic-grid">@L["Cockpit.Semantic.Label"]</label>
+                        <input id="cockpit-semantic-grid"
+                               class="cockpit-semantic-input"
+                               @bind="SemanticGridPrompt"
+                               @bind:event="oninput"
+                               @onkeydown="OnSemanticGridKeyDown"
+                               disabled="@IsSemanticGridApplying"
+                               placeholder="@L["Cockpit.Semantic.Placeholder"]" />
+                        <TelerikButton OnClick="@ApplySemanticGridCommandAsync"
+                                       Enabled="@(!IsSemanticGridApplying)">@L["Cockpit.Semantic.Apply"]</TelerikButton>
+                        <TelerikButton OnClick="@(() => ClearSemanticGridCommand())"
+                                       Enabled="@(HasSemanticGridControl && !IsSemanticGridApplying)"
+                                       FillMode="@ThemeConstants.Button.FillMode.Flat">@L["Action.Clear"]</TelerikButton>
+                    </div>
+                    <div class="cockpit-semantic-suggestions">
+                        @foreach (var suggestion in SemanticGridSuggestions)
+                        {
+                            <button type="button"
+                                    class="cockpit-semantic-chip"
+                                    @onclick="@(() => ApplySemanticGridSuggestionAsync(suggestion))">
+                                @suggestion
+                            </button>
+                        }
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(SemanticGridMessage))
+                    {
+                        <div class="cockpit-semantic-status @SemanticGridMessageClass">@SemanticGridMessage</div>
+                    }
                 </div>
-                <TelerikGrid Data="@RecentJobs"
+                <TelerikGrid Data="@VisibleRecentJobs"
                              Height="420px"
                              Sortable="true"
                              FilterMode="@GridFilterMode.FilterMenu"
@@ -110,18 +146,25 @@
                              SelectedItems="@SelectedJobs"
                              OnRowClick="@OnRecentJobRowClick">
                     <GridColumns>
-                        <GridColumn Field="@nameof(CockpitRecentJob.Company)" Title="@(L["Cockpit.Col.Company"])" Width="150px" />
-                        <GridColumn Field="@nameof(CockpitRecentJob.Title)" Title="@(L["Cockpit.Col.Title"])" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.Company)" Title="@(L["Cockpit.Col.Company"])" Width="170px" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.Title)" Title="@(L["Cockpit.Col.Title"])" Width="280px" />
                         <GridColumn Field="@nameof(CockpitRecentJob.StatusCode)" Title="@(L["Cockpit.Col.Status"])" Width="140px">
                             <Template>
                                 @{
                                     var job = (CockpitRecentJob)context;
                                 }
-                                <span class="cockpit-pill @StatusClass(job.StatusCode)">@job.StatusCode</span>
+                                <span class="cockpit-pill @StatusClass(job.StatusCode)">@StatusDisplay(job.StatusCode)</span>
                             </Template>
                         </GridColumn>
-                        <GridColumn Field="@nameof(CockpitRecentJob.MatchLevel)" Title="@(L["Cockpit.Col.Match"])" Width="150px" />
-                        <GridColumn Field="@nameof(CockpitRecentJob.JudgementSummary)" Title="@(L["Cockpit.Col.Judgement"])" />
+                        <GridColumn Field="@nameof(CockpitRecentJob.MatchLevel)" Title="@(L["Cockpit.Col.Match"])" Width="150px">
+                            <Template>
+                                @{
+                                    var job = (CockpitRecentJob)context;
+                                }
+                                @MatchDisplay(job.MatchLevel)
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(CockpitRecentJob.JudgementSummary)" Title="@(L["Cockpit.Col.Judgement"])" Width="420px" />
                     </GridColumns>
                 </TelerikGrid>
             </div>
@@ -145,10 +188,10 @@
                         <span>@SelectedJobProcess.Title</span>
                     </div>
                     <div class="cockpit-detail-meta">
-                        <span class="cockpit-pill @StatusClass(SelectedJobProcess.StatusCode)">@SelectedJobProcess.StatusCode</span>
+                        <span class="cockpit-pill @StatusClass(SelectedJobProcess.StatusCode)">@StatusDisplay(SelectedJobProcess.StatusCode)</span>
                         @if (!string.IsNullOrWhiteSpace(SelectedJobProcess.MatchLevel))
                         {
-                            <span>@SelectedJobProcess.MatchLevel</span>
+                            <span>@MatchDisplay(SelectedJobProcess.MatchLevel)</span>
                         }
                         @if (SelectedJobProcess.WinScore is not null)
                         {
@@ -171,6 +214,55 @@
                     }
                 }
             </aside>
+
+            <aside class="cockpit-assistant-panel" aria-label="@L["Cockpit.Assistant"]">
+                <div class="cockpit-assistant-header">
+                    <div class="cockpit-assistant-title">
+                        <TelerikSvgIcon Icon="@SvgIcon.Sparkles" />
+                        <h3>@L["Cockpit.Assistant"]</h3>
+                    </div>
+                    <TelerikButton OnClick="@ClearAssistantChat"
+                                   FillMode="@ThemeConstants.Button.FillMode.Flat"
+                                   Enabled="@(!IsAssistantResponding)">
+                        @L["Action.Clear"]
+                    </TelerikButton>
+                </div>
+                <div class="cockpit-assistant-context">@AssistantContextSummary</div>
+                <div class="cockpit-assistant-suggestions">
+                    @foreach (var suggestion in AssistantSuggestions)
+                    {
+                        <button type="button"
+                                class="cockpit-assistant-chip"
+                                disabled="@IsAssistantResponding"
+                                @onclick="@(() => ApplyAssistantSuggestionAsync(suggestion))">
+                            @suggestion
+                        </button>
+                    }
+                </div>
+                @if (!SemanticGridAiParser.IsConfigured)
+                {
+                    <div class="cockpit-assistant-status cockpit-assistant-status-error">
+                        @L["Cockpit.Assistant.NotConfigured"]
+                    </div>
+                }
+                else if (IsAssistantResponding)
+                {
+                    <div class="cockpit-assistant-status">
+                        @L["Cockpit.Assistant.Thinking", SemanticGridAiParser.ProviderName]
+                    </div>
+                }
+                <div class="cockpit-assistant-chat">
+                    <TelerikChat TItem="AssistantChatMessage"
+                                 @ref="@AssistantChatRef"
+                                 Data="@AssistantMessages"
+                                 AuthorId="@AssistantUserId"
+                                 EnableSpeechToText="true"
+                                 OnSendMessage="@OnAssistantSendMessageAsync"
+                                 Height="520px"
+                                 Width="100%">
+                    </TelerikChat>
+                </div>
+            </aside>
         </section>
 
         <div class="cockpit-meta">@L["Cockpit.Meta"]</div>
@@ -189,12 +281,106 @@
     private List<CockpitDailySeries> DailySeries = [];
     private List<CockpitPipelineStep> PipelineSteps = [];
     private List<CockpitRecentJob> RecentJobs = [];
+    private string SemanticGridPrompt = string.Empty;
+    private string? SemanticGridMessage;
+    private bool IsSemanticGridApplying;
+    private bool SemanticGridNoMatch;
+    private SemanticGridFilter ActiveSemanticGridFilter = SemanticGridFilter.All;
+    private SemanticGridDateWindow ActiveSemanticGridDateWindow = SemanticGridDateWindow.None;
+    private SemanticGridSort ActiveSemanticGridSort = SemanticGridSort.None;
+    private string? ActiveSemanticGridCompany;
+    private string? ActiveSemanticGridContentQuery;
+    private IReadOnlyList<string> ActiveSemanticGridContentTerms = [];
     private IEnumerable<CockpitRecentJob> SelectedJobs = [];
     private CockpitJobProcess? SelectedJobProcess;
+    private TelerikChat<AssistantChatMessage>? AssistantChatRef { get; set; }
+    private List<AssistantChatMessage> AssistantMessages = [];
+    private bool IsAssistantResponding;
+
+    private const string AssistantUserId = "cockpit-user";
+    private const string AssistantBotId = "cockpit-assistant";
+
+    private IReadOnlyList<string> SemanticGridSuggestions =>
+    [
+        L["Cockpit.Semantic.Suggestion.Strong"].Value,
+        L["Cockpit.Semantic.Suggestion.Possible"].Value,
+        L["Cockpit.Semantic.Suggestion.Review"].Value,
+        L["Cockpit.Semantic.Suggestion.Sales"].Value,
+        L["Cockpit.Semantic.Suggestion.RecentApplied"].Value,
+        L["Cockpit.Semantic.Suggestion.Company"].Value,
+    ];
+
+    private IReadOnlyList<string> AssistantSuggestions =>
+    [
+        L["Cockpit.Assistant.Suggestion.SelectedSummary"].Value,
+        L["Cockpit.Assistant.Suggestion.NextAction"].Value,
+        L["Cockpit.Assistant.Suggestion.Risks"].Value,
+        L["Cockpit.Assistant.Suggestion.Compare"].Value,
+    ];
+
+    private IReadOnlyList<CockpitRecentJob> VisibleRecentJobs
+    {
+        get
+        {
+            IEnumerable<CockpitRecentJob> jobs = ActiveSemanticGridFilter switch
+            {
+                SemanticGridFilter.StrongFit => RecentJobs.Where(IsStrongFit),
+                SemanticGridFilter.PossibleFit => RecentJobs.Where(IsPossibleFit),
+                SemanticGridFilter.NeedsReview => RecentJobs.Where(IsNeedsReview),
+                SemanticGridFilter.Applied => RecentJobs.Where(job => IsStatus(job, "applied")),
+                _ => RecentJobs,
+            };
+
+            if (!string.IsNullOrWhiteSpace(ActiveSemanticGridCompany))
+            {
+                jobs = jobs.Where(job =>
+                    string.Equals(job.Company, ActiveSemanticGridCompany, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (HasSemanticGridContent)
+            {
+                jobs = jobs.Where(MatchesSemanticContent);
+            }
+
+            jobs = ActiveSemanticGridDateWindow switch
+            {
+                SemanticGridDateWindow.LastThreeDays => jobs.Where(IsInLastThreeCalendarDays),
+                _ => jobs,
+            };
+
+            jobs = ActiveSemanticGridSort switch
+            {
+                SemanticGridSort.Company => jobs.OrderBy(job => job.Company).ThenByDescending(job => job.CreatedAt),
+                SemanticGridSort.FitScore => jobs.OrderByDescending(SemanticScore).ThenBy(job => job.Company),
+                SemanticGridSort.Newest => jobs.OrderByDescending(job => job.CreatedAt),
+                _ => jobs,
+            };
+
+            return jobs.ToList();
+        }
+    }
+
+    private bool HasSemanticGridControl =>
+        ActiveSemanticGridFilter is not SemanticGridFilter.All ||
+        ActiveSemanticGridDateWindow is not SemanticGridDateWindow.None ||
+        ActiveSemanticGridSort is not SemanticGridSort.None ||
+        !string.IsNullOrWhiteSpace(ActiveSemanticGridCompany) ||
+        HasSemanticGridContent;
+
+    private bool HasSemanticGridContent =>
+        !string.IsNullOrWhiteSpace(ActiveSemanticGridContentQuery) ||
+        ActiveSemanticGridContentTerms.Count > 0;
+
+    private string SemanticGridMessageClass =>
+        SemanticGridNoMatch ? "cockpit-semantic-status-error" : string.Empty;
+
+    private string AssistantContextSummary =>
+        L["Cockpit.Assistant.Context", SemanticGridSummary, VisibleRecentJobs.Count, RecentJobs.Count].Value;
 
     protected override async Task OnInitializedAsync()
     {
         _persistingSubscription = ApplicationState.RegisterOnPersisting(PersistSnapshot);
+        EnsureAssistantWelcomeMessage();
 
         if (ApplicationState.TryTakeFromJson<CockpitSnapshot>(SnapshotKey, out var snapshot) && snapshot is not null)
         {
@@ -207,6 +393,16 @@
         }
 
         await LoadSummaryAsync();
+    }
+
+    private void EnsureAssistantWelcomeMessage()
+    {
+        if (AssistantMessages.Count > 0)
+        {
+            return;
+        }
+
+        AddAssistantMessage(AssistantBotId, L["Cockpit.Assistant.Name"].Value, L["Cockpit.Assistant.Welcome"].Value);
     }
 
     private async Task LoadSummaryAsync()
@@ -267,6 +463,451 @@
         return Task.CompletedTask;
     }
 
+    private async Task ApplySemanticGridSuggestionAsync(string suggestion)
+    {
+        SemanticGridPrompt = suggestion;
+        await ApplySemanticGridCommandAsync();
+    }
+
+    private async Task ApplySemanticGridCommandAsync()
+    {
+        var command = SemanticGridPrompt.Trim();
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            SemanticGridNoMatch = true;
+            SemanticGridMessage = L["Cockpit.Semantic.Empty"];
+            return;
+        }
+
+        IsSemanticGridApplying = true;
+        SemanticGridNoMatch = false;
+        SemanticGridMessage = SemanticGridAiParser.IsConfigured
+            ? L["Cockpit.Semantic.ParsingAi", SemanticGridAiParser.ProviderName].Value
+            : null;
+
+        try
+        {
+            var parseAttempt = await ParseSemanticGridCommandAsync(command);
+            ApplySemanticGridParseResult(parseAttempt);
+        }
+        finally
+        {
+            IsSemanticGridApplying = false;
+        }
+    }
+
+    private void ApplySemanticGridParseResult(SemanticGridParseAttempt parseAttempt)
+    {
+        var result = parseAttempt.Result;
+        if (result.Clear)
+        {
+            ClearSemanticGridCommand(L["Cockpit.Semantic.Cleared"]);
+            return;
+        }
+
+        if (!result.Matched)
+        {
+            SemanticGridNoMatch = true;
+            SemanticGridMessage = parseAttempt.Source is SemanticGridParseSource.Ai &&
+                                  !string.IsNullOrWhiteSpace(parseAttempt.AiReason)
+                ? L["Cockpit.Semantic.NoMatchAi", parseAttempt.ProviderName, parseAttempt.AiReason ?? string.Empty].Value
+                : L["Cockpit.Semantic.NoMatch"];
+            return;
+        }
+
+        if (result.Filter is not null)
+        {
+            ActiveSemanticGridFilter = result.Filter.Value;
+        }
+
+        if (result.DateWindow is not null)
+        {
+            ActiveSemanticGridDateWindow = result.DateWindow.Value;
+        }
+
+        if (result.Sort is not null)
+        {
+            ActiveSemanticGridSort = result.Sort.Value;
+        }
+
+        if (result.Company is not null)
+        {
+            ActiveSemanticGridCompany = result.Company;
+        }
+
+        if (result.ContentQuery is not null || result.ContentTerms.Count > 0)
+        {
+            ActiveSemanticGridContentQuery = result.ContentQuery;
+            ActiveSemanticGridContentTerms = result.ContentTerms;
+        }
+
+        SemanticGridNoMatch = false;
+        SemanticGridMessage = parseAttempt.Source switch
+        {
+            SemanticGridParseSource.Ai => L["Cockpit.Semantic.AppliedAi", parseAttempt.ProviderName, SemanticGridSummary, VisibleRecentJobs.Count].Value,
+            SemanticGridParseSource.LocalRules when !string.IsNullOrWhiteSpace(parseAttempt.AiWarning) =>
+                L["Cockpit.Semantic.AiFailedRules", parseAttempt.ProviderName, parseAttempt.AiWarning ?? string.Empty, SemanticGridSummary, VisibleRecentJobs.Count].Value,
+            _ => L["Cockpit.Semantic.Applied", SemanticGridSummary, VisibleRecentJobs.Count].Value,
+        };
+        EnsureSelectedJobIsVisible();
+    }
+
+    private void ClearSemanticGridCommand() => ClearSemanticGridCommand(null);
+
+    private void ClearSemanticGridCommand(string? message)
+    {
+        SemanticGridPrompt = string.Empty;
+        ActiveSemanticGridFilter = SemanticGridFilter.All;
+        ActiveSemanticGridDateWindow = SemanticGridDateWindow.None;
+        ActiveSemanticGridSort = SemanticGridSort.None;
+        ActiveSemanticGridCompany = null;
+        ActiveSemanticGridContentQuery = null;
+        ActiveSemanticGridContentTerms = [];
+        SemanticGridNoMatch = false;
+        SemanticGridMessage = message;
+        EnsureSelectedJobIsVisible();
+    }
+
+    private async Task OnSemanticGridKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key is "Enter")
+        {
+            await ApplySemanticGridCommandAsync();
+        }
+    }
+
+    private async Task OnAssistantSendMessageAsync(ChatSendMessageEventArgs args)
+    {
+        await RunAssistantPromptAsync(args.Message);
+    }
+
+    private async Task ApplyAssistantSuggestionAsync(string suggestion)
+    {
+        await RunAssistantPromptAsync(suggestion);
+    }
+
+    private async Task RunAssistantPromptAsync(string? prompt)
+    {
+        var message = prompt?.Trim();
+        if (string.IsNullOrWhiteSpace(message) || IsAssistantResponding)
+        {
+            return;
+        }
+
+        AddAssistantMessage(AssistantUserId, L["Cockpit.Assistant.User"].Value, message);
+
+        if (!SemanticGridAiParser.IsConfigured)
+        {
+            AddAssistantMessage(AssistantBotId, L["Cockpit.Assistant.Name"].Value, L["Cockpit.Assistant.NotConfigured"].Value);
+            return;
+        }
+
+        try
+        {
+            IsAssistantResponding = true;
+            await InvokeAsync(StateHasChanged);
+
+            var result = await SemanticGridAiParser.AskAssistantAsync(message, BuildAssistantContext());
+            var response = result.Message ??
+                           L["Cockpit.Assistant.Error", result.Error ?? L["Cockpit.Semantic.AiUnknownError"].Value].Value;
+            AddAssistantMessage(AssistantBotId, L["Cockpit.Assistant.Name"].Value, response);
+        }
+        finally
+        {
+            IsAssistantResponding = false;
+            AssistantChatRef?.Refresh();
+        }
+    }
+
+    private void ClearAssistantChat()
+    {
+        AssistantMessages = [];
+        EnsureAssistantWelcomeMessage();
+        AssistantChatRef?.Refresh();
+    }
+
+    private void AddAssistantMessage(string authorId, string authorName, string text)
+    {
+        AssistantMessages.Add(new AssistantChatMessage
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            AuthorId = authorId,
+            AuthorName = authorName,
+            Text = text,
+            Timestamp = DateTime.Now,
+        });
+        AssistantChatRef?.Refresh();
+    }
+
+    private string BuildAssistantContext()
+    {
+        var visibleJobs = VisibleRecentJobs;
+        var selectedJob = SelectedJobs.FirstOrDefault();
+        var builder = new StringBuilder();
+
+        builder.AppendLine($"Today: {(Metrics?.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))}");
+        builder.AppendLine($"Current grid scope: {SemanticGridSummary}; visible jobs: {visibleJobs.Count} of {RecentJobs.Count}.");
+
+        if (Metrics is not null)
+        {
+            builder.AppendLine($"Daily metrics: applications today {Metrics.ApplicationsAppliedToday}/{Metrics.ApplicationsAppliedTarget}; applications this week {Metrics.ApplicationsAppliedWeek}/{Metrics.ApplicationsAppliedWeekTarget}; JDs scanned 24h {Metrics.JdScanned24h}/{Metrics.JdScannedTarget}; correct-pool 24h {Metrics.JdCorrectPool24h}.");
+        }
+
+        if (selectedJob is not null)
+        {
+            builder.AppendLine("Selected grid row:");
+            AppendRecentJobContext(builder, selectedJob);
+        }
+
+        if (SelectedJobProcess is not null)
+        {
+            builder.AppendLine("Selected application notes:");
+            AppendContextLine(builder, "Company", SelectedJobProcess.Company);
+            AppendContextLine(builder, "Title", SelectedJobProcess.Title);
+            AppendContextLine(builder, "Status", StatusDisplay(SelectedJobProcess.StatusCode));
+            AppendContextLine(builder, "Match", MatchDisplay(SelectedJobProcess.MatchLevel));
+            AppendContextLine(builder, "Win score", SelectedJobProcess.WinScore?.ToString(CultureInfo.InvariantCulture));
+            AppendContextLine(builder, "Role summary", SelectedJobProcess.PjdRoleSummary);
+            AppendContextLine(builder, "Hiring focus", SelectedJobProcess.PjdHiringFocus);
+            AppendContextLine(builder, "Fit notes", SelectedJobProcess.WinReasoning);
+            AppendContextLine(builder, "Next step", SelectedJobProcess.DispositionNote);
+            AppendContextLine(builder, "Work authorization", SelectedJobProcess.VisaNote);
+        }
+
+        builder.AppendLine("Visible jobs:");
+        foreach (var job in visibleJobs.Take(8))
+        {
+            AppendRecentJobContext(builder, job);
+        }
+
+        if (visibleJobs.Count > 8)
+        {
+            builder.AppendLine($"Additional visible jobs omitted: {visibleJobs.Count - 8}.");
+        }
+
+        return builder.ToString();
+    }
+
+    private void AppendRecentJobContext(StringBuilder builder, CockpitRecentJob job)
+    {
+        builder.Append("- ");
+        builder.Append(job.Company);
+        builder.Append(" | ");
+        builder.Append(job.Title);
+        builder.Append(" | status ");
+        builder.Append(StatusDisplay(job.StatusCode));
+        builder.Append(" | match ");
+        builder.Append(MatchDisplay(job.MatchLevel));
+
+        if (job.WinScore is not null || job.MatchScore is not null)
+        {
+            builder.Append(" | score ");
+            builder.Append((job.WinScore ?? job.MatchScore)?.ToString(CultureInfo.InvariantCulture));
+        }
+
+        builder.Append(" | created ");
+        builder.Append(job.CreatedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        AppendContextLine(builder, "notes", job.JudgementSummary, inline: true);
+    }
+
+    private static void AppendContextLine(StringBuilder builder, string label, string? value, bool inline = false)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (inline)
+        {
+            builder.Append(" | ");
+            builder.Append(label);
+            builder.Append(": ");
+            builder.AppendLine(TrimContextValue(value));
+            return;
+        }
+
+        builder.Append(label);
+        builder.Append(": ");
+        builder.AppendLine(TrimContextValue(value));
+    }
+
+    private static string TrimContextValue(string value)
+    {
+        var normalized = string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return normalized.Length <= 360
+            ? normalized
+            : normalized[..360];
+    }
+
+    private async Task<SemanticGridParseAttempt> ParseSemanticGridCommandAsync(string command)
+    {
+        if (!SemanticGridAiParser.IsConfigured)
+        {
+            return SemanticGridParseAttempt.Local(ParseSemanticGridCommand(command));
+        }
+
+        var aiResult = await SemanticGridAiParser.ParseAsync(command);
+        if (aiResult.Command is not null)
+        {
+            return SemanticGridParseAttempt.Ai(
+                ConvertAiSemanticGridCommand(aiResult.Command, command),
+                aiResult.Command.Reason,
+                SemanticGridAiParser.ProviderName);
+        }
+
+        return SemanticGridParseAttempt.Local(
+            ParseSemanticGridCommand(command),
+            aiResult.Error ?? L["Cockpit.Semantic.AiUnknownError"].Value,
+            SemanticGridAiParser.ProviderName);
+    }
+
+    private SemanticGridParseResult ConvertAiSemanticGridCommand(
+        CockpitSemanticGridAiCommand command,
+        string rawCommand)
+    {
+        if (command.Clear)
+        {
+            return SemanticGridParseResult.ForClear();
+        }
+
+        if (!command.Matched)
+        {
+            return SemanticGridParseResult.NoMatch();
+        }
+
+        var filter = command.Filter switch
+        {
+            "strongFit" => SemanticGridFilter.StrongFit,
+            "possibleFit" => SemanticGridFilter.PossibleFit,
+            "needsReview" => SemanticGridFilter.NeedsReview,
+            "applied" => SemanticGridFilter.Applied,
+            _ => (SemanticGridFilter?)null,
+        };
+
+        var dateWindow = command.DateWindow switch
+        {
+            "lastThreeDays" => SemanticGridDateWindow.LastThreeDays,
+            _ => (SemanticGridDateWindow?)null,
+        };
+
+        var sort = command.Sort switch
+        {
+            "newest" => SemanticGridSort.Newest,
+            "company" => SemanticGridSort.Company,
+            "fitScore" => SemanticGridSort.FitScore,
+            _ => (SemanticGridSort?)null,
+        };
+
+        var company = FindCompanyFilter(rawCommand, NormalizeCommand(rawCommand));
+        var contentQuery = SanitizeSemanticContentQuery(command.ContentQuery);
+        var contentTerms = BuildSemanticContentTerms(contentQuery, command.ContentTerms);
+
+        return filter is null &&
+               dateWindow is null &&
+               sort is null &&
+               company is null &&
+               contentQuery is null &&
+               contentTerms.Count == 0
+            ? SemanticGridParseResult.NoMatch()
+            : SemanticGridParseResult.Match(filter, dateWindow, sort, company, contentQuery, contentTerms);
+    }
+
+    private void EnsureSelectedJobIsVisible()
+    {
+        var selected = SelectedJobs.FirstOrDefault();
+        if (selected is null || VisibleRecentJobs.Any(job => job.JobId == selected.JobId))
+        {
+            return;
+        }
+
+        SelectedJobs = [];
+        SelectedJobProcess = null;
+    }
+
+    private SemanticGridParseResult ParseSemanticGridCommand(string command)
+    {
+        var normalized = NormalizeCommand(command);
+        if (ContainsAny(normalized, "clear", "reset", "showall", "全部", "清除", "重置", "還原"))
+        {
+            return SemanticGridParseResult.ForClear();
+        }
+
+        SemanticGridFilter? filter = null;
+        SemanticGridDateWindow? dateWindow = null;
+        SemanticGridSort? sort = null;
+        var company = FindCompanyFilter(command, normalized);
+        var contentQuery = TryCreateLocalContentQuery(command, normalized);
+
+        if (ContainsAny(normalized, "高度適合", "優先", "strong", "best", "recommended"))
+        {
+            filter = SemanticGridFilter.StrongFit;
+        }
+        else if (ContainsAny(normalized, "可以考慮", "可考慮", "possible", "medium", "edge"))
+        {
+            filter = SemanticGridFilter.PossibleFit;
+        }
+        else if (ContainsAny(normalized, "待評估", "授權", "暫緩", "review", "visa", "pending", "hold", "unclear"))
+        {
+            filter = SemanticGridFilter.NeedsReview;
+        }
+        else if (ContainsAny(normalized, "已申請", "已送出", "送出申請", "已投", "投遞", "applied", "sent"))
+        {
+            filter = SemanticGridFilter.Applied;
+        }
+
+        if (ContainsAny(
+                normalized,
+                "最近三天",
+                "近三天",
+                "最近3天",
+                "近3天",
+                "三天內",
+                "3天內",
+                "最近三日",
+                "近三日",
+                "last3days",
+                "past3days",
+                "lastthreedays",
+                "pastthreedays"))
+        {
+            dateWindow = SemanticGridDateWindow.LastThreeDays;
+        }
+
+        if (ContainsAny(normalized, "依公司", "公司排序", "sortbycompany") ||
+            (ContainsAny(normalized, "公司", "company") && ContainsAny(normalized, "排序", "sort", "order")))
+        {
+            sort = SemanticGridSort.Company;
+        }
+        else if (ContainsAny(normalized, "最新", "時間", "recent", "newest", "date"))
+        {
+            sort = SemanticGridSort.Newest;
+        }
+        else if (ContainsAny(normalized, "分數", "score") ||
+                 (ContainsAny(normalized, "排序", "sort") && ContainsAny(normalized, "適合", "fit")))
+        {
+            sort = SemanticGridSort.FitScore;
+        }
+
+        if (dateWindow is not null && sort is null)
+        {
+            sort = SemanticGridSort.Newest;
+        }
+
+        return filter is null &&
+               dateWindow is null &&
+               sort is null &&
+               company is null &&
+               contentQuery is null
+            ? SemanticGridParseResult.NoMatch()
+            : SemanticGridParseResult.Match(
+                filter,
+                dateWindow,
+                sort,
+                company,
+                contentQuery?.Query,
+                contentQuery?.Terms ?? []);
+    }
+
     private RenderFragment MetricCard(string title, long actual, int target, bool primary) => @<div class="cockpit-kpi-card @(primary ? "cockpit-kpi-primary" : "")">
         <div class="cockpit-kpi-title">@title</div>
         <div class="cockpit-kpi-value">@actual <span>/ @target</span></div>
@@ -290,10 +931,370 @@
         return $"{Math.Clamp((double)actual / target, 0, 1) * 100:0}%";
     }
 
+    private string SemanticGridSummary
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (ActiveSemanticGridFilter is not SemanticGridFilter.All)
+            {
+                parts.Add(ActiveSemanticGridFilterLabel);
+            }
+
+            if (!string.IsNullOrWhiteSpace(ActiveSemanticGridCompany))
+            {
+                parts.Add(L["Cockpit.Semantic.Filter.Company", ActiveSemanticGridCompany].Value);
+            }
+
+            if (HasSemanticGridContent)
+            {
+                parts.Add(L["Cockpit.Semantic.Filter.Content", ActiveSemanticGridContentLabel].Value);
+            }
+
+            if (ActiveSemanticGridDateWindow is not SemanticGridDateWindow.None)
+            {
+                parts.Add(ActiveSemanticGridDateWindowLabel);
+            }
+
+            if (ActiveSemanticGridSort is not SemanticGridSort.None)
+            {
+                parts.Add(ActiveSemanticGridSortLabel);
+            }
+
+            return parts.Count == 0
+                ? L["Cockpit.Semantic.All"].Value
+                : string.Join(" + ", parts);
+        }
+    }
+
+    private string ActiveSemanticGridContentLabel
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(ActiveSemanticGridContentQuery))
+            {
+                return ActiveSemanticGridContentQuery;
+            }
+
+            return string.Join(", ", ActiveSemanticGridContentTerms.Take(3));
+        }
+    }
+
+    private string ActiveSemanticGridFilterLabel => ActiveSemanticGridFilter switch
+    {
+        SemanticGridFilter.StrongFit => L["Cockpit.Semantic.Filter.Strong"].Value,
+        SemanticGridFilter.PossibleFit => L["Cockpit.Semantic.Filter.Possible"].Value,
+        SemanticGridFilter.NeedsReview => L["Cockpit.Semantic.Filter.Review"].Value,
+        SemanticGridFilter.Applied => L["Cockpit.Semantic.Filter.Applied"].Value,
+        _ => L["Cockpit.Semantic.All"].Value,
+    };
+
+    private string ActiveSemanticGridDateWindowLabel => ActiveSemanticGridDateWindow switch
+    {
+        SemanticGridDateWindow.LastThreeDays => L["Cockpit.Semantic.Filter.LastThreeDays"].Value,
+        _ => string.Empty,
+    };
+
+    private string ActiveSemanticGridSortLabel => ActiveSemanticGridSort switch
+    {
+        SemanticGridSort.Company => L["Cockpit.Semantic.Sort.Company"].Value,
+        SemanticGridSort.FitScore => L["Cockpit.Semantic.Sort.Score"].Value,
+        SemanticGridSort.Newest => L["Cockpit.Semantic.Sort.Newest"].Value,
+        _ => string.Empty,
+    };
+
     private string StepLabel(CockpitPipelineStep step) =>
         CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
             ? step.LabelZh
             : step.LabelEn;
+
+    private string StatusDisplay(string status) => status switch
+    {
+        "recommended" => L["Cockpit.Status.Recommended"].Value,
+        "recommended_edge" => L["Cockpit.Status.RecommendedEdge"].Value,
+        "on_hold" => L["Cockpit.Status.OnHold"].Value,
+        "pending_analysis" => L["Cockpit.Status.PendingAnalysis"].Value,
+        "pending_visa" => L["Cockpit.Status.PendingVisa"].Value,
+        "visa_uncertain" => L["Cockpit.Status.VisaUncertain"].Value,
+        "applied" => L["Cockpit.Status.Applied"].Value,
+        _ => HumanizeCode(status),
+    };
+
+    private string MatchDisplay(string? matchLevel)
+    {
+        if (string.IsNullOrWhiteSpace(matchLevel))
+        {
+            return string.Empty;
+        }
+
+        return matchLevel.Trim().ToLowerInvariant() switch
+        {
+            "high" or "strong" => L["Cockpit.Match.High"].Value,
+            "medium" or "moderate" or "edge" => L["Cockpit.Match.Medium"].Value,
+            "low" or "weak" => L["Cockpit.Match.Low"].Value,
+            _ => HumanizeCode(matchLevel),
+        };
+    }
+
+    private static string HumanizeCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Replace('_', ' ').Replace('-', ' ').Trim();
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(normalized);
+    }
+
+    private static bool IsStrongFit(CockpitRecentJob job) =>
+        MatchLevelIs(job, "high", "strong") || IsStatus(job, "recommended");
+
+    private static bool IsPossibleFit(CockpitRecentJob job) =>
+        MatchLevelIs(job, "medium", "moderate", "edge") || IsStatus(job, "recommended_edge");
+
+    private static bool IsNeedsReview(CockpitRecentJob job) =>
+        IsStatus(job, "on_hold", "pending_analysis", "pending_visa", "visa_uncertain");
+
+    private bool IsInLastThreeCalendarDays(CockpitRecentJob job)
+    {
+        var today = Metrics?.LocalToday ?? DateOnly.FromDateTime(DateTime.Today);
+        var start = today.AddDays(-2);
+        var jobDate = DateOnly.FromDateTime(job.CreatedAt.Date);
+
+        return jobDate >= start && jobDate <= today;
+    }
+
+    private static int SemanticScore(CockpitRecentJob job) =>
+        job.MatchScore ?? job.WinScore ?? -1;
+
+    private static bool MatchLevelIs(CockpitRecentJob job, params string[] values) =>
+        values.Any(value => string.Equals(job.MatchLevel, value, StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsStatus(CockpitRecentJob job, params string[] values) =>
+        values.Any(value => string.Equals(job.StatusCode, value, StringComparison.OrdinalIgnoreCase));
+
+    private static bool ContainsAny(string value, params string[] needles) =>
+        needles.Any(value.Contains);
+
+    private static string NormalizeCommand(string value) =>
+        value.Trim().ToLowerInvariant().Replace(" ", string.Empty);
+
+    private string? FindCompanyFilter(string command, string normalizedCommand)
+    {
+        var companies = RecentJobs
+            .Select(job => job.Company.Trim())
+            .Where(company => !string.IsNullOrWhiteSpace(company))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var company in companies)
+        {
+            var normalizedCompany = NormalizeCommand(company);
+            if (normalizedCommand.Contains(normalizedCompany))
+            {
+                return company;
+            }
+        }
+
+        var tokens = ExtractSearchTokens(command);
+        return companies.FirstOrDefault(company =>
+        {
+            var normalizedCompany = NormalizeCommand(company);
+            return tokens.Any(token => token.Length >= 3 && normalizedCompany.Contains(token));
+        });
+    }
+
+    private bool MatchesSemanticContent(CockpitRecentJob job)
+    {
+        var terms = BuildSemanticContentTerms(ActiveSemanticGridContentQuery, ActiveSemanticGridContentTerms);
+        if (terms.Count == 0)
+        {
+            return true;
+        }
+
+        var searchable = BuildSemanticJobText(job);
+        var normalizedSearchable = NormalizeSemanticContent(searchable);
+        return terms.Any(term =>
+        {
+            var normalizedTerm = NormalizeSemanticContent(term);
+            return normalizedTerm.Length > 0 && normalizedSearchable.Contains(normalizedTerm);
+        });
+    }
+
+    private string BuildSemanticJobText(CockpitRecentJob job) =>
+        string.Join(
+            ' ',
+            job.Company,
+            job.Title,
+            job.StatusCode,
+            StatusDisplay(job.StatusCode),
+            job.MatchLevel,
+            MatchDisplay(job.MatchLevel),
+            job.JudgementSummary);
+
+    private static string? SanitizeSemanticContentQuery(string? query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return null;
+        }
+
+        var value = string.Join(' ', query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return value.Length <= 80 ? value : value[..80];
+    }
+
+    private static IReadOnlyList<string> BuildSemanticContentTerms(
+        string? query,
+        IEnumerable<string> rawTerms)
+    {
+        var terms = new List<string>();
+
+        AddTerm(query);
+        foreach (var term in rawTerms)
+        {
+            AddTerm(term);
+        }
+
+        foreach (var token in ExtractSearchTokens(query ?? string.Empty))
+        {
+            AddTerm(token);
+        }
+
+        for (var index = 0; index < terms.Count && terms.Count < 24; index++)
+        {
+            foreach (var alias in ExpandSemanticContentTerm(terms[index]))
+            {
+                AddTerm(alias);
+            }
+        }
+
+        return terms.Take(24).ToList();
+
+        void AddTerm(string? rawTerm)
+        {
+            var term = SanitizeSemanticContentTerm(rawTerm);
+            if (term is null)
+            {
+                return;
+            }
+
+            if (!terms.Contains(term, StringComparer.OrdinalIgnoreCase))
+            {
+                terms.Add(term);
+            }
+        }
+    }
+
+    private static string? SanitizeSemanticContentTerm(string? rawTerm)
+    {
+        if (string.IsNullOrWhiteSpace(rawTerm))
+        {
+            return null;
+        }
+
+        var term = string.Join(' ', rawTerm.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        if (term.Length > 40)
+        {
+            term = term[..40];
+        }
+
+        var normalized = NormalizeSemanticContent(term);
+        if (normalized.Length < 2 || SemanticContentStopWords.Contains(normalized))
+        {
+            return null;
+        }
+
+        return term;
+    }
+
+    private static SemanticContentQuery? TryCreateLocalContentQuery(string command, string normalizedCommand)
+    {
+        var terms = new List<string>();
+
+        foreach (var alias in SemanticContentAliases)
+        {
+            if (normalizedCommand.Contains(alias.Key))
+            {
+                terms.Add(alias.Key);
+                terms.AddRange(alias.Value);
+            }
+        }
+
+        if (terms.Count == 0 &&
+            ContainsAny(normalizedCommand, "相關", "職缺", "工作", "role", "roles", "job", "jobs", "jd", "about"))
+        {
+            terms.AddRange(ExtractSearchTokens(command));
+        }
+
+        var contentTerms = BuildSemanticContentTerms(command, terms);
+        if (contentTerms.Count == 0)
+        {
+            return null;
+        }
+
+        return new SemanticContentQuery(SanitizeSemanticContentQuery(command), contentTerms);
+    }
+
+    private static IEnumerable<string> ExpandSemanticContentTerm(string term)
+    {
+        var normalized = NormalizeSemanticContent(term);
+        foreach (var alias in SemanticContentAliases)
+        {
+            if (normalized.Contains(alias.Key))
+            {
+                foreach (var expanded in alias.Value)
+                {
+                    yield return expanded;
+                }
+            }
+        }
+    }
+
+    private static string NormalizeSemanticContent(string value)
+    {
+        var builder = new List<char>();
+        foreach (var character in value.ToLowerInvariant())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                builder.Add(character);
+            }
+        }
+
+        return new string(builder.ToArray());
+    }
+
+    private static List<string> ExtractSearchTokens(string command)
+    {
+        var tokens = new List<string>();
+        var token = new List<char>();
+
+        foreach (var character in command.ToLowerInvariant())
+        {
+            if (char.IsAsciiLetterOrDigit(character))
+            {
+                token.Add(character);
+                continue;
+            }
+
+            AddToken();
+        }
+
+        AddToken();
+        return tokens;
+
+        void AddToken()
+        {
+            if (token.Count == 0)
+            {
+                return;
+            }
+
+            tokens.Add(new string(token.ToArray()));
+            token.Clear();
+        }
+    }
 
     private static string StepClass(CockpitPipelineStep step) => step.StepStatus switch
     {
@@ -310,7 +1311,68 @@
         _ => "cockpit-pill-neutral",
     };
 
+    private static readonly Dictionary<string, string[]> SemanticContentAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["sales"] = ["sales", "revenue", "crm", "account", "customer", "order", "claims", "vendor"],
+        ["銷售"] = ["sales", "revenue", "crm", "account", "customer", "order", "claims"],
+        ["業務"] = ["sales", "revenue", "crm", "account", "customer", "order", "claims"],
+        ["gtm"] = ["gtm", "go to market", "sales", "marketing", "revenue", "pipeline", "customer", "crm"],
+        ["marketing"] = ["marketing", "market", "campaign", "customer", "proposal", "intelligence"],
+        ["市場"] = ["marketing", "market", "campaign", "customer", "proposal", "intelligence"],
+        ["crm"] = ["crm", "sales", "customer", "account", "order", "erp"],
+        ["erp"] = ["erp", "operations", "inventory", "accounting", "order", "crm"],
+        ["data"] = ["data", "analysis", "analytics", "reporting", "statistics", "scripting", "intelligence"],
+        ["資料"] = ["data", "analysis", "analytics", "reporting", "statistics", "intelligence"],
+        ["分析"] = ["analysis", "analytics", "data", "reporting", "statistics", "intelligence"],
+        ["operations"] = ["operations", "coordinator", "workflow", "process", "order", "vendor", "erp", "crm"],
+        ["ops"] = ["operations", "coordinator", "workflow", "process", "order", "vendor", "erp", "crm"],
+        ["營運"] = ["operations", "coordinator", "workflow", "process", "order", "vendor", "erp", "crm"],
+        ["mandarin"] = ["mandarin", "bilingual", "chinese"],
+        ["中文"] = ["mandarin", "bilingual", "chinese"],
+        ["華語"] = ["mandarin", "bilingual", "chinese"],
+        ["transportation"] = ["transportation", "planning", "engineering", "analysis"],
+        ["交通"] = ["transportation", "planning", "engineering", "analysis"],
+        ["consulting"] = ["consulting", "proposal", "client", "associate", "business analyst"],
+        ["顧問"] = ["consulting", "proposal", "client", "associate", "business analyst"],
+        ["intern"] = ["intern", "internship"],
+        ["實習"] = ["intern", "internship"],
+    };
+
+    private static readonly HashSet<string> SemanticContentStopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "about",
+        "all",
+        "job",
+        "jobs",
+        "jd",
+        "role",
+        "roles",
+        "work",
+        "related",
+        "show",
+        "only",
+        "filter",
+        "content",
+        "business",
+        "development",
+        "management",
+        "相關",
+        "職缺",
+        "工作",
+        "類",
+        "的",
+    };
+
     public void Dispose() => _persistingSubscription?.Dispose();
+
+    public sealed class AssistantChatMessage
+    {
+        public string Id { get; set; } = string.Empty;
+        public string AuthorId { get; set; } = string.Empty;
+        public string AuthorName { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
 
     private sealed class CockpitSnapshot
     {
@@ -318,5 +1380,82 @@
         public List<CockpitDailySeries> DailySeries { get; set; } = [];
         public List<CockpitPipelineStep> PipelineSteps { get; set; } = [];
         public List<CockpitRecentJob> RecentJobs { get; set; } = [];
+    }
+
+    private enum SemanticGridFilter
+    {
+        All,
+        StrongFit,
+        PossibleFit,
+        NeedsReview,
+        Applied,
+    }
+
+    private enum SemanticGridDateWindow
+    {
+        None,
+        LastThreeDays,
+    }
+
+    private enum SemanticGridSort
+    {
+        None,
+        Newest,
+        Company,
+        FitScore,
+    }
+
+    private enum SemanticGridParseSource
+    {
+        LocalRules,
+        Ai,
+    }
+
+    private readonly record struct SemanticGridParseResult(
+        bool Matched,
+        bool Clear,
+        SemanticGridFilter? Filter,
+        SemanticGridDateWindow? DateWindow,
+        SemanticGridSort? Sort,
+        string? Company,
+        string? ContentQuery,
+        IReadOnlyList<string> ContentTerms)
+    {
+        public static SemanticGridParseResult Match(
+            SemanticGridFilter? filter,
+            SemanticGridDateWindow? dateWindow,
+            SemanticGridSort? sort,
+            string? company,
+            string? contentQuery,
+            IReadOnlyList<string> contentTerms) =>
+            new(true, false, filter, dateWindow, sort, company, contentQuery, contentTerms);
+
+        public static SemanticGridParseResult ForClear() =>
+            new(true, true, null, null, null, null, null, []);
+
+        public static SemanticGridParseResult NoMatch() =>
+            new(false, false, null, null, null, null, null, []);
+    }
+
+    private sealed record SemanticContentQuery(string? Query, IReadOnlyList<string> Terms);
+
+    private readonly record struct SemanticGridParseAttempt(
+        SemanticGridParseResult Result,
+        SemanticGridParseSource Source,
+        string? AiReason,
+        string? AiWarning,
+        string ProviderName)
+    {
+        public static SemanticGridParseAttempt Local(
+            SemanticGridParseResult result,
+            string? aiWarning = null,
+            string providerName = "AI") =>
+            new(result, SemanticGridParseSource.LocalRules, null, aiWarning, providerName);
+
+        public static SemanticGridParseAttempt Ai(
+            SemanticGridParseResult result,
+            string? reason,
+            string providerName) =>
+            new(result, SemanticGridParseSource.Ai, reason, null, providerName);
     }
 }

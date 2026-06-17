@@ -22,6 +22,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();
 builder.Services.AddScoped<CockpitDataService>();
+builder.Services.AddHttpClient<CockpitSemanticGridAiParser>();
 
 // English default; Traditional Chinese available via the in-app toggle.
 var supportedCultures = new[] { "en", "zh-Hant" };
