@@ -8,8 +8,16 @@
 
 This repo is a small Blazor/Telerik cockpit and governance prototype for a
 signal-intelligence workflow: messy signals become searchable resources,
-reviewable AI-drafted insights, human approval decisions, and an append-only
-audit trail.
+reviewable AI-drafted insights, human-approved next actions, and auditable
+writeback boundaries.
+
+The workspace now carries two inspectable signal surfaces in one app:
+
+- Application Tracker: reads the job-search system of record directly from
+  `core.jobs`, `core.applications`, and `core.descriptions` with read-only
+  SQL.
+- HubSpot CRM: reads live HubSpot CRM records through a scoped private app token
+  and translates CRM hygiene into GTM handoff readiness.
 
 The project is interview leverage first. Prefer the smallest credible demo that
 can be inspected, explained, and reused across future scenario packs. Do not
@@ -26,15 +34,23 @@ Start from the nearest durable source before acting.
   and claim boundary.
 - `src/SignalIntelligenceWorkspace/Components/Pages/Cockpit.razor`: `/cockpit`
   page structure and Telerik component usage.
+- `src/SignalIntelligenceWorkspace/Components/Pages/HubSpot.razor`: `/hubspot`
+  read-only HubSpot CRM cockpit.
 - `src/SignalIntelligenceWorkspace/wwwroot/app.css`: cockpit styling and layout
   surface.
 - `src/SignalIntelligenceWorkspace/Localization/Ui.resx` and
   `src/SignalIntelligenceWorkspace/Localization/Ui.zh-Hant.resx`: user-visible
   labels and localized cockpit text.
 - `src/SignalIntelligenceWorkspace/Services/Cockpit/CockpitDataService.cs`:
-  cockpit data access. Treat this as data-boundary code, not UI surface.
+  read-only direct Postgres access for the application cockpit. Treat this as
+  data-boundary code, not UI surface.
 - `src/SignalIntelligenceWorkspace/Models/Cockpit/`: cockpit DTOs that mirror
-  the Supabase views consumed by `CockpitDataService`.
+  the application tracker snapshot consumed by `CockpitDataService`.
+- `src/SignalIntelligenceWorkspace/Services/HubSpot/HubSpotCrmService.cs`:
+  read-only HubSpot API access and local CRM readiness logic ported from the
+  HubSpot demo.
+- `src/SignalIntelligenceWorkspace/Models/HubSpot/`: DTOs for the HubSpot CRM
+  cockpit.
 - `.mcp.json`: declares the Telerik Blazor MCP server. Its presence does not
   prove the current client has exposed the MCP tools; check the active tool list
   before relying on them.
@@ -65,13 +81,19 @@ current evidence proves they are necessary:
 
 - `src/SignalIntelligenceWorkspace/Services/Cockpit/CockpitDataService.cs`
 - `src/SignalIntelligenceWorkspace/Models/Cockpit/`
-- Supabase views or SQL backing `core.cockpit_*`
+- direct SQL backing `CockpitDataService`
 - user-secrets or local secret configuration
 - `D:\claude-workspace\personal\xin-job-hunting` DB source
 
-The cockpit may read from the job-search system of record through the existing
-service and views. UI maintenance should not silently widen that data-access
+The application cockpit may read from the job-search system of record through
+`CockpitDataService`. It should stay read-only unless the user explicitly opens
+a write path. UI maintenance should not silently widen that data-access
 boundary.
+
+The HubSpot cockpit is read-only unless the user explicitly opens a write path.
+Do not add create/update/delete behavior, MCP write tools, or assistant-driven
+CRM writes without preserving the explicit confirmation gate and documenting the
+permission boundary.
 
 ## Telerik UI Rules
 

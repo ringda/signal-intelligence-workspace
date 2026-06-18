@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using SignalIntelligenceWorkspace.Components;
 using SignalIntelligenceWorkspace.Services;
 using SignalIntelligenceWorkspace.Services.Cockpit;
+using SignalIntelligenceWorkspace.Services.HubSpot;
 using SignalIntelligenceWorkspace.Services.Scenarios;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,8 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<WorkspaceState>();
 builder.Services.AddScoped<CockpitDataService>();
 builder.Services.AddHttpClient<CockpitSemanticGridAiParser>();
+builder.Services.AddHttpClient<HubSpotCrmService>();
+builder.Services.AddHttpClient<HubSpotAssistantAiService>();
 
 // English default; Traditional Chinese available via the in-app toggle.
 var supportedCultures = new[] { "en", "zh-Hant" };

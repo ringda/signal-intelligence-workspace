@@ -52,7 +52,9 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 
   <data name="App.Name"><value>訊號情報工作台</value></data>
+  <data name="App.Subtitle"><value>把申請與 CRM 訊號整理成可審核的下一步</value></data>
   <data name="Nav.Cockpit"><value>申請追蹤</value></data>
+  <data name="Nav.HubSpot"><value>HubSpot CRM</value></data>
   <data name="Nav.Governance"><value>AI 審核</value></data>
   <data name="Nav.Signals"><value>訊號主題</value></data>
   <data name="Nav.Resources"><value>資源庫</value></data>

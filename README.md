@@ -1,12 +1,32 @@
 # Signal Intelligence Workspace
 
-A small **workflow-testing prototype** that turns messy business signals into searchable resources, reviewable AI-drafted insights, human-approved decisions, and an append-only audit trail.
+A small **signal-to-action cockpit** that brings the live Application Tracker
+and the HubSpot CRM workflow into one Blazor/Telerik workspace.
 
-The first scenario pack models a transportation-consulting world: proposal resources, market opportunity signals, and customer feedback themes. All clients, projects, and people in the data are fictional.
+The shared pattern is:
+
+```text
+messy signals
+  -> structured context
+  -> human-reviewed next action
+  -> governed writeback boundary
+```
+
+The workspace has three surfaces:
+
+- **Application Tracker (`/cockpit`)**: reads the job-search system of record
+  directly from `core.jobs`, `core.applications`, and `core.descriptions`, then
+  shows the JD/application pipeline, evidence, readiness cards, and next-step
+  reasoning.
+- **HubSpot CRM (`/hubspot`)**: reads live HubSpot contacts, companies, and
+  deals with a scoped private app token, then turns CRM hygiene into GTM handoff
+  readiness cards.
+- **AI Review (`/governance`)**: keeps the original fictional governance lab
+  where AI-proposed actions are previewed, approved/rejected, and logged.
 
 ![Governance loop](docs/governance-loop.png)
 
-## The loop
+## The Loop
 
 ```
 messy signals
@@ -19,9 +39,34 @@ messy signals
 
 AI helps structure and draft. It never executes anything on its own: every AI-proposed command is previewed, approved or rejected by a human, and logged.
 
-## Demo script
+## Demo Script
 
-Open **AI Governance** and use the three built-in prompt suggestions:
+Open `http://localhost:8240/cockpit` for the Application Tracker:
+
+1. Confirm the page is reading from the direct Postgres source card.
+2. Review today's application steps, weekly application pace, and readiness
+   cards.
+3. Use the semantic grid input, e.g. **"Show strong fits"** or
+   **"Sales-related roles"**.
+4. Ask the Application Tracker Assistant to prioritize jobs, explain risk, or
+   draft next actions from the loaded snapshot.
+5. Select a row and inspect the role summary, hiring focus, fit notes, and next
+   step.
+
+Open `http://localhost:8240/hubspot` for the HubSpot CRM surface:
+
+1. Confirm contacts, companies, and deals load from the connected HubSpot
+   portal.
+2. Inspect the CRM Handoff Readiness cards.
+3. Ask the HubSpot CRM Assistant to audit hygiene, rank cleanup work, or draft a
+   next-touch memo from the loaded snapshot.
+4. Open a record in HubSpot from the row or contact card.
+
+The HubSpot page is read-only in this repo. The assistant can draft proposed
+notes/tasks/field changes, but it does not execute CRM writes.
+
+For the original AI governance lab, open **AI Review** and use the three built-in
+prompt suggestions:
 
 1. **"Summarize recurring customer feedback themes for the proposal team."**
    → generates a `summarizeFeedback` command → preview dialog → approve → a draft summary enters the Review Queue (still requires its own approval before it counts as reusable material).
@@ -67,6 +112,21 @@ All domain data lives in a `ScenarioPack` (segments, resources, themes, demo pro
 
 Requires the .NET 10 SDK and a **Telerik UI for Blazor license** (this repo contains no license keys; a free 30-day trial is available from Telerik).
 
+For the HubSpot page, set a private app token in the environment that launches
+the app:
+
+```powershell
+setx PRIVATE_APP_ACCESS_TOKEN "pat-your-token-here"
+```
+
+Optional config keys:
+
+```text
+HubSpot:PortalId
+HubSpot:UiDomain
+HubSpot:PrivateAppAccessToken
+```
+
 ```powershell
 dotnet run --project src/SignalIntelligenceWorkspace --launch-profile http
 ```
@@ -77,11 +137,13 @@ Run the parser tests:
 dotnet test
 ```
 
-### Optional AI-backed cockpit parsing
+### Optional AI-backed cockpit parsing and HubSpot assistant
 
 The `/cockpit` Grid command box works without an AI key by falling back to the
-local deterministic parser. To try LLM-backed semantic parsing, configure a
-server-side provider and key.
+local deterministic parser. The `/hubspot` CRM Assistant needs a Gemini key
+because it generates narrative CRM hygiene analysis and memo drafts from the
+loaded snapshot. To try the AI-backed flows, configure a server-side provider
+and key.
 
 Gemini:
 
@@ -104,17 +166,25 @@ You can also use environment variables: `AI_PROVIDER`, `GEMINI_API_KEY`,
 app picks Gemini when a Gemini key exists, then OpenAI when an OpenAI key exists.
 The app sends only the user's Grid prompt and the allowed command schema to the
 configured provider, then validates the structured response before changing the
-local Grid filter state.
+local Grid filter state. The HubSpot assistant sends the currently loaded
+HubSpot snapshot context to Gemini and returns text only; it does not call
+HubSpot write APIs.
 
-## What this is — and is not
+## What This Is — And Is Not
 
-This is a small prototype built to **test an AI-assisted proposal / market-intelligence workflow**: how AI output should be bounded, reviewed, and recorded before it becomes reusable team material.
+This is a portfolio prototype for **signal intelligence workflows**: job-market
+signals and CRM signals become structured context, inspected next actions, and a
+clear boundary before writeback.
 
-It is **not** a production AI tool, not an internal system of any company, and not a claim of AI product engineering or deployed tooling ownership. The scenario data is fictional.
+It is not a production AI platform, not an official HubSpot project, not a
+production HubSpot administration system, and not a claim of ownership over any
+company's internal CRM/GTM system. The governance scenario data is fictional;
+the Application Tracker and HubSpot pages can read real configured systems.
 
 ## Roadmap
 
-- More Grid command types behind the same bounded LLM response schema
-- Second scenario pack (sales pipeline / revenue operations world)
-- Persistence across sessions
-- Multi-role review simulation (coordinator / analyst / reviewer)
+- Add a dedicated HubSpot detail page for one contact/deal.
+- Add confirmation-gated CRM write proposals after the read-only surface is
+  stable.
+- Add a shared "next actions" view across Application Tracker and HubSpot CRM.
+- Keep the governance lab as the review/audit pattern for future write paths.

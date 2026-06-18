@@ -19,9 +19,11 @@
         </div>
         @if (Metrics is not null)
         {
-            <div class="cockpit-date">
-                <span>@Metrics.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</span>
-                <span>@Metrics.MetricTimezone</span>
+            <div class="cockpit-source-card">
+                <span>Source</span>
+                <strong>Direct Postgres</strong>
+                <span>@RecentJobs.Count recent jobs loaded</span>
+                <span>Refreshed @SnapshotLoadedAt.ToString("MMM d, yyyy h:mm tt", CultureInfo.InvariantCulture)</span>
             </div>
         }
     </div>
@@ -36,6 +38,33 @@
     }
     else
     {
+        <div class="cockpit-action-row">
+            <span class="cockpit-policy">Read-only direct DB page. No write executed.</span>
+            @if (Metrics is not null)
+            {
+                <span class="cockpit-policy">@Metrics.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) · @Metrics.MetricTimezone</span>
+            }
+        </div>
+
+        <section class="cockpit-truth-panel">
+            <strong>What is real here</strong>
+            <span>
+                The Application Tracker now reads directly from the job-search database tables:
+                core.jobs, core.applications, and core.descriptions. The assistant can reason over
+                the loaded snapshot, but this page does not update the database.
+            </span>
+        </section>
+
+        @if (Metrics is not null)
+        {
+            <section class="cockpit-summary-grid" aria-label="@L["Cockpit.Kpis"]">
+                @SummaryTile(L["Cockpit.Kpi.ApplicationsToday"], Metrics.ApplicationsAppliedToday, Metrics.ApplicationsAppliedTarget, true)
+                @SummaryTile(L["Cockpit.Kpi.ApplicationsWeek"], Metrics.ApplicationsAppliedWeek, Metrics.ApplicationsAppliedWeekTarget, true)
+                @SummaryTile(L["Cockpit.Kpi.Jd24h"], Metrics.JdScanned24h, Metrics.JdScannedTarget, false)
+                @SummaryTile(L["Cockpit.Kpi.CorrectPool"], Metrics.JdCorrectPool24h, Math.Max(Metrics.JdScannedTarget, 1), false)
+            </section>
+        }
+
         <section class="cockpit-band" aria-label="@L["Cockpit.Pipeline"]">
             <div class="cockpit-section-head">
                 <h3>@L["Cockpit.Pipeline"]</h3>
@@ -53,21 +82,6 @@
                 }
             </div>
         </section>
-
-        @if (Metrics is not null)
-        {
-            <section class="cockpit-band" aria-label="@L["Cockpit.Kpis"]">
-                <div class="cockpit-section-head">
-                    <h3>@L["Cockpit.Kpis"]</h3>
-                </div>
-                <div class="cockpit-kpi-grid">
-                    @MetricCard(L["Cockpit.Kpi.ApplicationsToday"], Metrics.ApplicationsAppliedToday, Metrics.ApplicationsAppliedTarget, true)
-                    @MetricCard(L["Cockpit.Kpi.ApplicationsWeek"], Metrics.ApplicationsAppliedWeek, Metrics.ApplicationsAppliedWeekTarget, true)
-                    @MetricCard(L["Cockpit.Kpi.Jd24h"], Metrics.JdScanned24h, Metrics.JdScannedTarget, false)
-                    @MetricCard(L["Cockpit.Kpi.CorrectPool"], Metrics.JdCorrectPool24h, Math.Max(Metrics.JdScannedTarget, 1), false)
-                </div>
-            </section>
-        }
 
         <section class="cockpit-main">
             <div class="cockpit-chart-panel">
@@ -265,6 +279,61 @@
             </aside>
         </section>
 
+        <section class="cockpit-band cockpit-readiness-panel">
+            <div class="cockpit-section-head">
+                <div>
+                    <h3>Application Readiness</h3>
+                    <p class="muted">Recent jobs translated into fit signal, evidence state, and next action.</p>
+                </div>
+            </div>
+
+            @if (ApplicationReadinessJobs.Count == 0)
+            {
+                <div class="cockpit-empty">No recent application readiness cards are available.</div>
+            }
+            else
+            {
+                <div class="application-readiness-grid">
+                    @foreach (var job in ApplicationReadinessJobs)
+                    {
+                        <article class="application-readiness-card">
+                            <div class="application-card-head">
+                                <div>
+                                    <strong>@job.Company</strong>
+                                    <span>@job.Title</span>
+                                </div>
+                                <span class="cockpit-pill @StatusClass(job.StatusCode)">@StatusDisplay(job.StatusCode)</span>
+                            </div>
+
+                            <div class="application-card-meta">
+                                <span>@(string.IsNullOrWhiteSpace(job.Location) ? "No location" : job.Location)</span>
+                                <span>@MatchDisplay(job.MatchLevel)</span>
+                                <span>@job.CreatedAt.ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</span>
+                                <span>@(string.IsNullOrWhiteSpace(job.PipelineFolder) ? "Not initialized" : $"80-applications/{job.PipelineFolder}")</span>
+                            </div>
+
+                            <div class="application-score">
+                                <span>@ApplicationReadinessScore(job) / 100</span>
+                                <div class="application-score-track">
+                                    <div style="@($"width: {ApplicationReadinessScore(job)}%")"></div>
+                                </div>
+                            </div>
+
+                            <div class="application-card-block">
+                                <small>Next action</small>
+                                <span>@ApplicationNextAction(job)</span>
+                            </div>
+
+                            <div class="application-card-block">
+                                <small>Evidence</small>
+                                <span>@(string.IsNullOrWhiteSpace(job.JudgementSummary) ? "No judgement summary loaded." : job.JudgementSummary)</span>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
         <div class="cockpit-meta">@L["Cockpit.Meta"]</div>
     }
 </div>
@@ -276,6 +345,7 @@
     private bool IsLoading = true;
     private bool IsDetailLoading;
     private string? LoadError;
+    private DateTimeOffset SnapshotLoadedAt = DateTimeOffset.Now;
 
     private CockpitDailyMetrics? Metrics;
     private List<CockpitDailySeries> DailySeries = [];
@@ -371,6 +441,13 @@
         !string.IsNullOrWhiteSpace(ActiveSemanticGridContentQuery) ||
         ActiveSemanticGridContentTerms.Count > 0;
 
+    private IReadOnlyList<CockpitRecentJob> ApplicationReadinessJobs =>
+        RecentJobs
+            .OrderByDescending(ApplicationReadinessSortScore)
+            .ThenByDescending(job => job.CreatedAt)
+            .Take(8)
+            .ToList();
+
     private string SemanticGridMessageClass =>
         SemanticGridNoMatch ? "cockpit-semantic-status-error" : string.Empty;
 
@@ -388,6 +465,7 @@
             DailySeries = snapshot.DailySeries;
             PipelineSteps = snapshot.PipelineSteps;
             RecentJobs = snapshot.RecentJobs;
+            SnapshotLoadedAt = DateTimeOffset.Now;
             IsLoading = false;
             return;
         }
@@ -416,6 +494,7 @@
             DailySeries = await CockpitData.GetDailySeriesAsync();
             PipelineSteps = await CockpitData.GetTodayPipelineStepsAsync();
             RecentJobs = await CockpitData.GetRecentJobsAsync();
+            SnapshotLoadedAt = DateTimeOffset.Now;
         }
         catch (Exception ex)
         {
@@ -916,6 +995,14 @@
         </div>
     </div>;
 
+    private RenderFragment SummaryTile(string title, long actual, int target, bool primary) => @<div class="cockpit-summary-tile @(primary ? "cockpit-summary-primary" : "")">
+        <span>@title</span>
+        <strong>@actual <small>/ @target</small></strong>
+        <div class="cockpit-progress" aria-hidden="true">
+            <div style="width:@ProgressWidth(actual, target)"></div>
+        </div>
+    </div>;
+
     private RenderFragment EvidenceBlock(string title, string? body) => @<div class="cockpit-evidence-block">
         <h4>@title</h4>
         <p>@(string.IsNullOrWhiteSpace(body) ? L["Cockpit.Evidence.None"] : body)</p>
@@ -1073,6 +1160,64 @@
 
     private static bool IsStatus(CockpitRecentJob job, params string[] values) =>
         values.Any(value => string.Equals(job.StatusCode, value, StringComparison.OrdinalIgnoreCase));
+
+    private static int ApplicationReadinessScore(CockpitRecentJob job)
+    {
+        var baseScore = job.WinScore ?? job.MatchScore ?? 35;
+        if (baseScore <= 10)
+        {
+            baseScore *= 10;
+        }
+
+        if (IsStatus(job, "applied"))
+        {
+            baseScore = Math.Max(baseScore, 80);
+        }
+        else if (IsStatus(job, "recommended", "visa_uncertain"))
+        {
+            baseScore = Math.Max(baseScore, 72);
+        }
+        else if (IsStatus(job, "recommended_edge"))
+        {
+            baseScore = Math.Max(baseScore, 62);
+        }
+        else if (IsStatus(job, "pending_analysis", "pending_visa", "on_hold"))
+        {
+            baseScore = Math.Min(baseScore, 55);
+        }
+
+        return Math.Clamp(baseScore, 20, 100);
+    }
+
+    private static int ApplicationReadinessSortScore(CockpitRecentJob job) =>
+        ApplicationReadinessScore(job) + (IsStatus(job, "applied") ? 8 : 0);
+
+    private string ApplicationNextAction(CockpitRecentJob job)
+    {
+        if (IsStatus(job, "applied"))
+        {
+            return "Review follow-up timing and networking state.";
+        }
+
+        if (IsStatus(job, "recommended", "visa_uncertain") || IsStrongFit(job))
+        {
+            return string.IsNullOrWhiteSpace(job.PipelineFolder)
+                ? "Initialize the application folder and prepare a role brief."
+                : "Use the existing folder to tailor resume and next-touch evidence.";
+        }
+
+        if (IsStatus(job, "recommended_edge") || IsPossibleFit(job))
+        {
+            return "Confirm fit risk, then decide whether this stays in the active pool.";
+        }
+
+        if (IsNeedsReview(job))
+        {
+            return "Review missing evidence before spending tailoring time.";
+        }
+
+        return "Keep as reference unless new evidence changes the fit.";
+    }
 
     private static bool ContainsAny(string value, params string[] needles) =>
         needles.Any(value.Contains);

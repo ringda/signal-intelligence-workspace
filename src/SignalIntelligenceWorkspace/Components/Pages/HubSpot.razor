@@ -1,0 +1,497 @@
+@page "/hubspot"
+@inject HubSpotCrmService HubSpotData
+@inject HubSpotAssistantAiService HubSpotAssistant
+@inject IStringLocalizer<Ui> L
+@using System.Globalization
+@using System.Text
+
+<PageTitle>@L["Nav.HubSpot"] | @L["App.Name"]</PageTitle>
+
+<div class="hubspot-page">
+    <div class="hubspot-header">
+        <div>
+            <div class="hubspot-kicker">HubSpot CRM Signals</div>
+            <h2>Live CRM readiness</h2>
+            <p class="muted">
+                Read-only HubSpot records in the same Signal Intelligence Workspace:
+                CRM facts from HubSpot, judgment surfaced as handoff risk and next action.
+            </p>
+        </div>
+
+        @if (Snapshot is not null)
+        {
+            <div class="hubspot-source-card">
+                <span>Source</span>
+                <strong>HubSpot API</strong>
+                <span>@TotalRows records loaded</span>
+                <span>Refreshed @Snapshot.RefreshedAt.ToString("MMM d, yyyy h:mm tt")</span>
+            </div>
+        }
+    </div>
+
+    @if (LoadError is not null)
+    {
+        <div class="cockpit-alert">@LoadError</div>
+    }
+    else if (Snapshot is null)
+    {
+        <div class="cockpit-loading">Loading HubSpot CRM records...</div>
+    }
+    else
+    {
+        <div class="hubspot-action-row">
+            <a class="hubspot-link-button" href="@Snapshot.PortalUrl" target="_blank" rel="noreferrer">
+                Open HubSpot portal
+            </a>
+            <span class="hubspot-policy">Read-only page. No write executed.</span>
+        </div>
+
+        <section class="hubspot-truth-panel">
+            <strong>What is real here</strong>
+            <span>
+                Contacts, companies, deals, owners, and lifecycle fields are fetched from the
+                connected HubSpot portal with the server token. The readiness score is local
+                GTM handoff logic copied from the HubSpot demo into this Blazor workspace.
+            </span>
+        </section>
+
+        <section class="hubspot-panel hubspot-assistant-panel" data-testid="hubspot-assistant">
+            <div class="cockpit-assistant-header">
+                <div class="cockpit-assistant-title">
+                    <TelerikSvgIcon Icon="@SvgIcon.Sparkles" />
+                    <h3>HubSpot CRM Assistant</h3>
+                </div>
+                <TelerikButton OnClick="@ClearAssistantChat"
+                               Size="@ThemeConstants.Button.Size.Small"
+                               FillMode="@ThemeConstants.Button.FillMode.Flat"
+                               Enabled="@(!IsAssistantResponding)">
+                    Clear
+                </TelerikButton>
+            </div>
+
+            <div class="cockpit-assistant-context">
+                Ask Gemini about the live HubSpot snapshot now loaded here: @TotalRows CRM rows,
+                @Snapshot.ReadinessCards.Count readiness cards, @NeedsCleanupCount cleanup risks.
+                It can draft analysis and memos, but this page does not write to HubSpot.
+            </div>
+
+            <div class="cockpit-assistant-suggestions">
+                @foreach (var suggestion in AssistantSuggestions)
+                {
+                    <button type="button"
+                            class="cockpit-assistant-chip"
+                            data-testid="@suggestion.TestId"
+                            disabled="@IsAssistantResponding"
+                            @onclick="@(() => ApplyAssistantSuggestionAsync(suggestion.Label))">
+                        @suggestion.Label
+                    </button>
+                }
+            </div>
+
+            @if (!HubSpotAssistant.IsConfigured)
+            {
+                <div class="cockpit-assistant-status cockpit-assistant-status-error">
+                    Gemini key is not configured for the HubSpot assistant.
+                </div>
+            }
+            else if (IsAssistantResponding)
+            {
+                <div class="cockpit-assistant-status">
+                    @HubSpotAssistant.ProviderName is reading the current HubSpot snapshot...
+                </div>
+            }
+
+            <div class="cockpit-assistant-chat">
+                <TelerikChat TItem="AssistantChatMessage"
+                             @ref="@AssistantChatRef"
+                             Data="@AssistantMessages"
+                             AuthorId="@AssistantUserId"
+                             OnSendMessage="@OnAssistantSendMessageAsync"
+                             Height="420px"
+                             Width="100%">
+                </TelerikChat>
+            </div>
+        </section>
+
+        <section class="hubspot-summary-grid" aria-label="HubSpot CRM summary">
+            @foreach (var section in Snapshot.Sections)
+            {
+                <div class="hubspot-summary-tile">
+                    <span>@section.Title</span>
+                    <strong>@section.Rows.Count</strong>
+                    <small>@(section.Error is null ? "Live read" : "Read error")</small>
+                </div>
+            }
+            <div class="hubspot-summary-tile hubspot-summary-primary">
+                <span>Needs cleanup</span>
+                <strong>@NeedsCleanupCount</strong>
+                <small>contact handoff cards</small>
+            </div>
+        </section>
+
+        <section class="hubspot-grid-stack">
+            @foreach (var section in Snapshot.Sections)
+            {
+                <section class="hubspot-panel">
+                    <div class="cockpit-section-head">
+                        <div>
+                            <h3>@section.Title</h3>
+                            <p class="muted">@section.Subtitle</p>
+                        </div>
+                        <a class="hubspot-record-link" href="@section.IndexUrl" target="_blank" rel="noreferrer">
+                            View in HubSpot
+                        </a>
+                    </div>
+
+                    @if (section.Error is not null)
+                    {
+                        <div class="cockpit-alert">@section.Error</div>
+                    }
+                    else if (section.Rows.Count == 0)
+                    {
+                        <div class="cockpit-empty">No records returned by HubSpot.</div>
+                    }
+                    else
+                    {
+                        <TelerikGrid Data="@section.Rows"
+                                     Sortable="true"
+                                     FilterMode="@GridFilterMode.FilterMenu"
+                                     Pageable="true"
+                                     PageSize="5">
+                            <GridColumns>
+                                <GridColumn Field="@nameof(HubSpotCrmRow.Primary)" Title="Name" Width="220px" />
+                                <GridColumn Field="@nameof(HubSpotCrmRow.Secondary)" Title="Secondary" Width="220px" />
+                                <GridColumn Field="@nameof(HubSpotCrmRow.Status)" Title="Status" Width="170px">
+                                    <Template>
+                                        @{
+                                            var row = (HubSpotCrmRow)context;
+                                        }
+                                        <span class="cockpit-pill cockpit-pill-neutral">@row.Status</span>
+                                    </Template>
+                                </GridColumn>
+                                <GridColumn Field="@nameof(HubSpotCrmRow.Detail)" Title="Detail" />
+                                <GridColumn Field="@nameof(HubSpotCrmRow.UpdatedAt)" Title="Updated" Width="140px" />
+                                <GridColumn Title="Record" Width="110px">
+                                    <Template>
+                                        @{
+                                            var row = (HubSpotCrmRow)context;
+                                        }
+                                        <a class="hubspot-record-link" href="@row.HubSpotUrl" target="_blank" rel="noreferrer">
+                                            Open
+                                        </a>
+                                    </Template>
+                                </GridColumn>
+                            </GridColumns>
+                        </TelerikGrid>
+                    }
+                </section>
+            }
+        </section>
+
+        <section class="hubspot-panel">
+            <div class="cockpit-section-head">
+                <div>
+                    <h3>CRM Handoff Readiness</h3>
+                    <p class="muted">Contact records translated into missing fields, risk level, and a concrete next action.</p>
+                </div>
+            </div>
+
+            @if (Snapshot.ReadinessCards.Count == 0)
+            {
+                <div class="cockpit-empty">No contact readiness cards are available.</div>
+            }
+            else
+            {
+                <div class="hubspot-readiness-grid">
+                    @foreach (var card in Snapshot.ReadinessCards)
+                    {
+                        <article class="hubspot-readiness-card">
+                            <div class="hubspot-card-head">
+                                <div>
+                                    <strong>@card.Name</strong>
+                                    <span>@card.Email</span>
+                                </div>
+                                <span class="cockpit-pill @ReadinessClass(card.Status)">@card.Status</span>
+                            </div>
+
+                            <div class="hubspot-card-meta">
+                                <span>@card.Company</span>
+                                <span>@card.Title</span>
+                                <span>@card.Lifecycle</span>
+                                <span>@card.Owner</span>
+                            </div>
+
+                            <div class="hubspot-score">
+                                <span>@card.Score / 100</span>
+                                <div class="hubspot-score-track">
+                                    <div style="@($"width: {card.Score}%")"></div>
+                                </div>
+                            </div>
+
+                            <div class="hubspot-card-block">
+                                <small>Missing</small>
+                                <span>@(card.Missing.Count == 0 ? "none" : string.Join(", ", card.Missing))</span>
+                            </div>
+
+                            <div class="hubspot-card-block">
+                                <small>Next action</small>
+                                <span>@card.NextAction</span>
+                            </div>
+
+                            <pre class="hubspot-note">@card.SuggestedNoteBody</pre>
+
+                            <a class="hubspot-record-link" href="@card.HubSpotUrl" target="_blank" rel="noreferrer">
+                                Open contact
+                            </a>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    private HubSpotCrmSnapshot? Snapshot { get; set; }
+    private string? LoadError { get; set; }
+    private TelerikChat<AssistantChatMessage>? AssistantChatRef { get; set; }
+    private List<AssistantChatMessage> AssistantMessages { get; set; } = [];
+    private bool IsAssistantResponding { get; set; }
+
+    private const string AssistantUserId = "hubspot-user";
+    private const string AssistantBotId = "hubspot-assistant";
+
+    private static readonly IReadOnlyList<AssistantSuggestion> AssistantSuggestions =
+    [
+        new("Audit CRM hygiene risks", "hubspot-assistant-suggestion-hygiene"),
+        new("Which contacts need cleanup first?", "hubspot-assistant-suggestion-cleanup"),
+        new("Draft a next-touch memo", "hubspot-assistant-suggestion-memo"),
+        new("List writeback proposals only", "hubspot-assistant-suggestion-writeback"),
+    ];
+
+    private int TotalRows => Snapshot?.Sections.Sum(section => section.Rows.Count) ?? 0;
+
+    private int NeedsCleanupCount =>
+        Snapshot?.ReadinessCards.Count(card => card.Status is "Needs Cleanup" or "Blocked") ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Snapshot = await HubSpotData.GetSnapshotAsync();
+        }
+        catch (Exception ex)
+        {
+            LoadError = ex.Message;
+        }
+
+        EnsureAssistantWelcomeMessage();
+    }
+
+    private static string ReadinessClass(string status) => status switch
+    {
+        "Ready" => "cockpit-pill-good",
+        "Needs Cleanup" => "cockpit-pill-watch",
+        "Blocked" => "hubspot-pill-blocked",
+        _ => "cockpit-pill-neutral",
+    };
+
+    private async Task OnAssistantSendMessageAsync(ChatSendMessageEventArgs args)
+    {
+        await RunAssistantPromptAsync(args.Message);
+    }
+
+    private async Task ApplyAssistantSuggestionAsync(string suggestion)
+    {
+        await RunAssistantPromptAsync(suggestion);
+    }
+
+    private async Task RunAssistantPromptAsync(string? prompt)
+    {
+        var message = prompt?.Trim();
+        if (string.IsNullOrWhiteSpace(message) || IsAssistantResponding)
+        {
+            return;
+        }
+
+        AddAssistantMessage(AssistantUserId, "You", message);
+
+        if (Snapshot is null)
+        {
+            AddAssistantMessage(AssistantBotId, "HubSpot AI", "HubSpot snapshot is not loaded yet.");
+            return;
+        }
+
+        if (!HubSpotAssistant.IsConfigured)
+        {
+            AddAssistantMessage(AssistantBotId, "HubSpot AI", "Gemini key is not configured for this server. Add it with dotnet user-secrets or an environment variable, then restart the app.");
+            return;
+        }
+
+        try
+        {
+            IsAssistantResponding = true;
+            await InvokeAsync(StateHasChanged);
+
+            var result = await HubSpotAssistant.AskAsync(message, BuildHubSpotAssistantContext());
+            var response = result.Message ?? $"Gemini assistant error: {result.Error ?? "unknown error"}";
+            AddAssistantMessage(AssistantBotId, "HubSpot AI", response);
+        }
+        finally
+        {
+            IsAssistantResponding = false;
+            AssistantChatRef?.Refresh();
+        }
+    }
+
+    private void ClearAssistantChat()
+    {
+        AssistantMessages = [];
+        EnsureAssistantWelcomeMessage();
+        AssistantChatRef?.Refresh();
+    }
+
+    private void EnsureAssistantWelcomeMessage()
+    {
+        if (AssistantMessages.Count > 0)
+        {
+            return;
+        }
+
+        var summary = Snapshot is null
+            ? "Load HubSpot first, then ask me to inspect CRM readiness."
+            : $"I can analyze the current HubSpot snapshot: {TotalRows} CRM rows, {Snapshot.ReadinessCards.Count} readiness cards, {NeedsCleanupCount} cleanup risks. I will not write to HubSpot from this page.";
+        AddAssistantMessage(AssistantBotId, "HubSpot AI", summary);
+    }
+
+    private void AddAssistantMessage(string authorId, string authorName, string text)
+    {
+        AssistantMessages.Add(new AssistantChatMessage
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            AuthorId = authorId,
+            AuthorName = authorName,
+            Text = text,
+            Timestamp = DateTime.Now,
+        });
+        AssistantChatRef?.Refresh();
+    }
+
+    private string BuildHubSpotAssistantContext()
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($"Today: {DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}");
+        builder.AppendLine("Page boundary: read-only HubSpot CRM cockpit. The assistant can draft analysis, notes, and writeback proposals, but no HubSpot write is available on this page.");
+
+        if (Snapshot is null)
+        {
+            builder.AppendLine("HubSpot snapshot is not loaded.");
+            return builder.ToString();
+        }
+
+        builder.AppendLine($"Source: HubSpot API. Portal URL: {Snapshot.PortalUrl}.");
+        builder.AppendLine($"Refreshed: {Snapshot.RefreshedAt.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)}.");
+        builder.AppendLine($"Loaded records: {TotalRows}. Readiness cards: {Snapshot.ReadinessCards.Count}. Cleanup risks: {NeedsCleanupCount}.");
+
+        builder.AppendLine("CRM sections:");
+        foreach (var section in Snapshot.Sections)
+        {
+            builder.AppendLine($"Section: {section.Title}. Rows: {section.Rows.Count}. Read status: {(section.Error is null ? "ok" : section.Error)}.");
+            foreach (var row in section.Rows.Take(5))
+            {
+                AppendRowContext(builder, row);
+            }
+
+            if (section.Rows.Count > 5)
+            {
+                builder.AppendLine($"Additional {section.Title} rows omitted: {section.Rows.Count - 5}.");
+            }
+        }
+
+        builder.AppendLine("Contact readiness cards:");
+        foreach (var card in Snapshot.ReadinessCards.Take(10))
+        {
+            builder.Append("- ");
+            builder.Append(card.Name);
+            builder.Append(" | email ");
+            builder.Append(card.Email);
+            builder.Append(" | company ");
+            builder.Append(card.Company);
+            builder.Append(" | title ");
+            builder.Append(card.Title);
+            builder.Append(" | lifecycle ");
+            builder.Append(card.Lifecycle);
+            builder.Append(" | owner ");
+            builder.Append(card.Owner);
+            builder.Append(" | status ");
+            builder.Append(card.Status);
+            builder.Append(" | score ");
+            builder.Append(card.Score.ToString(CultureInfo.InvariantCulture));
+            builder.Append(" | missing ");
+            builder.Append(card.Missing.Count == 0 ? "none" : string.Join(", ", card.Missing));
+            AppendContextLine(builder, "next action", card.NextAction, inline: true);
+            AppendContextLine(builder, "reason", card.Why, inline: true);
+        }
+
+        if (Snapshot.ReadinessCards.Count > 10)
+        {
+            builder.AppendLine($"Additional readiness cards omitted: {Snapshot.ReadinessCards.Count - 10}.");
+        }
+
+        return builder.ToString();
+    }
+
+    private static void AppendRowContext(StringBuilder builder, HubSpotCrmRow row)
+    {
+        builder.Append("- ");
+        builder.Append(row.Primary);
+        builder.Append(" | secondary ");
+        builder.Append(row.Secondary);
+        builder.Append(" | status ");
+        builder.Append(row.Status);
+        builder.Append(" | detail ");
+        builder.Append(TrimContextValue(row.Detail));
+        builder.Append(" | updated ");
+        builder.AppendLine(row.UpdatedAt);
+    }
+
+    private static void AppendContextLine(StringBuilder builder, string label, string? value, bool inline = false)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (inline)
+        {
+            builder.Append(" | ");
+            builder.Append(label);
+            builder.Append(": ");
+            builder.AppendLine(TrimContextValue(value));
+            return;
+        }
+
+        builder.Append(label);
+        builder.Append(": ");
+        builder.AppendLine(TrimContextValue(value));
+    }
+
+    private static string TrimContextValue(string value)
+    {
+        var normalized = string.Join(' ', value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return normalized.Length <= 360
+            ? normalized
+            : normalized[..360];
+    }
+
+    private sealed record AssistantSuggestion(string Label, string TestId);
+
+    public sealed class AssistantChatMessage
+    {
+        public string Id { get; set; } = string.Empty;
+        public string AuthorId { get; set; } = string.Empty;
+        public string AuthorName { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+}

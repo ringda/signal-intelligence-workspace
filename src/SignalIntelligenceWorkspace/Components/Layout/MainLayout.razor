@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @layout TelerikLayout
 @inject WorkspaceState State
-@inject ScenarioPack Scenario
 @inject IStringLocalizer<Ui> L
 @inject NavigationManager Nav
 @using System.Globalization
@@ -13,7 +12,7 @@
                    Title="@L["Action.ToggleNav"]" />
     <div class="topbar-titles">
         <span class="app-name">@L["App.Name"]</span>
-        <span class="scenario-name">@Scenario.DisplayTitle</span>
+        <span class="scenario-name">@L["App.Subtitle"]</span>
     </div>
     <span class="topbar-spacer"></span>
     <div class="lang-switch">
@@ -73,6 +72,7 @@
     private List<NavItem> NavItems => new()
     {
         new NavItem { Text = L["Nav.Cockpit"], Icon = SvgIcon.Home, Url = "/", Match = NavLinkMatch.All },
+        new NavItem { Text = L["Nav.HubSpot"], Icon = SvgIcon.Folder, Url = "/hubspot" },
         new NavItem { Text = L["Nav.Governance"], Icon = SvgIcon.Sparkles, Url = "/governance" },
         new NavItem { Text = L["Nav.Signals"], Icon = SvgIcon.Eye, Url = "/signals" },
         new NavItem { Text = L["Nav.Resources"], Icon = SvgIcon.Folder, Url = "/resources" },

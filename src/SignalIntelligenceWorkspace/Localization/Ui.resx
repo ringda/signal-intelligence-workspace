@@ -52,7 +52,9 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 
   <data name="App.Name"><value>Signal Intelligence Workspace</value></data>
+  <data name="App.Subtitle"><value>Application and CRM signals into reviewed next actions</value></data>
   <data name="Nav.Cockpit"><value>Application Tracker</value></data>
+  <data name="Nav.HubSpot"><value>HubSpot CRM</value></data>
   <data name="Nav.Governance"><value>AI Review</value></data>
   <data name="Nav.Signals"><value>Signal Themes</value></data>
   <data name="Nav.Resources"><value>Resource Library</value></data>
