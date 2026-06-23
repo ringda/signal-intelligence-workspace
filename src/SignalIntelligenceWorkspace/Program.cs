@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using SignalIntelligenceWorkspace.Components;
 using SignalIntelligenceWorkspace.Services;
+using SignalIntelligenceWorkspace.Services.ApplicationIntelligence;
 using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.HubSpot;
 using SignalIntelligenceWorkspace.Services.Scenarios;
@@ -22,6 +23,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 // Singleton so demo state (drafts, filter, audit) survives full-page navigation
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();
+builder.Services.AddScoped<ApplicationIntelligenceDataService>();
 builder.Services.AddScoped<CockpitDataService>();
 builder.Services.AddHttpClient<CockpitSemanticGridAiParser>();
 builder.Services.AddHttpClient<HubSpotCrmService>();

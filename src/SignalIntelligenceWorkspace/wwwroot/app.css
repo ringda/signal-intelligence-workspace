@@ -106,6 +106,15 @@ h1:focus {
     text-decoration: none;
 }
 
+.k-drawer-mini .app-drawer-item .k-item-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
 .app-drawer-item:hover,
 .app-drawer-item:focus {
     color: inherit;
@@ -1099,6 +1108,575 @@ h1:focus {
     overflow-wrap: anywhere;
 }
 
+/* ---- HM-facing Application Intelligence prototype ---- */
+
+.page-body:has(.application-intelligence-page) {
+    width: 100%;
+    max-width: 1680px;
+    box-sizing: border-box;
+}
+
+.application-intelligence-page {
+    --ai-primary: #0f766e;
+    --ai-primary-dark: #0b4f4a;
+    --ai-primary-soft: #d7f1ee;
+    --ai-blue: #2563eb;
+    --ai-blue-soft: #dbeafe;
+    --ai-green: #15803d;
+    --ai-green-soft: #ddf7e8;
+    --ai-amber: #a16207;
+    --ai-amber-soft: #fff1d6;
+    --ai-red: #b42318;
+    --ai-red-soft: #fee4e2;
+    --ai-ink: #1f2933;
+    --ai-muted: #5b6470;
+    --ai-line: #dce3e8;
+    --ai-panel: #ffffff;
+    --ai-soft: #f7f9fa;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    color: var(--ai-ink);
+}
+
+.application-intelligence-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    gap: 18px;
+    align-items: stretch;
+}
+
+.application-intelligence-hero-copy {
+    border: 1px solid var(--ai-line);
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ffffff 0%, #f6fbfa 100%);
+    padding: 22px;
+}
+
+.application-intelligence-kicker {
+    display: inline-flex;
+    margin-bottom: 8px;
+    color: var(--ai-primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.application-intelligence-hero h1 {
+    margin: 0;
+    max-width: 780px;
+    font-size: 2rem;
+    line-height: 1.12;
+    letter-spacing: 0;
+}
+
+.application-intelligence-hero p {
+    max-width: 920px;
+    margin: 10px 0 0;
+    color: var(--ai-muted);
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.application-intelligence-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.application-intelligence-chip,
+.application-intelligence-caption {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border: 1px solid #b9d9d4;
+    border-radius: 999px;
+    background: var(--ai-primary-soft);
+    padding: 4px 10px;
+    color: var(--ai-primary-dark);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.application-intelligence-source {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    border: 1px solid var(--ai-line);
+    border-left: 4px solid var(--ai-primary);
+    border-radius: 8px;
+    background: var(--ai-panel);
+    padding: 18px;
+    color: var(--ai-muted);
+    font-size: 0.86rem;
+}
+
+.application-intelligence-source strong {
+    color: var(--ai-ink);
+    font-size: 1.25rem;
+}
+
+.application-intelligence-read-guide {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #c8dfe6;
+    border-left: 4px solid var(--ai-blue);
+    border-radius: 8px;
+    background: #f4fbfd;
+    padding: 12px 14px;
+    color: #31444d;
+    font-size: 0.92rem;
+}
+
+.application-intelligence-read-guide strong {
+    color: var(--ai-ink);
+    white-space: nowrap;
+}
+
+.application-intelligence-read-guide span {
+    min-width: 0;
+    color: var(--ai-muted);
+    line-height: 1.45;
+}
+
+.application-intelligence-boundary {
+    display: grid;
+    gap: 4px;
+    border: 1px solid #d8e4dd;
+    border-left: 4px solid var(--ai-green);
+    border-radius: 8px;
+    background: #f7fbf8;
+    padding: 14px;
+    color: #3f4d46;
+    font-size: 0.9rem;
+}
+
+.application-intelligence-live-strip {
+    display: grid;
+    gap: 4px;
+    border: 1px solid var(--ai-line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+}
+
+.application-intelligence-live-strip strong {
+    color: var(--ai-ink);
+}
+
+.application-intelligence-live-strip span {
+    color: var(--ai-muted);
+}
+
+.application-intelligence-live-strip-success {
+    border-left: 4px solid var(--ai-blue);
+    background: var(--ai-blue-soft);
+}
+
+.application-intelligence-live-strip-loading {
+    border-left: 4px solid var(--ai-amber);
+    background: var(--ai-amber-soft);
+}
+
+.application-intelligence-live-strip-fallback {
+    border-left: 4px solid var(--ai-red);
+    background: var(--ai-red-soft);
+}
+
+.application-intelligence-kpi-grid,
+.application-intelligence-funnel,
+.application-intelligence-pipeline,
+.application-intelligence-learning-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.application-intelligence-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.application-intelligence-kpi,
+.application-intelligence-funnel-step,
+.application-intelligence-pipeline-step,
+.application-intelligence-learning-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    border: 1px solid var(--ai-line);
+    border-radius: 8px;
+    background: var(--ai-panel);
+    padding: 14px;
+}
+
+.application-intelligence-kpi span,
+.application-intelligence-kpi small,
+.application-intelligence-funnel-step small,
+.application-intelligence-pipeline-step small,
+.application-intelligence-learning-item p {
+    color: var(--ai-muted);
+}
+
+.application-intelligence-kpi strong {
+    color: var(--ai-ink);
+    font-size: 1.8rem;
+    line-height: 1.1;
+}
+
+.application-intelligence-kpi-primary {
+    border-color: var(--ai-primary);
+    background: var(--ai-primary);
+}
+
+.application-intelligence-kpi-primary span,
+.application-intelligence-kpi-primary strong,
+.application-intelligence-kpi-primary small {
+    color: #ffffff;
+}
+
+.application-intelligence-kpi-breakdown {
+    display: grid;
+    gap: 5px;
+    margin: 6px 0 0;
+    padding: 8px 0 0;
+    border-top: 1px solid #e8eef1;
+    list-style: none;
+}
+
+.application-intelligence-kpi-breakdown li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    font-size: 0.78rem;
+}
+
+.application-intelligence-kpi-breakdown span {
+    overflow: hidden;
+    color: var(--ai-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.application-intelligence-kpi-breakdown strong {
+    flex: 0 0 auto;
+    color: var(--ai-ink);
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+
+.application-intelligence-panel {
+    min-width: 0;
+    border: 1px solid var(--ai-line);
+    border-radius: 8px;
+    background: var(--ai-panel);
+    padding: 18px;
+}
+
+.application-intelligence-section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.application-intelligence-section-head h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.application-intelligence-section-head p {
+    margin: 4px 0 0;
+}
+
+.application-intelligence-funnel {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.application-intelligence-funnel-step {
+    position: relative;
+    min-height: 116px;
+    background: var(--ai-soft);
+}
+
+.application-intelligence-funnel-step::after {
+    content: "->";
+    position: absolute;
+    top: 40px;
+    right: -11px;
+    z-index: 1;
+    color: var(--ai-muted);
+    font-weight: 800;
+}
+
+.application-intelligence-funnel-step:last-child::after {
+    display: none;
+}
+
+.application-intelligence-funnel-value {
+    color: var(--ai-primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.application-intelligence-pipeline {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.application-intelligence-pipeline-step span:first-child {
+    color: var(--ai-primary);
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.application-intelligence-progress-wrap {
+    margin-top: auto;
+}
+
+.application-intelligence-progress.k-progressbar {
+    height: 8px;
+}
+
+.application-intelligence-progress .k-progress-status,
+.application-intelligence-progress .k-progress-status-wrap {
+    display: none;
+}
+
+.application-intelligence-workbench {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.75fr) minmax(520px, 1.25fr);
+    grid-template-areas:
+        "chart grid"
+        "detail grid";
+    gap: 16px;
+    align-items: stretch;
+}
+
+.application-intelligence-chart-panel {
+    grid-area: chart;
+}
+
+.application-intelligence-empty-chart {
+    display: grid;
+    min-height: 280px;
+    place-items: center;
+    border: 1px dashed var(--ai-line);
+    border-radius: 8px;
+    color: var(--ai-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.application-intelligence-grid-panel {
+    grid-area: grid;
+    overflow: hidden;
+}
+
+.application-intelligence-detail-panel {
+    grid-area: detail;
+}
+
+.application-intelligence-grid-title {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.application-intelligence-grid-title span {
+    color: var(--ai-muted);
+    font-size: 0.84rem;
+    line-height: 1.3;
+}
+
+.application-intelligence-score {
+    color: var(--ai-ink);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.application-intelligence-status {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1.3;
+    white-space: normal;
+}
+
+.application-intelligence-status-good {
+    background: var(--ai-green-soft);
+    color: var(--ai-green);
+}
+
+.application-intelligence-status-done {
+    background: var(--ai-blue-soft);
+    color: var(--ai-blue);
+}
+
+.application-intelligence-status-watch {
+    background: var(--ai-amber-soft);
+    color: var(--ai-amber);
+}
+
+.application-intelligence-status-risk {
+    background: var(--ai-red-soft);
+    color: var(--ai-red);
+}
+
+.application-intelligence-status-neutral {
+    background: #eef1f3;
+    color: #44505a;
+}
+
+.application-intelligence-case-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.application-intelligence-case-head div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.application-intelligence-case-head div > span {
+    color: var(--ai-muted);
+}
+
+.application-intelligence-case-source {
+    display: grid;
+    gap: 8px;
+    border: 1px solid #e6edf1;
+    border-radius: 8px;
+    background: var(--ai-soft);
+    padding: 12px;
+}
+
+.application-intelligence-case-source p {
+    margin: 0;
+    color: var(--ai-muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.application-intelligence-evidence-chain {
+    border-top: 1px solid #eef1f3;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.application-intelligence-evidence-chain h3 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+}
+
+.application-intelligence-evidence-chain ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.application-intelligence-evidence-chain li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 10px;
+    align-items: flex-start;
+    border: 1px solid #edf1f4;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.application-intelligence-evidence-chain li > div {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.application-intelligence-evidence-chain small {
+    color: var(--ai-muted);
+    line-height: 1.35;
+}
+
+.application-intelligence-evidence-block {
+    border-top: 1px solid #eef1f3;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.application-intelligence-evidence-block h3 {
+    margin: 0 0 6px;
+    font-size: 0.9rem;
+}
+
+.application-intelligence-evidence-block p {
+    margin: 0;
+    color: #3d4951;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.application-intelligence-learning {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.75fr);
+    gap: 16px;
+}
+
+.application-intelligence-learning-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.application-intelligence-learning-item p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.application-intelligence-claims {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+}
+
+.application-intelligence-claims div {
+    border-top: 1px solid #eef1f3;
+    padding-top: 10px;
+}
+
+.application-intelligence-claims div:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.application-intelligence-claims dt {
+    margin-bottom: 4px;
+    color: var(--ai-ink);
+    font-weight: 800;
+}
+
+.application-intelligence-claims dd {
+    margin: 0;
+    color: var(--ai-muted);
+    line-height: 1.4;
+}
+
 @media (min-width: 1450px) {
     .cockpit-main {
         grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.25fr) minmax(360px, 0.95fr);
@@ -1179,7 +1757,55 @@ h1:focus {
     .application-card-meta,
     .application-score,
     .hubspot-card-meta,
-    .hubspot-score {
+    .hubspot-score,
+    .application-intelligence-case-head {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1120px) {
+    .application-intelligence-kpi-grid,
+    .application-intelligence-funnel,
+    .application-intelligence-pipeline,
+    .application-intelligence-learning-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .application-intelligence-workbench {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "chart"
+            "grid"
+            "detail";
+    }
+
+    .application-intelligence-learning {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .application-intelligence-hero {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .application-intelligence-kpi-grid,
+    .application-intelligence-funnel,
+    .application-intelligence-pipeline,
+    .application-intelligence-learning-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .application-intelligence-funnel-step::after {
+        display: none;
+    }
+
+    .application-intelligence-section-head,
+    .application-intelligence-case-head {
+        flex-direction: column;
+    }
+
+    .application-intelligence-hero h1 {
+        font-size: 1.7rem;
     }
 }

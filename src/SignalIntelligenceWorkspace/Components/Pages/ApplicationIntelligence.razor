@@ -1,0 +1,947 @@
+@page "/application-intelligence"
+@inject ApplicationIntelligenceDataService ApplicationIntelligenceData
+@inject IStringLocalizer<Ui> L
+@using System.Globalization
+@using SignalIntelligenceWorkspace.Models.ApplicationIntelligence
+@using SignalIntelligenceWorkspace.Services.ApplicationIntelligence
+
+<PageTitle>@L["ApplicationIntelligence.PageTitle"] | @L["App.Name"]</PageTitle>
+
+<div class="application-intelligence-page">
+    <section class="application-intelligence-hero" aria-labelledby="application-intelligence-title">
+        <div class="application-intelligence-hero-copy">
+            <span class="application-intelligence-kicker">@T("ApplicationIntelligence.Kicker")</span>
+            <h1 id="application-intelligence-title">@T("ApplicationIntelligence.Title")</h1>
+            <p>@T("ApplicationIntelligence.Subtitle")</p>
+            <div class="application-intelligence-chip-row" aria-label="@T("ApplicationIntelligence.ProofPoints.Aria")">
+                @foreach (var proof in ProofPoints)
+                {
+                    <span class="application-intelligence-chip">@proof</span>
+                }
+            </div>
+        </div>
+
+        <aside class="application-intelligence-source">
+            <span>@T("ApplicationIntelligence.Source.Label")</span>
+            <strong>@SourceTitle</strong>
+            <span>@SourceState</span>
+            <span>@T("ApplicationIntelligence.Source.Boundary")</span>
+        </aside>
+    </section>
+
+    <section class="application-intelligence-read-guide" aria-label="@T("ApplicationIntelligence.ReadGuide.Title")">
+        <strong>@T("ApplicationIntelligence.ReadGuide.Title")</strong>
+        <span>@T("ApplicationIntelligence.ReadGuide.Body")</span>
+    </section>
+
+    <section class="application-intelligence-boundary" aria-label="@T("ApplicationIntelligence.Boundary.Aria")">
+        <strong>@T("ApplicationIntelligence.Boundary.Title")</strong>
+        <span>@T("ApplicationIntelligence.Boundary.Body")</span>
+    </section>
+
+    <section class="application-intelligence-live-strip @LiveStatusClass" aria-label="@T("ApplicationIntelligence.Live.Aria")">
+        <strong>@LiveStatusTitle</strong>
+        <span>@LiveStatusBody</span>
+    </section>
+
+    <section class="application-intelligence-kpi-grid" aria-label="@T("ApplicationIntelligence.Metrics.Aria")">
+        @foreach (var metric in Metrics)
+        {
+            <article class="application-intelligence-kpi @(metric.Primary ? "application-intelligence-kpi-primary" : "")">
+                <span>@metric.Label</span>
+                <strong>@metric.Value</strong>
+                <small>@metric.Detail</small>
+                @if (metric.Breakdown is { Count: > 0 } breakdown)
+                {
+                    <ul class="application-intelligence-kpi-breakdown" aria-label="@metric.Label">
+                        @foreach (var item in breakdown)
+                        {
+                            <li>
+                                <span>@item.Label</span>
+                                <strong>@item.Value</strong>
+                            </li>
+                        }
+                    </ul>
+                }
+            </article>
+        }
+    </section>
+
+    <section class="application-intelligence-panel" aria-labelledby="signal-funnel-heading">
+        <div class="application-intelligence-section-head">
+            <div>
+                <h2 id="signal-funnel-heading">@T("ApplicationIntelligence.SignalFunnel.Title")</h2>
+                <p class="muted">@T("ApplicationIntelligence.SignalFunnel.Body")</p>
+            </div>
+            <span class="application-intelligence-caption">@SnapshotCaption</span>
+        </div>
+
+        <div class="application-intelligence-funnel">
+            @foreach (var step in FunnelSteps)
+            {
+                <article class="application-intelligence-funnel-step">
+                    <span class="application-intelligence-funnel-value">@step.Value</span>
+                    <strong>@step.Label</strong>
+                    <small>@step.Detail</small>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="application-intelligence-panel" aria-labelledby="decision-pipeline-heading">
+        <div class="application-intelligence-section-head">
+            <div>
+                <h2 id="decision-pipeline-heading">@T("ApplicationIntelligence.DecisionPipeline.Title")</h2>
+                <p class="muted">@T("ApplicationIntelligence.DecisionPipeline.Body")</p>
+            </div>
+        </div>
+
+        <div class="application-intelligence-pipeline">
+            @foreach (var step in PipelineSteps)
+            {
+                <article class="application-intelligence-pipeline-step">
+                    <span>@step.Order</span>
+                    <strong>@step.Label</strong>
+                    <small>@step.State</small>
+                    <div class="application-intelligence-progress-wrap">
+                        <TelerikProgressBar Value="@step.Progress"
+                                            Max="100"
+                                            AriaLabel="@ProgressAria(step.Label)"
+                                            Class="application-intelligence-progress" />
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="application-intelligence-workbench" aria-labelledby="evidence-heading">
+        <div class="application-intelligence-panel application-intelligence-chart-panel">
+            <div class="application-intelligence-section-head">
+                <div>
+                    <h2 id="evidence-heading">@T("ApplicationIntelligence.Evidence.Title")</h2>
+                    <p class="muted">@T("ApplicationIntelligence.Evidence.Body")</p>
+                </div>
+            </div>
+
+            @if (DecisionScoreData.Count == 0)
+            {
+                <div class="application-intelligence-empty-chart">
+                    @T("ApplicationIntelligence.Chart.Empty")
+                </div>
+            }
+            else
+            {
+                <TelerikChart Height="280px">
+                    <ChartSeriesItems>
+                        <ChartSeries Type="@ChartSeriesType.Column"
+                                     Name="@T("ApplicationIntelligence.Chart.Share")"
+                                     Data="@DecisionScoreData"
+                                     Field="@nameof(DecisionScore.SignalShare)"
+                                     CategoryField="@nameof(DecisionScore.Segment)" />
+                    </ChartSeriesItems>
+                    <ChartValueAxes>
+                        <ChartValueAxis Min="0" Max="100">
+                            <ChartValueAxisLabels Format="{0}" />
+                        </ChartValueAxis>
+                    </ChartValueAxes>
+                    <ChartLegend Position="@ChartLegendPosition.Bottom" Visible="true" />
+                </TelerikChart>
+            }
+        </div>
+
+        <div class="application-intelligence-panel application-intelligence-grid-panel">
+            <div class="application-intelligence-section-head">
+                <div>
+                    <h2>@T("ApplicationIntelligence.DecisionRecords.Title")</h2>
+                    <p class="muted">@T("ApplicationIntelligence.DecisionRecords.Body")</p>
+                </div>
+            </div>
+
+            <TelerikGrid Data="@ApplicationCases"
+                         Height="420px"
+                         Sortable="true"
+                         Pageable="true"
+                         PageSize="4"
+                         Resizable="true"
+                         SelectionMode="@GridSelectionMode.Single"
+                         SelectedItems="@SelectedCases"
+                         OnRowClick="@OnCaseRowClick">
+                <GridColumns>
+                    <GridColumn Field="@nameof(ApplicationCase.Company)" Title="@(L["ApplicationIntelligence.Grid.CompanyRole"])" Width="230px">
+                        <Template>
+                            @{
+                                var item = (ApplicationCase)context;
+                            }
+                            <div class="application-intelligence-grid-title">
+                                <strong>@item.Company</strong>
+                                <span>@item.Role</span>
+                            </div>
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field="@nameof(ApplicationCase.Decision)" Title="@(L["ApplicationIntelligence.Grid.Decision"])" Width="160px">
+                        <Template>
+                            @{
+                                var item = (ApplicationCase)context;
+                            }
+                            <span class="application-intelligence-status @StatusClass(item.Tone)">
+                                @item.Decision
+                            </span>
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field="@nameof(ApplicationCase.CorrectPool)" Title="@(L["ApplicationIntelligence.Grid.CorrectPool"])" Width="180px" />
+                    <GridColumn Field="@nameof(ApplicationCase.EvidenceScore)" Title="@(L["ApplicationIntelligence.Grid.Evidence"])" Width="130px">
+                        <Template>
+                            @{
+                                var item = (ApplicationCase)context;
+                            }
+                            <span class="application-intelligence-score">@item.EvidenceScore / 100</span>
+                        </Template>
+                    </GridColumn>
+                    <GridColumn Field="@nameof(ApplicationCase.NextAction)" Title="@(L["ApplicationIntelligence.Grid.NextAction"])" Width="360px" />
+                </GridColumns>
+            </TelerikGrid>
+        </div>
+
+        <aside class="application-intelligence-panel application-intelligence-detail-panel" aria-labelledby="case-microscope-heading">
+            <div class="application-intelligence-section-head">
+                <div>
+                    <h2 id="case-microscope-heading">@T("ApplicationIntelligence.CaseMicroscope.Title")</h2>
+                    <p class="muted">@T("ApplicationIntelligence.CaseMicroscope.Body")</p>
+                </div>
+            </div>
+
+            <div class="application-intelligence-case-head">
+                <div>
+                    <strong>@SelectedCase.Company</strong>
+                    <span>@SelectedCase.Role</span>
+                </div>
+                <span class="application-intelligence-status @StatusClass(SelectedCase.Tone)">
+                    @SelectedCase.Decision
+                </span>
+            </div>
+
+            <div class="application-intelligence-case-source">
+                <span class="application-intelligence-status application-intelligence-status-neutral">
+                    @SelectedCase.SourceLabel
+                </span>
+                <p>@SelectedCase.SourceDetail</p>
+            </div>
+
+            @if (SelectedCase.Checkpoints.Count > 0)
+            {
+                <div class="application-intelligence-evidence-chain">
+                    <h3>@T("ApplicationIntelligence.EvidenceChain.Title")</h3>
+                    <ol>
+                        @foreach (var checkpoint in SelectedCase.Checkpoints)
+                        {
+                            <li>
+                                <div>
+                                    <strong>@checkpoint.Label</strong>
+                                    <small>@checkpoint.Evidence</small>
+                                </div>
+                                <span class="application-intelligence-status @StatusClass(checkpoint.Tone)">
+                                    @checkpoint.State
+                                </span>
+                            </li>
+                        }
+                    </ol>
+                </div>
+            }
+
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.FitEvidence"), SelectedCase.FitEvidence)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.RoleContract"), SelectedCase.RoleContract)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.MustProve"), SelectedCase.MustProve)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.CannotBorrow"), SelectedCase.CannotBorrow)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.Artifacts"), SelectedCase.ArtifactEvidence)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.NextAction"), SelectedCase.NextAction)
+            @EvidenceBlock(T("ApplicationIntelligence.EvidenceBlock.LearningHook"), SelectedCase.LearningHook)
+        </aside>
+    </section>
+
+    <section class="application-intelligence-learning" aria-labelledby="learning-loop-heading">
+        <div class="application-intelligence-panel">
+            <div class="application-intelligence-section-head">
+                <div>
+                    <h2 id="learning-loop-heading">@T("ApplicationIntelligence.LearningLoop.Title")</h2>
+                    <p class="muted">@T("ApplicationIntelligence.LearningLoop.Body")</p>
+                </div>
+            </div>
+            <div class="application-intelligence-learning-grid">
+                @foreach (var lesson in LearningItems)
+                {
+                    <article class="application-intelligence-learning-item">
+                        <span class="application-intelligence-status @StatusClass(lesson.Tone)">
+                            @lesson.Signal
+                        </span>
+                        <strong>@lesson.Title</strong>
+                        <p>@lesson.Detail</p>
+                    </article>
+                }
+            </div>
+        </div>
+
+        <div class="application-intelligence-panel application-intelligence-claim-panel">
+            <div class="application-intelligence-section-head">
+                <div>
+                    <h2>@T("ApplicationIntelligence.ClaimBoundary.Title")</h2>
+                    <p class="muted">@T("ApplicationIntelligence.ClaimBoundary.Body")</p>
+                </div>
+            </div>
+            <dl class="application-intelligence-claims">
+                <div>
+                    <dt>@T("ApplicationIntelligence.Claim.Say")</dt>
+                    <dd>@T("ApplicationIntelligence.Claim.Say.Body")</dd>
+                </div>
+                <div>
+                    <dt>@T("ApplicationIntelligence.Claim.DoNotSay")</dt>
+                    <dd>@T("ApplicationIntelligence.Claim.DoNotSay.Body")</dd>
+                </div>
+                <div>
+                    <dt>@T("ApplicationIntelligence.Claim.Translate")</dt>
+                    <dd>@T("ApplicationIntelligence.Claim.Translate.Body")</dd>
+                </div>
+            </dl>
+        </div>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<string> ProofPoints { get; set; } = [];
+    private IReadOnlyList<DashboardMetric> Metrics { get; set; } = [];
+    private IReadOnlyList<FunnelStep> FunnelSteps { get; set; } = [];
+    private IReadOnlyList<PipelineStep> PipelineSteps { get; set; } = [];
+    private IReadOnlyList<ApplicationCase> ApplicationCases { get; set; } = [];
+    private IReadOnlyList<LearningItem> LearningItems { get; set; } = [];
+    private IReadOnlyList<DecisionScore> DecisionScoreData { get; set; } = [];
+    private ApplicationIntelligenceSnapshot? LiveSnapshot { get; set; }
+    private bool IsLiveLoading { get; set; } = true;
+    private string? LiveLoadError { get; set; }
+    private ApplicationCase SelectedCase { get; set; } = default!;
+
+    private IEnumerable<ApplicationCase> SelectedCases =>
+        SelectedCase is null ? [] : [SelectedCase];
+
+    private bool HasLiveSnapshot => LiveSnapshot is not null;
+
+    private string SourceTitle => HasLiveSnapshot
+        ? T("ApplicationIntelligence.Source.LiveTitle")
+        : T("ApplicationIntelligence.Source.Title");
+
+    private string SourceState
+    {
+        get
+        {
+            if (IsLiveLoading)
+            {
+                return T("ApplicationIntelligence.Live.Loading.Body");
+            }
+
+            if (LiveSnapshot is not null)
+            {
+                return T(
+                    "ApplicationIntelligence.Source.LiveLoaded",
+                    FormatCount(LiveSnapshot.Summary.ApplicationRows),
+                    LiveSnapshot.Summary.MetricTimezone);
+            }
+
+            return T("ApplicationIntelligence.Source.Mock");
+        }
+    }
+
+    private string SnapshotCaption => HasLiveSnapshot
+        ? T("ApplicationIntelligence.Snapshot.LiveCaption")
+        : T("ApplicationIntelligence.Snapshot.Caption");
+
+    private string LiveStatusClass => HasLiveSnapshot
+        ? "application-intelligence-live-strip-success"
+        : LiveLoadError is not null
+            ? "application-intelligence-live-strip-fallback"
+            : "application-intelligence-live-strip-loading";
+
+    private string LiveStatusTitle => HasLiveSnapshot
+        ? T("ApplicationIntelligence.Live.ReadOnly.Title")
+        : LiveLoadError is not null
+            ? T("ApplicationIntelligence.Live.Fallback.Title")
+            : T("ApplicationIntelligence.Live.Loading.Title");
+
+    private string LiveStatusBody
+    {
+        get
+        {
+            if (LiveSnapshot is not null)
+            {
+                return T(
+                    "ApplicationIntelligence.Live.ReadOnly.Body",
+                    LiveSnapshot.Summary.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    LiveSnapshot.LoadedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.CurrentCulture));
+            }
+
+            return LiveLoadError is not null
+                ? T("ApplicationIntelligence.Live.Fallback.Body")
+                : T("ApplicationIntelligence.Live.Loading.Body");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        BuildSampleNarrative();
+        await LoadLiveSnapshotAsync();
+    }
+
+    private void BuildSampleNarrative()
+    {
+        ProofPoints =
+        [
+            T("ApplicationIntelligence.Proof.HighNoise"),
+            T("ApplicationIntelligence.Proof.Evidence"),
+            T("ApplicationIntelligence.Proof.Writeback"),
+        ];
+
+        Metrics =
+        [
+            new("20k+", T("ApplicationIntelligence.Metric.Signals.Label"), T("ApplicationIntelligence.Metric.Signals.Detail"), true),
+            new("370", T("ApplicationIntelligence.Metric.Pipeline.Label"), T("ApplicationIntelligence.Metric.Pipeline.Detail"), false),
+            new("285", T("ApplicationIntelligence.Metric.Applications.Label"), T("ApplicationIntelligence.Metric.Applications.Detail"), false),
+            new("26 / 44", T("ApplicationIntelligence.Metric.System.Label"), T("ApplicationIntelligence.Metric.System.Detail"), false),
+        ];
+
+        FunnelSteps =
+        [
+            new("20k+", T("ApplicationIntelligence.Funnel.Market.Label"), T("ApplicationIntelligence.Funnel.Market.Detail")),
+            new("370", T("ApplicationIntelligence.Funnel.Pipeline.Label"), T("ApplicationIntelligence.Funnel.Pipeline.Detail")),
+            new("285", T("ApplicationIntelligence.Funnel.Applications.Label"), T("ApplicationIntelligence.Funnel.Applications.Detail")),
+            new("24", T("ApplicationIntelligence.Funnel.Outreach.Label"), T("ApplicationIntelligence.Funnel.Outreach.Detail")),
+            new(T("ApplicationIntelligence.Funnel.Learning.Value"), T("ApplicationIntelligence.Funnel.Learning.Label"), T("ApplicationIntelligence.Funnel.Learning.Detail")),
+        ];
+
+        PipelineSteps =
+        [
+            new("01", T("ApplicationIntelligence.Pipeline.Shortlist.Label"), T("ApplicationIntelligence.Pipeline.Shortlist.State"), 86),
+            new("02", T("ApplicationIntelligence.Pipeline.RoleDecision.Label"), T("ApplicationIntelligence.Pipeline.RoleDecision.State"), 72),
+            new("03", T("ApplicationIntelligence.Pipeline.Tailor.Label"), T("ApplicationIntelligence.Pipeline.Tailor.State"), 68),
+            new("04", T("ApplicationIntelligence.Pipeline.Apply.Label"), T("ApplicationIntelligence.Pipeline.Apply.State"), 62),
+            new("05", T("ApplicationIntelligence.Pipeline.FollowUp.Label"), T("ApplicationIntelligence.Pipeline.FollowUp.State"), 38),
+            new("06", T("ApplicationIntelligence.Pipeline.Learn.Label"), T("ApplicationIntelligence.Pipeline.Learn.State"), 54),
+        ];
+
+        ApplicationCases =
+        [
+            new(
+                "Northstar Mobility",
+                T("ApplicationIntelligence.Case.Northstar.Role"),
+                T("ApplicationIntelligence.Case.Decision.HighPriority"),
+                "good",
+                T("ApplicationIntelligence.Case.Pool.MarketingGtm"),
+                88,
+                82,
+                T("ApplicationIntelligence.Case.Northstar.RoleContract"),
+                T("ApplicationIntelligence.Case.Northstar.MustProve"),
+                T("ApplicationIntelligence.Case.Northstar.CannotBorrow"),
+                T("ApplicationIntelligence.Case.Northstar.NextAction"))
+            {
+                SourceLabel = T("ApplicationIntelligence.Case.Source.Sample.Label"),
+                SourceDetail = T("ApplicationIntelligence.Case.Source.Sample.Detail"),
+                FitEvidence = T("ApplicationIntelligence.Case.Northstar.RoleContract"),
+                ArtifactEvidence = T("ApplicationIntelligence.Case.Sample.ArtifactEvidence"),
+                LearningHook = T("ApplicationIntelligence.Case.Sample.LearningHook"),
+                Checkpoints = BuildSampleCheckpoints(),
+            },
+            new(
+                "Atlas Revenue Systems",
+                T("ApplicationIntelligence.Case.Atlas.Role"),
+                T("ApplicationIntelligence.Case.Decision.RoutingReady"),
+                "done",
+                T("ApplicationIntelligence.Case.Pool.RevOps"),
+                78,
+                73,
+                T("ApplicationIntelligence.Case.Atlas.RoleContract"),
+                T("ApplicationIntelligence.Case.Atlas.MustProve"),
+                T("ApplicationIntelligence.Case.Atlas.CannotBorrow"),
+                T("ApplicationIntelligence.Case.Atlas.NextAction"))
+            {
+                SourceLabel = T("ApplicationIntelligence.Case.Source.Sample.Label"),
+                SourceDetail = T("ApplicationIntelligence.Case.Source.Sample.Detail"),
+                FitEvidence = T("ApplicationIntelligence.Case.Atlas.RoleContract"),
+                ArtifactEvidence = T("ApplicationIntelligence.Case.Sample.ArtifactEvidence"),
+                LearningHook = T("ApplicationIntelligence.Case.Sample.LearningHook"),
+                Checkpoints = BuildSampleCheckpoints(),
+            },
+            new(
+                "Cedar Health Ops",
+                T("ApplicationIntelligence.Case.Cedar.Role"),
+                T("ApplicationIntelligence.Case.Decision.Watch"),
+                "watch",
+                T("ApplicationIntelligence.Case.Pool.CsOps"),
+                64,
+                58,
+                T("ApplicationIntelligence.Case.Cedar.RoleContract"),
+                T("ApplicationIntelligence.Case.Cedar.MustProve"),
+                T("ApplicationIntelligence.Case.Cedar.CannotBorrow"),
+                T("ApplicationIntelligence.Case.Cedar.NextAction"))
+            {
+                SourceLabel = T("ApplicationIntelligence.Case.Source.Sample.Label"),
+                SourceDetail = T("ApplicationIntelligence.Case.Source.Sample.Detail"),
+                FitEvidence = T("ApplicationIntelligence.Case.Cedar.RoleContract"),
+                ArtifactEvidence = T("ApplicationIntelligence.Case.Sample.ArtifactEvidence"),
+                LearningHook = T("ApplicationIntelligence.Case.Sample.LearningHook"),
+                Checkpoints = BuildSampleCheckpoints(),
+            },
+            new(
+                "Orbit Retail Claims",
+                T("ApplicationIntelligence.Case.Orbit.Role"),
+                T("ApplicationIntelligence.Case.Decision.RiskReview"),
+                "risk",
+                T("ApplicationIntelligence.Case.Pool.SalesSupport"),
+                56,
+                48,
+                T("ApplicationIntelligence.Case.Orbit.RoleContract"),
+                T("ApplicationIntelligence.Case.Orbit.MustProve"),
+                T("ApplicationIntelligence.Case.Orbit.CannotBorrow"),
+                T("ApplicationIntelligence.Case.Orbit.NextAction"))
+            {
+                SourceLabel = T("ApplicationIntelligence.Case.Source.Sample.Label"),
+                SourceDetail = T("ApplicationIntelligence.Case.Source.Sample.Detail"),
+                FitEvidence = T("ApplicationIntelligence.Case.Orbit.RoleContract"),
+                ArtifactEvidence = T("ApplicationIntelligence.Case.Sample.ArtifactEvidence"),
+                LearningHook = T("ApplicationIntelligence.Case.Sample.LearningHook"),
+                Checkpoints = BuildSampleCheckpoints(),
+            },
+        ];
+
+        SetDecisionScoreData(BuildDecisionScores(ApplicationCases));
+
+        LearningItems =
+        [
+            new(T("ApplicationIntelligence.Learning.Reply.Signal"), T("ApplicationIntelligence.Learning.Reply.Title"), T("ApplicationIntelligence.Learning.Reply.Detail"), "good"),
+            new(T("ApplicationIntelligence.Learning.Rejection.Signal"), T("ApplicationIntelligence.Learning.Rejection.Title"), T("ApplicationIntelligence.Learning.Rejection.Detail"), "watch"),
+            new(T("ApplicationIntelligence.Learning.FollowUp.Signal"), T("ApplicationIntelligence.Learning.FollowUp.Title"), T("ApplicationIntelligence.Learning.FollowUp.Detail"), "risk"),
+        ];
+
+        SelectedCase = ApplicationCases[0];
+    }
+
+    private async Task LoadLiveSnapshotAsync()
+    {
+        try
+        {
+            IsLiveLoading = true;
+            LiveLoadError = null;
+            LiveSnapshot = await ApplicationIntelligenceData.GetSnapshotAsync();
+            ApplyLiveSnapshot(LiveSnapshot);
+        }
+        catch (Exception ex)
+        {
+            LiveLoadError = ex.Message;
+        }
+        finally
+        {
+            IsLiveLoading = false;
+        }
+    }
+
+    private void ApplyLiveSnapshot(ApplicationIntelligenceSnapshot snapshot)
+    {
+        var summary = snapshot.Summary;
+
+        Metrics =
+        [
+            new(FormatCount(summary.JobsScreenedTotal), T("ApplicationIntelligence.Metric.Signals.Label"), T("ApplicationIntelligence.Metric.Signals.Detail"), true),
+            new(FormatCount(summary.QualifiedRoles), T("ApplicationIntelligence.Metric.Pipeline.Label"), T("ApplicationIntelligence.Metric.Pipeline.Detail"), false),
+            new(FormatCount(summary.ApplicationsSubmitted), T("ApplicationIntelligence.Metric.Applications.Label"), T("ApplicationIntelligence.Metric.Applications.Detail"), false),
+            new(
+                FormatCount(summary.CompletedWorkflowSteps),
+                T("ApplicationIntelligence.Metric.Stages.Label"),
+                T("ApplicationIntelligence.Metric.Stages.Detail"),
+                false,
+                [
+                    new(T("ApplicationIntelligence.MetricBreakdown.RoleBriefed"), FormatCount(summary.RoleBriefed)),
+                    new(T("ApplicationIntelligence.MetricBreakdown.Tailored"), FormatCount(summary.Tailored)),
+                    new(T("ApplicationIntelligence.MetricBreakdown.Applied"), FormatCount(summary.ApplicationsSubmitted)),
+                    new(T("ApplicationIntelligence.MetricBreakdown.FollowUp"), FormatCount(summary.NetworkingStarted)),
+                    new(T("ApplicationIntelligence.MetricBreakdown.Learning"), FormatCount(summary.LearningSignals)),
+                ]),
+        ];
+
+        FunnelSteps =
+        [
+            new(FormatCount(summary.JobsScreenedTotal), T("ApplicationIntelligence.Funnel.Market.Label"), T("ApplicationIntelligence.Funnel.Market.Detail")),
+            new(FormatCount(summary.QualifiedRoles), T("ApplicationIntelligence.Funnel.Pipeline.Label"), T("ApplicationIntelligence.Funnel.Pipeline.Detail")),
+            new(FormatCount(summary.ApplicationsSubmitted), T("ApplicationIntelligence.Funnel.Applications.Label"), T("ApplicationIntelligence.Funnel.Applications.Detail")),
+            new(FormatCount(summary.NetworkingStarted), T("ApplicationIntelligence.Funnel.Outreach.Label"), T("ApplicationIntelligence.Funnel.Outreach.Detail")),
+            new(FormatCount(summary.LearningSignals), T("ApplicationIntelligence.Funnel.Learning.Label"), T("ApplicationIntelligence.Funnel.Learning.Detail")),
+        ];
+
+        var applicationRows = Math.Max(summary.ApplicationRows, summary.ApplicationsSubmitted);
+
+        PipelineSteps =
+        [
+            new("01", T("ApplicationIntelligence.Pipeline.Shortlist.Label"), CountState(summary.QualifiedRoles, summary.JobsScreenedTotal), Percent(summary.QualifiedRoles, summary.JobsScreenedTotal)),
+            new("02", T("ApplicationIntelligence.Pipeline.RoleDecision.Label"), CountState(summary.RoleBriefed, applicationRows), Percent(summary.RoleBriefed, applicationRows)),
+            new("03", T("ApplicationIntelligence.Pipeline.Tailor.Label"), CountState(summary.Tailored, applicationRows), Percent(summary.Tailored, applicationRows)),
+            new("04", T("ApplicationIntelligence.Pipeline.Apply.Label"), CountState(summary.ApplicationsSubmitted, applicationRows), Percent(summary.ApplicationsSubmitted, applicationRows)),
+            new("05", T("ApplicationIntelligence.Pipeline.FollowUp.Label"), CountState(summary.NetworkingStarted, summary.ApplicationsSubmitted), Percent(summary.NetworkingStarted, summary.ApplicationsSubmitted)),
+            new("06", T("ApplicationIntelligence.Pipeline.Learn.Label"), CountState(summary.LearningSignals, summary.ApplicationsSubmitted), Percent(summary.LearningSignals, summary.ApplicationsSubmitted)),
+        ];
+
+        SetDecisionScoreData(BuildDecisionScores(snapshot));
+
+        if (snapshot.CaseRecords.Count > 0)
+        {
+            ApplicationCases = snapshot.CaseRecords.Select(BuildLiveApplicationCase).ToList();
+            SelectedCase = ApplicationCases[0];
+        }
+    }
+
+    private Task OnCaseRowClick(GridRowClickEventArgs args)
+    {
+        if (args.Item is ApplicationCase selected)
+        {
+            SelectedCase = selected;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private RenderFragment EvidenceBlock(string title, string body) => @<div class="application-intelligence-evidence-block">
+        <h3>@title</h3>
+        <p>@body</p>
+    </div>;
+
+    private string T(string key) => L[key].Value;
+
+    private string T(string key, params object[] arguments) => L[key, arguments].Value;
+
+    private string ProgressAria(string stepLabel) =>
+        T("ApplicationIntelligence.ProgressAria", stepLabel);
+
+    private string CountState(long actual, long target) =>
+        T("ApplicationIntelligence.Pipeline.CountState", FormatCount(actual), FormatCount(target));
+
+    private string SegmentLabel(string segmentKey) => segmentKey switch
+    {
+        "strong" => T("ApplicationIntelligence.Segment.Strong"),
+        "possible" => T("ApplicationIntelligence.Segment.Possible"),
+        "review" => T("ApplicationIntelligence.Segment.Review"),
+        "applied" => T("ApplicationIntelligence.Segment.Applied"),
+        _ => T("ApplicationIntelligence.Segment.Other"),
+    };
+
+    private ApplicationCase BuildLiveApplicationCase(ApplicationIntelligenceCaseRecord record)
+    {
+        var evidenceScore = NormalizeScore(record.WinScore ?? record.MatchScore);
+        var roleContract = FirstFilled(
+            record.PjdRoleSummary,
+            record.PjdHiringFocus,
+            record.JdExcerpt,
+            T("ApplicationIntelligence.Case.Live.RoleFallback"));
+        var fitEvidence = FirstFilled(
+            record.JudgementSummary,
+            record.PjdHiringFocus,
+            record.JdExcerpt,
+            T("ApplicationIntelligence.Case.Live.FitFallback"));
+        var mustProve = FirstFilled(
+            record.PjdHiringFocus,
+            T("ApplicationIntelligence.Case.Live.MustProveFallback", StatusValue(record.MatchLevel)));
+
+        return new ApplicationCase(
+            record.Company,
+            record.Title,
+            LiveDecision(record),
+            LiveTone(record),
+            LiveCorrectPool(record),
+            evidenceScore,
+            ReadinessScore(record),
+            roleContract,
+            mustProve,
+            T("ApplicationIntelligence.Case.Live.CannotBorrow"),
+            LiveNextAction(record))
+        {
+            SourceLabel = T("ApplicationIntelligence.Case.Source.Live.Label"),
+            SourceDetail = T("ApplicationIntelligence.Case.Source.Live.Detail"),
+            FitEvidence = fitEvidence,
+            ArtifactEvidence = string.IsNullOrWhiteSpace(record.PipelineFolder)
+                ? T("ApplicationIntelligence.Case.Live.Artifact.NoFolder")
+                : T("ApplicationIntelligence.Case.Live.Artifact.WithFolder"),
+            LearningHook = string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase)
+                ? T("ApplicationIntelligence.Case.Live.Learning.Applied")
+                : T("ApplicationIntelligence.Case.Live.Learning.Pending"),
+            Checkpoints = BuildLiveCheckpoints(record),
+        };
+    }
+
+    private IReadOnlyList<CaseCheckpoint> BuildLiveCheckpoints(ApplicationIntelligenceCaseRecord record)
+    {
+        var roleDone = IsDone(record.PjdStatus);
+        var tailorDone = IsDone(record.PtStatus) || IsDone(record.PrpStatus);
+        var applied = string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase);
+        var followUpStarted = !string.IsNullOrWhiteSpace(record.NetworkingStage)
+            && !string.Equals(record.NetworkingStage, "not_started", StringComparison.OrdinalIgnoreCase);
+
+        return
+        [
+            new(
+                T("ApplicationIntelligence.Checkpoint.Role.Label"),
+                roleDone ? T("ApplicationIntelligence.Checkpoint.State.Done") : T("ApplicationIntelligence.Checkpoint.State.Waiting"),
+                roleDone ? "done" : "watch",
+                roleDone
+                    ? T("ApplicationIntelligence.Checkpoint.Role.DoneEvidence")
+                    : T("ApplicationIntelligence.Checkpoint.Role.WaitingEvidence")),
+            new(
+                T("ApplicationIntelligence.Checkpoint.Tailor.Label"),
+                tailorDone ? T("ApplicationIntelligence.Checkpoint.State.Done") : T("ApplicationIntelligence.Checkpoint.State.Waiting"),
+                tailorDone ? "done" : "watch",
+                tailorDone
+                    ? T("ApplicationIntelligence.Checkpoint.Tailor.DoneEvidence")
+                    : T("ApplicationIntelligence.Checkpoint.Tailor.WaitingEvidence")),
+            new(
+                T("ApplicationIntelligence.Checkpoint.Apply.Label"),
+                applied ? T("ApplicationIntelligence.Checkpoint.State.Done") : T("ApplicationIntelligence.Checkpoint.State.Waiting"),
+                applied ? "good" : "watch",
+                applied
+                    ? T("ApplicationIntelligence.Checkpoint.Apply.DoneEvidence", FormatOptionalDate(record.AppliedAt))
+                    : T("ApplicationIntelligence.Checkpoint.Apply.WaitingEvidence")),
+            new(
+                T("ApplicationIntelligence.Checkpoint.FollowUp.Label"),
+                followUpStarted ? T("ApplicationIntelligence.Checkpoint.State.InReview") : T("ApplicationIntelligence.Checkpoint.State.Waiting"),
+                followUpStarted ? "done" : "risk",
+                followUpStarted
+                    ? T("ApplicationIntelligence.Checkpoint.FollowUp.DoneEvidence")
+                    : T("ApplicationIntelligence.Checkpoint.FollowUp.WaitingEvidence")),
+            new(
+                T("ApplicationIntelligence.Checkpoint.Learning.Label"),
+                T("ApplicationIntelligence.Checkpoint.State.InReview"),
+                "watch",
+                T("ApplicationIntelligence.Checkpoint.Learning.Evidence")),
+        ];
+    }
+
+    private IReadOnlyList<CaseCheckpoint> BuildSampleCheckpoints() =>
+    [
+        new(T("ApplicationIntelligence.Checkpoint.Role.Label"), T("ApplicationIntelligence.Checkpoint.State.Done"), "done", T("ApplicationIntelligence.Checkpoint.Role.DoneEvidence")),
+        new(T("ApplicationIntelligence.Checkpoint.Tailor.Label"), T("ApplicationIntelligence.Checkpoint.State.InReview"), "watch", T("ApplicationIntelligence.Checkpoint.Tailor.WaitingEvidence")),
+        new(T("ApplicationIntelligence.Checkpoint.Apply.Label"), T("ApplicationIntelligence.Checkpoint.State.Waiting"), "watch", T("ApplicationIntelligence.Checkpoint.Apply.WaitingEvidence")),
+        new(T("ApplicationIntelligence.Checkpoint.FollowUp.Label"), T("ApplicationIntelligence.Checkpoint.State.Waiting"), "risk", T("ApplicationIntelligence.Checkpoint.FollowUp.WaitingEvidence")),
+        new(T("ApplicationIntelligence.Checkpoint.Learning.Label"), T("ApplicationIntelligence.Checkpoint.State.InReview"), "watch", T("ApplicationIntelligence.Checkpoint.Learning.Evidence")),
+    ];
+
+    private string LiveDecision(ApplicationIntelligenceCaseRecord record)
+    {
+        if (string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase))
+        {
+            return T("ApplicationIntelligence.Case.Decision.Applied");
+        }
+
+        if ((IsDone(record.PtStatus) || IsDone(record.PrpStatus)) && IsDone(record.PjdStatus))
+        {
+            return T("ApplicationIntelligence.Case.Decision.Tailored");
+        }
+
+        if (IsDone(record.PjdStatus))
+        {
+            return T("ApplicationIntelligence.Case.Decision.RoutingReady");
+        }
+
+        return string.Equals(record.DispositionState, "open", StringComparison.OrdinalIgnoreCase)
+            ? T("ApplicationIntelligence.Case.Decision.HighPriority")
+            : T("ApplicationIntelligence.Case.Decision.Watch");
+    }
+
+    private string LiveTone(ApplicationIntelligenceCaseRecord record)
+    {
+        if (string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase))
+        {
+            return "good";
+        }
+
+        if (IsDone(record.PjdStatus))
+        {
+            return "done";
+        }
+
+        return string.Equals(record.DispositionState, "open", StringComparison.OrdinalIgnoreCase)
+            ? "watch"
+            : "risk";
+    }
+
+    private string LiveCorrectPool(ApplicationIntelligenceCaseRecord record)
+    {
+        if (string.Equals(record.DispositionState, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            return T("ApplicationIntelligence.Case.Live.Pool.Open");
+        }
+
+        if (!string.IsNullOrWhiteSpace(record.MatchLevel))
+        {
+            return T("ApplicationIntelligence.Case.Live.Pool.Match", record.MatchLevel);
+        }
+
+        return T("ApplicationIntelligence.Case.Live.Pool.Review");
+    }
+
+    private string LiveNextAction(ApplicationIntelligenceCaseRecord record)
+    {
+        if (!IsDone(record.PjdStatus))
+        {
+            return T("ApplicationIntelligence.Case.Live.NextAction.RoleBrief");
+        }
+
+        if (!IsDone(record.PtStatus) && !IsDone(record.PrpStatus))
+        {
+            return T("ApplicationIntelligence.Case.Live.NextAction.Tailor");
+        }
+
+        if (!string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase))
+        {
+            return T("ApplicationIntelligence.Case.Live.NextAction.Apply");
+        }
+
+        if (string.Equals(record.NetworkingStage, "not_started", StringComparison.OrdinalIgnoreCase))
+        {
+            return T("ApplicationIntelligence.Case.Live.NextAction.FollowUp");
+        }
+
+        return T("ApplicationIntelligence.Case.Live.NextAction.Learn");
+    }
+
+    private IReadOnlyList<DecisionScore> BuildDecisionScores(ApplicationIntelligenceSnapshot snapshot)
+    {
+        var total = snapshot.FitSegments.Sum(segment => segment.Count);
+
+        if (total <= 0)
+        {
+            return BuildDecisionScores(ApplicationCases);
+        }
+
+        return snapshot.FitSegments
+            .Where(segment => segment.Count > 0 || segment.AverageReadiness > 0)
+            .Select(segment => new DecisionScore(
+                SegmentLabel(segment.SegmentKey),
+                Percent(segment.Count, total),
+                segment.AverageReadiness))
+            .ToList();
+    }
+
+    private static IReadOnlyList<DecisionScore> BuildDecisionScores(IReadOnlyList<ApplicationCase> cases) =>
+        cases
+            .Select(item => new DecisionScore(
+                item.Company,
+                item.EvidenceScore,
+                item.ReadinessScore))
+            .ToList();
+
+    private void SetDecisionScoreData(IReadOnlyList<DecisionScore> scores)
+    {
+        DecisionScoreData = scores;
+    }
+
+    private static int Percent(long actual, long target)
+    {
+        if (target <= 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Clamp(Math.Round((double)actual / target * 100), 0, 100);
+    }
+
+    private static string FormatCount(long value) =>
+        value.ToString("N0", CultureInfo.CurrentCulture);
+
+    private static string FormatOptionalDate(DateTimeOffset? value) =>
+        value is null ? "snapshot" : value.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    private static bool IsDone(string value) =>
+        string.Equals(value, "done", StringComparison.OrdinalIgnoreCase);
+
+    private static int NormalizeScore(int? value)
+    {
+        if (value is null || value.Value <= 0)
+        {
+            return 0;
+        }
+
+        return value.Value <= 10 ? value.Value * 10 : Math.Clamp(value.Value, 0, 100);
+    }
+
+    private static int ReadinessScore(ApplicationIntelligenceCaseRecord record)
+    {
+        var score = 0;
+
+        if (IsDone(record.PjdStatus))
+        {
+            score += 25;
+        }
+
+        if (IsDone(record.PtStatus) || IsDone(record.PrpStatus))
+        {
+            score += 25;
+        }
+
+        if (string.Equals(record.PaStatus, "applied", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 30;
+        }
+
+        if (!string.Equals(record.NetworkingStage, "not_started", StringComparison.OrdinalIgnoreCase))
+        {
+            score += 20;
+        }
+
+        return score;
+    }
+
+    private static string FirstFilled(params string?[] values) =>
+        values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+
+    private static string StatusValue(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "review" : value;
+
+    private static string StatusClass(string tone) => tone switch
+    {
+        "good" => "application-intelligence-status-good",
+        "done" => "application-intelligence-status-done",
+        "watch" => "application-intelligence-status-watch",
+        "risk" => "application-intelligence-status-risk",
+        _ => "application-intelligence-status-neutral",
+    };
+
+    private sealed record DashboardMetric(
+        string Value,
+        string Label,
+        string Detail,
+        bool Primary,
+        IReadOnlyList<MetricBreakdown>? Breakdown = null);
+
+    private sealed record MetricBreakdown(string Label, string Value);
+
+    private sealed record FunnelStep(string Value, string Label, string Detail);
+
+    private sealed record PipelineStep(string Order, string Label, string State, double Progress);
+
+    private sealed record ApplicationCase(
+        string Company,
+        string Role,
+        string Decision,
+        string Tone,
+        string CorrectPool,
+        int EvidenceScore,
+        int ReadinessScore,
+        string RoleContract,
+        string MustProve,
+        string CannotBorrow,
+        string NextAction)
+    {
+        public string SourceLabel { get; init; } = string.Empty;
+        public string SourceDetail { get; init; } = string.Empty;
+        public string FitEvidence { get; init; } = string.Empty;
+        public string ArtifactEvidence { get; init; } = string.Empty;
+        public string LearningHook { get; init; } = string.Empty;
+        public IReadOnlyList<CaseCheckpoint> Checkpoints { get; init; } = [];
+    }
+
+    private sealed record CaseCheckpoint(string Label, string State, string Tone, string Evidence);
+
+    private sealed record LearningItem(string Signal, string Title, string Detail, string Tone);
+
+    public sealed record DecisionScore(string Segment, int SignalShare, int Readiness);
+}
