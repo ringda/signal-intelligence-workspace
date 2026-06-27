@@ -6,6 +6,7 @@ using SignalIntelligenceWorkspace.Services.ApplicationIntelligence;
 using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.HubSpot;
 using SignalIntelligenceWorkspace.Services.Scenarios;
+using SignalIntelligenceWorkspace.Services.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,8 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
 app.UseHttpsRedirection();
+
+app.UseBasicAuthentication();
 
 app.UseRequestLocalization();
 
