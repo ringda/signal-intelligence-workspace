@@ -16,7 +16,10 @@ public sealed class BasicAuthMiddlewareTests
     [InlineData("/_blazor")]
     [InlineData("/favicon.png")]
     [InlineData("/app.css")]
+    [InlineData("/app.vwzsywn7n4.css")]
     [InlineData("/SignalIntelligenceWorkspace.styles.css")]
+    [InlineData("/SignalIntelligenceWorkspace.13lg14ogy8.styles.css")]
+    [InlineData("/SignalIntelligenceWorkspace.styles.abc123.js")]
     public async Task InvokeAsync_AllowsPublicAndAssetPathsWithoutCredentials(string path)
     {
         var context = CreateContext(path);

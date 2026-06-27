@@ -5,6 +5,20 @@ public sealed class BasicAuthMiddleware(
     IConfiguration configuration,
     ILogger<BasicAuthMiddleware> logger)
 {
+    private static readonly string[] PublicRootAssetExtensions =
+    [
+        ".css",
+        ".js",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".svg",
+        ".ico",
+        ".webmanifest",
+        ".woff",
+        ".woff2"
+    ];
+
     public async Task InvokeAsync(HttpContext context)
     {
         if (AllowsAnonymous(context.Request.Path))
@@ -62,7 +76,19 @@ public sealed class BasicAuthMiddleware(
             value.StartsWith("/Components/", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/favicon.png", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/app.css", StringComparison.OrdinalIgnoreCase) ||
-            value.Equals("/SignalIntelligenceWorkspace.styles.css", StringComparison.OrdinalIgnoreCase);
+            value.Equals("/SignalIntelligenceWorkspace.styles.css", StringComparison.OrdinalIgnoreCase) ||
+            IsRootStaticAsset(value);
+    }
+
+    private static bool IsRootStaticAsset(string path)
+    {
+        if (path.Length == 0 || path[0] != '/' || path.IndexOf('/', 1) >= 0)
+        {
+            return false;
+        }
+
+        return PublicRootAssetExtensions.Any(extension =>
+            path.EndsWith(extension, StringComparison.OrdinalIgnoreCase));
     }
 }
 
