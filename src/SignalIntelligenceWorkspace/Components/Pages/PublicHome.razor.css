@@ -14,6 +14,36 @@
     color: var(--ink);
     background: var(--paper);
     line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero {
+    order: 0;
+}
+
+#workflow {
+    order: 1;
+}
+
+#reliability {
+    order: 2;
+}
+
+#marketing-fit {
+    order: 3;
+}
+
+#conversation {
+    order: 4;
+}
+
+#proof {
+    order: 5;
+}
+
+.footer {
+    order: 6;
 }
 
 .hero {
@@ -423,6 +453,11 @@ h2 {
     background: var(--brick);
 }
 
+.role-note {
+    margin: 16px 0 0;
+    color: var(--muted);
+}
+
 .proof-dashboard-section {
     background: var(--paper);
 }
@@ -554,6 +589,65 @@ h2 {
 
 .message p:last-child {
     margin-bottom: 0;
+}
+
+.footer {
+    border-top: 1px solid rgba(31, 29, 26, 0.12);
+    background: var(--paper);
+    padding: 28px clamp(18px, 6vw, 76px) 38px;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.footer-inner {
+    display: flex;
+    width: min(1160px, 100%);
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 0 auto;
+}
+
+.footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.contact-link {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid rgba(224, 83, 60, 0.28);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.58);
+    padding: 7px 12px;
+    color: var(--brick-deep);
+    font-size: 0.88rem;
+    font-weight: 760;
+    line-height: 1;
+    text-decoration: none;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.contact-link:hover,
+.contact-link:focus-visible {
+    border-color: rgba(224, 83, 60, 0.7);
+    background: rgba(224, 83, 60, 0.08);
+    transform: translateY(-1px);
+}
+
+.contact-icon {
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    font-size: 0.74rem;
+    font-weight: 840;
 }
 
 @media (max-width: 1040px) {
