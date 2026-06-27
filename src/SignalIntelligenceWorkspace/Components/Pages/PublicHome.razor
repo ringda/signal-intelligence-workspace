@@ -4,303 +4,290 @@
 
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
-<main class="public-home public-proof-dashboard" data-testid="public-proof-dashboard">
-    <section class="public-dashboard-hero" aria-labelledby="public-home-title">
-        <div class="public-dashboard-copy">
-            <p class="public-kicker">Johanna Fan | Marketing / GTM / Customer Signal Analytics</p>
+<main class="public-home" data-testid="public-proof-dashboard">
+    <section class="hero" id="top" aria-labelledby="public-home-title">
+        <div class="hero-copy">
+            <p class="eyebrow">Live GTM pipeline context</p>
             <h1 id="public-home-title">Candidate Go-to-Market Pipeline</h1>
-            <p class="public-lede">
+            <p class="lead">
                 I run my job search as a live candidate GTM pipeline, turning broad market and role
                 signals into <strong>fit decisions, role-relevant proof, and tracked outreach</strong>
                 that help hiring teams quickly see where I can contribute.
             </p>
-            <div class="public-hero-notes" aria-label="Pipeline positioning">
-                <span>Quality over quantity</span>
-                <span>Review-gated AI</span>
-                <span>Dashboard-backed proof</span>
+
+            <div class="proof-strip" aria-label="System proof points" data-testid="public-kpi-strip">
+                <div class="proof">
+                    <strong>20K+</strong>
+                    <span>job-market signals screened with review rules</span>
+                </div>
+                <div class="proof">
+                    <strong>6</strong>
+                    <span>repeatable gates from signal to outreach review</span>
+                </div>
+                <div class="proof">
+                    <strong>1</strong>
+                    <span>loop connecting proof, outreach, and learning</span>
+                </div>
             </div>
         </div>
 
-        <aside class="public-governance-card" aria-label="Public data boundary">
-            <span>Public boundary</span>
-            <strong>Telerik dashboard proof without private cockpit detail.</strong>
-            <p>
-                This page uses sanitized aggregates, synthetic timeline rows, and public-safe work
-                patterns. Raw applications, outreach, company records, private notes, and HubSpot data
-                stay behind authenticated routes.
+        <div class="hero-visual" aria-label="System map">
+            <div class="system-map">
+                <div class="map-node map-node-source">Job signals</div>
+                <div class="map-node map-node-people">People signals</div>
+                <div class="map-node map-node-evidence">Evidence</div>
+                <div class="map-node map-node-review">Human review</div>
+                <div class="map-node map-node-writeback">Write-back</div>
+                <div class="map-line map-line-a"></div>
+                <div class="map-line map-line-b"></div>
+                <div class="map-line map-line-c"></div>
+                <div class="map-line map-line-d"></div>
+                <div class="map-caption">
+                    <span>Job signals</span>
+                    <span>People signals</span>
+                    <span>Evidence</span>
+                    <span>Human review</span>
+                    <span>Write-back</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="band-ink" id="workflow" aria-labelledby="public-workflow-title">
+        <div class="section-inner">
+            <p class="section-kicker">Workflow</p>
+            <h2 id="public-workflow-title">Quality over quantity.</h2>
+            <p class="section-text">
+                A high-quality application is not just a submission. It is selected with care, tailored
+                to the role, backed by proof, sent through a credible path, and reviewed for what should
+                change next.
             </p>
-        </aside>
-    </section>
+            <p class="section-text roadmap-lead">Roadmap for each application</p>
 
-    <section class="public-kpi-strip" aria-label="Public-safe pipeline metrics" data-testid="public-kpi-strip">
-        @foreach (var metric in Metrics)
-        {
-            <article class="public-kpi">
-                <span>@metric.Label</span>
-                <strong>@metric.Value</strong>
-                <p>@metric.Detail</p>
-            </article>
-        }
-    </section>
-
-    <section id="proof" class="public-dashboard-grid" aria-labelledby="public-proof-title">
-        <div class="public-panel public-chart-panel" data-testid="public-proof-chart">
-            <div class="public-section-head">
-                <p class="public-kicker">Telerik dashboard proof surface</p>
-                <h2 id="public-proof-title">Sanitized candidate GTM flow</h2>
-                <p>
-                    The chart keeps the proof inspectable: broad signals become screened opportunities,
-                    tailored proof, reviewed outreach, and learning loops without exposing source rows.
-                </p>
-            </div>
-
-            <TelerikChart Height="310px">
-                <ChartSeriesItems>
-                    <ChartSeries Type="@ChartSeriesType.Column"
-                                 Data="@StageAggregates"
-                                 Field="@nameof(PipelineAggregate.SignalVolume)"
-                                 CategoryField="@nameof(PipelineAggregate.Stage)"
-                                 Name="Public signal volume" />
-                    <ChartSeries Type="@ChartSeriesType.Line"
-                                 Data="@StageAggregates"
-                                 Field="@nameof(PipelineAggregate.ReviewedItems)"
-                                 CategoryField="@nameof(PipelineAggregate.Stage)"
-                                 Name="Human-reviewed items" />
-                </ChartSeriesItems>
-                <ChartValueAxes>
-                    <ChartValueAxis Min="0">
-                        <ChartValueAxisLabels Format="{0}" />
-                    </ChartValueAxis>
-                </ChartValueAxes>
-                <ChartLegend Position="@ChartLegendPosition.Bottom" Visible="true" />
-            </TelerikChart>
-        </div>
-
-        <aside class="public-panel public-detail-panel" data-testid="public-proof-detail" aria-labelledby="public-detail-title">
-            <div class="public-section-head">
-                <p class="public-kicker">Selected proof row</p>
-                <h2 id="public-detail-title">@SelectedProof.Theme</h2>
-                <p>@SelectedProof.PublicEvidence</p>
-            </div>
-
-            <dl class="public-detail-list">
-                <div>
-                    <dt>Decision signal</dt>
-                    <dd>@SelectedProof.Decision</dd>
-                </div>
-                <div>
-                    <dt>Public status</dt>
-                    <dd><span class="public-status @StatusClass(SelectedProof.Status)">@SelectedProof.Status</span></dd>
-                </div>
-                <div>
-                    <dt>Next human review</dt>
-                    <dd>@SelectedProof.NextReview</dd>
-                </div>
-                <div>
-                    <dt>Confidence</dt>
-                    <dd>@SelectedProof.Confidence</dd>
-                </div>
-            </dl>
-        </aside>
-    </section>
-
-    <section id="workflow" class="public-content-band public-workflow-band" aria-labelledby="public-workflow-title">
-        <div class="public-section-head">
-            <p class="public-kicker">Workflow</p>
-            <h2 id="public-workflow-title">Quality over quantity, made repeatable</h2>
-            <p>
-                Each application moves through the same public-safe operating logic: choose the right
-                opportunity, translate evidence for that role, review what can be claimed, and learn
-                from the result before the next cycle.
-            </p>
-        </div>
-
-        <ol class="public-roadmap-list" aria-label="Roadmap for each application">
-            @foreach (var step in WorkflowSteps)
-            {
-                <li>
-                    <span>@step.Number</span>
-                    <div>
+            <div class="workflow" aria-label="Roadmap for each application">
+                @foreach (var step in WorkflowSteps)
+                {
+                    <article class="workflow-step">
+                        <span class="step-icon" aria-hidden="true">@step.Number.ToString("00")</span>
+                        <span class="step-number">@step.Number.ToString("00")</span>
                         <h3>@step.Title</h3>
-                        <p>@step.Detail</p>
-                    </div>
-                </li>
-            }
-        </ol>
+                        <span class="step-dot" aria-hidden="true"></span>
+                    </article>
+                }
+            </div>
+        </div>
     </section>
 
-    <section id="reliability" class="public-content-band" aria-labelledby="public-reliability-title">
-        <div class="public-split-copy">
-            <div class="public-section-head">
-                <p class="public-kicker">Reliability layer</p>
+    <section class="band-white" id="reliability" aria-labelledby="public-reliability-title">
+        <div class="section-inner grid-2">
+            <div>
+                <p class="section-kicker">Reliability layer</p>
                 <h2 id="public-reliability-title">Context, knowledge, and tools keep AI-assisted work reviewable</h2>
-                <p>
+                <p class="section-text">
                     AI can structure research, pressure-test wording, and surface gaps. Source checks,
                     human review, and writeback rules decide what becomes a real claim or next action.
                 </p>
             </div>
 
-            <div class="public-reliability-summary">
-                <strong>What stays protected</strong>
-                <p>
-                    Private cockpit details never become public proof by default. The homepage shows
-                    aggregate logic and inspected work patterns, not raw CRM or application records.
-                </p>
+            <div class="belief-list">
+                @foreach (var layer in ReliabilityLayers)
+                {
+                    <div class="belief">
+                        <b>@layer.Name</b>
+                        <p>@layer.Detail</p>
+                    </div>
+                }
             </div>
-        </div>
-
-        <div class="public-card-grid public-reliability-grid">
-            @foreach (var layer in ReliabilityLayers)
-            {
-                <article class="public-info-card">
-                    <span>@layer.Name</span>
-                    <h3>@layer.Summary</h3>
-                    <p>@layer.Detail</p>
-                </article>
-            }
         </div>
     </section>
 
-    <section id="marketing-fit" class="public-content-band" aria-labelledby="public-marketing-title">
-        <div class="public-section-head public-narrow-copy">
-            <p class="public-kicker">Marketing / GTM analytics relevance</p>
+    <section class="band-white" id="marketing-fit" aria-labelledby="public-marketing-title">
+        <div class="section-inner">
+            <p class="section-kicker">Marketing / GTM analytics relevance</p>
             <h2 id="public-marketing-title">Noisy signals become trusted context, clearer readouts, and next actions</h2>
-            <p>
+            <p class="section-text">
                 I am not claiming mature campaign ownership. I am showing upstream work quality that
                 marketing analytics teams need: cleaner inputs, clearer definitions, visible review
                 gates, and handoffs that can support action.
             </p>
-        </div>
 
-        <div class="public-card-grid public-marketing-grid">
-            @foreach (var card in MarketingFitCards)
-            {
-                <article class="public-info-card">
-                    <span>@card.Title</span>
-                    <p>@card.Detail</p>
-                </article>
-            }
-        </div>
-
-        <div class="public-proof-boundary">
-            <div>
-                <h3>What this proves</h3>
-                <p>
-                    I can turn messy business signals into structured, reviewable context while keeping
-                    sources, decision criteria, and handoff visible across the workflow.
-                </p>
+            <div class="capability-grid">
+                @foreach (var card in MarketingFitCards)
+                {
+                    <article class="capability">
+                        <span class="capability-mark" aria-hidden="true"></span>
+                        <h3>@card.Title</h3>
+                        <p>@card.Detail</p>
+                    </article>
+                }
             </div>
-            <div>
-                <h3>What it does not overclaim</h3>
-                <p>
-                    This is not production CRM administration or a substitute for learning a team's
-                    actual marketing motion. It is a disciplined proof surface for the work quality I
-                    want to bring into that environment.
-                </p>
+
+            <div class="split-list">
+                <div class="role-block">
+                    <h3>What this proves</h3>
+                    <ul>
+                        <li>I can turn messy business signals into structured, reviewable context.</li>
+                        <li>I can keep sources, decision criteria, and handoff visible across a workflow.</li>
+                        <li>I can use AI as a disciplined quality layer, not a black-box shortcut.</li>
+                    </ul>
+                </div>
+                <div class="role-block">
+                    <h3>What it does not overclaim</h3>
+                    <ul>
+                        <li>It is not production CRM administration or mature campaign ownership.</li>
+                        <li>It is not a substitute for learning a team's actual marketing motion.</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="public-panel public-grid-panel" aria-labelledby="public-grid-title" data-testid="public-proof-grid">
-        <div class="public-section-head">
-            <p class="public-kicker">Public-safe grid</p>
-            <h2 id="public-grid-title">Inspectable proof rows, not private records</h2>
-            <p>
-                Rows describe reusable work patterns and judgment surfaces. Select a row to inspect the
-                public detail panel above.
+    <section class="band-white proof-dashboard-section" id="proof" aria-labelledby="public-proof-title">
+        <div class="section-inner">
+            <p class="section-kicker">Telerik proof surface</p>
+            <h2 id="public-proof-title">A public-safe dashboard layer, not private records.</h2>
+            <p class="section-text">
+                The Blazor / Telerik layer keeps the proof inspectable while keeping raw applications,
+                outreach, company records, private notes, and HubSpot data behind authenticated routes.
             </p>
-        </div>
 
-        <TelerikGrid Data="@ProofRows"
-                     Height="360px"
-                     Sortable="true"
-                     Resizable="true"
-                     SelectionMode="@GridSelectionMode.Single"
-                     SelectedItems="@SelectedProofRows"
-                     OnRowClick="@OnProofRowClick">
-            <GridColumns>
-                <GridColumn Field="@nameof(PublicProofRow.Theme)" Title="Proof Theme" Width="230px">
-                    <Template>
-                        @{
-                            var row = (PublicProofRow)context;
-                        }
-                        <div class="public-grid-title">
-                            <strong>@row.Theme</strong>
-                            <span>@row.Scope</span>
+            <div class="proof-dashboard-grid">
+                <div class="dashboard-panel public-chart-panel" data-testid="public-proof-chart">
+                    <TelerikChart Height="310px">
+                        <ChartSeriesItems>
+                            <ChartSeries Type="@ChartSeriesType.Column"
+                                         Data="@StageAggregates"
+                                         Field="@nameof(PipelineAggregate.SignalVolume)"
+                                         CategoryField="@nameof(PipelineAggregate.Stage)"
+                                         Name="Public signal volume" />
+                            <ChartSeries Type="@ChartSeriesType.Line"
+                                         Data="@StageAggregates"
+                                         Field="@nameof(PipelineAggregate.ReviewedItems)"
+                                         CategoryField="@nameof(PipelineAggregate.Stage)"
+                                         Name="Human-reviewed items" />
+                        </ChartSeriesItems>
+                        <ChartValueAxes>
+                            <ChartValueAxis Min="0">
+                                <ChartValueAxisLabels Format="{0}" />
+                            </ChartValueAxis>
+                        </ChartValueAxes>
+                        <ChartLegend Position="@ChartLegendPosition.Bottom" Visible="true" />
+                    </TelerikChart>
+                </div>
+
+                <aside class="dashboard-panel public-detail-panel" data-testid="public-proof-detail" aria-labelledby="public-detail-title">
+                    <p class="section-kicker">Selected proof row</p>
+                    <h3 id="public-detail-title">@SelectedProof.Theme</h3>
+                    <p>@SelectedProof.PublicEvidence</p>
+
+                    <dl class="public-detail-list">
+                        <div>
+                            <dt>Decision signal</dt>
+                            <dd>@SelectedProof.Decision</dd>
                         </div>
-                    </Template>
-                </GridColumn>
-                <GridColumn Field="@nameof(PublicProofRow.Decision)" Title="Decision Signal" Width="240px" />
-                <GridColumn Field="@nameof(PublicProofRow.Status)" Title="Public Status" Width="150px">
-                    <Template>
-                        @{
-                            var row = (PublicProofRow)context;
-                        }
-                        <span class="public-status @StatusClass(row.Status)">@row.Status</span>
-                    </Template>
-                </GridColumn>
-                <GridColumn Field="@nameof(PublicProofRow.Confidence)" Title="Confidence" Width="130px" />
-                <GridColumn Field="@nameof(PublicProofRow.NextReview)" Title="Next Review" Width="300px" />
-            </GridColumns>
-        </TelerikGrid>
+                        <div>
+                            <dt>Public status</dt>
+                            <dd><span class="public-status @StatusClass(SelectedProof.Status)">@SelectedProof.Status</span></dd>
+                        </div>
+                        <div>
+                            <dt>Next human review</dt>
+                            <dd>@SelectedProof.NextReview</dd>
+                        </div>
+                    </dl>
+                </aside>
+            </div>
+
+            <div class="dashboard-panel public-grid-panel" data-testid="public-proof-grid">
+                <TelerikGrid Data="@ProofRows"
+                             Height="360px"
+                             Sortable="true"
+                             Resizable="true"
+                             SelectionMode="@GridSelectionMode.Single"
+                             SelectedItems="@SelectedProofRows"
+                             OnRowClick="@OnProofRowClick">
+                    <GridColumns>
+                        <GridColumn Field="@nameof(PublicProofRow.Theme)" Title="Proof Theme" Width="230px">
+                            <Template>
+                                @{
+                                    var row = (PublicProofRow)context;
+                                }
+                                <div class="public-grid-title">
+                                    <strong>@row.Theme</strong>
+                                    <span>@row.Scope</span>
+                                </div>
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(PublicProofRow.Decision)" Title="Decision Signal" Width="240px" />
+                        <GridColumn Field="@nameof(PublicProofRow.Status)" Title="Public Status" Width="150px">
+                            <Template>
+                                @{
+                                    var row = (PublicProofRow)context;
+                                }
+                                <span class="public-status @StatusClass(row.Status)">@row.Status</span>
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="@nameof(PublicProofRow.Confidence)" Title="Confidence" Width="130px" />
+                        <GridColumn Field="@nameof(PublicProofRow.NextReview)" Title="Next Review" Width="300px" />
+                    </GridColumns>
+                </TelerikGrid>
+            </div>
+
+            <div class="dashboard-panel public-gantt-panel" id="roadmap" data-testid="public-proof-gantt">
+                <TelerikGantt Data="@TimelineItems"
+                              Height="360px"
+                              Width="100%"
+                              IdField="@nameof(PublicTimelineItem.Id)"
+                              ParentIdField="@nameof(PublicTimelineItem.ParentId)"
+                              TitleField="@nameof(PublicTimelineItem.Title)"
+                              StartField="@nameof(PublicTimelineItem.Start)"
+                              EndField="@nameof(PublicTimelineItem.End)"
+                              PercentCompleteField="@nameof(PublicTimelineItem.PercentComplete)"
+                              View="@GanttView.Month"
+                              TreeListWidth="360px"
+                              ColumnResizable="true"
+                              Navigable="true"
+                              ShowTooltip="true">
+                    <GanttViews>
+                        <GanttMonthView />
+                    </GanttViews>
+                    <GanttColumns>
+                        <GanttColumn Field="@nameof(PublicTimelineItem.Title)" Title="Pipeline Milestone" Expandable="true" Width="220px" />
+                        <GanttColumn Field="@nameof(PublicTimelineItem.SignalSurface)" Title="Signal Surface" Width="150px" />
+                        <GanttColumn Field="@nameof(PublicTimelineItem.ReviewGate)" Title="Review Gate" Width="170px" />
+                    </GanttColumns>
+                </TelerikGantt>
+            </div>
+        </div>
     </section>
 
-    <section id="roadmap" class="public-panel public-gantt-panel" aria-labelledby="public-gantt-title" data-testid="public-proof-gantt">
-        <div class="public-section-head">
-            <p class="public-kicker">Roadmap proof</p>
-            <h2 id="public-gantt-title">Milestone track from signal to hiring conversation</h2>
-            <p>
-                The Gantt turns the workflow into a visible operating cadence. Dates are illustrative
-                public milestones, not private application history.
-            </p>
+    <section class="band-white" id="conversation" aria-labelledby="public-conversation-title">
+        <div class="section-inner">
+            <p class="section-kicker">Conversation use</p>
+            <h2 id="public-conversation-title">A concise way to explain the pipeline after someone connects.</h2>
+            <div class="reply-box">
+                <p class="section-text">
+                    The page gives context without making the other person feel like one item in a campaign.
+                    It works best when paired with a small, role-specific question about how their team uses
+                    marketing, GTM, customer, or revenue signals to decide what happens next.
+                </p>
+                <div class="message" aria-label="Sample networking message">
+                    <p>
+                        Hi [Name], thanks for connecting. I am building toward marketing / GTM analytics roles,
+                        especially the part where messy customer, campaign, or market signals become clearer
+                        reporting and next-step decisions.
+                    </p>
+                    <p>
+                        I put together a short context page on a quality-over-quantity application pipeline I use
+                        to practice that work: role screening, source checks, evidence translation, official
+                        application, stakeholder outreach, tracking, and write-back.
+                    </p>
+                    <p>
+                        From your view, where would this kind of judgment-building profile be useful on a
+                        marketing or GTM analytics team?
+                    </p>
+                </div>
+            </div>
         </div>
-
-        <TelerikGantt Data="@TimelineItems"
-                      Height="360px"
-                      Width="100%"
-                      IdField="@nameof(PublicTimelineItem.Id)"
-                      ParentIdField="@nameof(PublicTimelineItem.ParentId)"
-                      TitleField="@nameof(PublicTimelineItem.Title)"
-                      StartField="@nameof(PublicTimelineItem.Start)"
-                      EndField="@nameof(PublicTimelineItem.End)"
-                      PercentCompleteField="@nameof(PublicTimelineItem.PercentComplete)"
-                      View="@GanttView.Month"
-                      TreeListWidth="360px"
-                      ColumnResizable="true"
-                      Navigable="true"
-                      ShowTooltip="true">
-            <GanttViews>
-                <GanttMonthView />
-            </GanttViews>
-            <GanttColumns>
-                <GanttColumn Field="@nameof(PublicTimelineItem.Title)" Title="Pipeline Milestone" Expandable="true" Width="220px" />
-                <GanttColumn Field="@nameof(PublicTimelineItem.SignalSurface)" Title="Signal Surface" Width="150px" />
-                <GanttColumn Field="@nameof(PublicTimelineItem.ReviewGate)" Title="Review Gate" Width="170px" />
-            </GanttColumns>
-        </TelerikGantt>
-    </section>
-
-    <section id="conversation" class="public-content-band public-conversation-band" aria-labelledby="public-conversation-title">
-        <div class="public-section-head">
-            <p class="public-kicker">Conversation use</p>
-            <h2 id="public-conversation-title">A concise context page for networking conversations</h2>
-            <p>
-                The page gives context without making the other person feel like one item in a campaign.
-                It works best with a small question about how their team uses marketing, GTM, customer,
-                or revenue signals to decide what happens next.
-            </p>
-        </div>
-
-        <blockquote class="public-message-sample">
-            <p>
-                I am building toward marketing / GTM analytics roles, especially the part where messy
-                customer, campaign, or market signals become clearer reporting and next-step decisions.
-            </p>
-            <p>
-                From your view, where would this kind of judgment-building profile be useful on a
-                marketing or GTM analytics team?
-            </p>
-        </blockquote>
     </section>
 </main>
 
