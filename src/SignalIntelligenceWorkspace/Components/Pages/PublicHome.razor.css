@@ -231,6 +231,29 @@ h2 {
     align-items: start;
 }
 
+.reliability-grid {
+    grid-template-columns: minmax(0, 0.72fr) minmax(420px, 1.08fr);
+    align-items: center;
+}
+
+.reliability-copy .section-text {
+    max-width: 650px;
+}
+
+.reliability-visual {
+    margin: 0;
+}
+
+.reliability-visual img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid rgba(31, 29, 26, 0.13);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 20px 54px -22px rgba(31, 29, 26, 0.28);
+}
+
 .belief-list {
     display: grid;
     gap: 12px;
@@ -552,6 +575,10 @@ h2 {
     .capability-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .reliability-visual {
+        max-width: 820px;
+    }
 }
 
 @media (max-width: 720px) {
@@ -580,6 +607,10 @@ h2 {
 
     .system-map {
         aspect-ratio: 1.05;
+    }
+
+    .reliability-visual img {
+        border-radius: 6px;
     }
 
     .workflow {

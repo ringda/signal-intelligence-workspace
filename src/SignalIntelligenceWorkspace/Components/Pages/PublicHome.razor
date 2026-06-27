@@ -71,26 +71,31 @@
     </section>
 
     <section class="band-white" id="reliability" aria-labelledby="public-reliability-title">
-        <div class="section-inner grid-2">
-            <div>
+        <div class="section-inner grid-2 reliability-grid">
+            <div class="reliability-copy">
                 <p class="section-kicker">Reliability layer</p>
-                <h2 id="public-reliability-title">Context / Knowledge / Tools keep this AI-assisted workflow from becoming random prompting.</h2>
+                <h2 id="public-reliability-title">Repeated judgment becomes reusable skill.</h2>
                 <p class="section-text">
-                    All three have to stay in sync. AI can structure research, pressure-test wording,
-                    and surface gaps; source checks, human review, and write-back decide what becomes
-                    a real claim or next action.
+                    What I want to show is not an AI tool stack. It is how repeated judgment becomes
+                    reusable skill.
+                </p>
+                <p class="section-text">
+                    Each JD, company signal, or stakeholder question first becomes the context for the
+                    task. I use AI to surface the judgment logic: what matters, what is missing, what
+                    cannot be claimed, and where human review is needed.
+                </p>
+                <p class="section-text">
+                    When the same judgment pattern repeats, I turn it into a reusable skill: source
+                    order, decision rules, guardrails, review points, and write-back behavior. The next
+                    run does not start from a fresh prompt; it starts from a clearer method.
                 </p>
             </div>
 
-            <div class="belief-list">
-                @foreach (var layer in ReliabilityLayers)
-                {
-                    <div class="belief">
-                        <b>@layer.Name</b>
-                        <p>@layer.Detail</p>
-                    </div>
-                }
-            </div>
+            <figure class="reliability-visual">
+                <img
+                    src="/public-home-reliability-engine.png"
+                    alt="Incoming contexts flow into a company workflow engine where knowledge and skills turn judgment into repeatable steps." />
+            </figure>
         </div>
     </section>
 
@@ -203,22 +208,6 @@
         new(6, "Improve the next cycle", "Review what changed, what got a response, what was overfit, and what should be reused.")
     ];
 
-    private static readonly IReadOnlyList<ReliabilityLayer> ReliabilityLayers =
-    [
-        new(
-            "Context",
-            "What world each opportunity is in: role, company, sources, status, constraints, gaps, and next action.",
-            "What world each opportunity is in: role, company, sources, status, constraints, gaps, and next action."),
-        new(
-            "Knowledge",
-            "What judgment can be reused: fit standards, correct pool, defensible proof, claim boundaries, quality gates, and exception rules.",
-            "What judgment can be reused: fit standards, correct pool, defensible proof, claim boundaries, quality gates, and exception rules."),
-        new(
-            "Tools",
-            "What can act under control: AI research and drafting, tracker, source checks, review gates, submission records, and write-back routines.",
-            "What can act under control: AI research and drafting, tracker, source checks, review gates, submission records, and write-back routines.")
-    ];
-
     private static readonly IReadOnlyList<MarketingFitCard> MarketingFitCards =
     [
         new("Analysis-ready inputs", "Source fields, status definitions, validation needs, and evidence gaps become visible before reporting."),
@@ -266,8 +255,6 @@
     };
 
     private sealed record PipelineStep(int Number, string Title, string Detail);
-
-    private sealed record ReliabilityLayer(string Name, string Summary, string Detail);
 
     private sealed record MarketingFitCard(string Title, string Detail);
 }
