@@ -124,92 +124,10 @@
     box-shadow: var(--shadow);
 }
 
-.map-node {
-    position: absolute;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    width: 16px;
-    height: 16px;
-    overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.95);
-    border-radius: 999px;
-    background: var(--brick);
-    color: transparent;
-    font-size: 0;
-    box-shadow:
-        0 0 0 8px rgba(224, 83, 60, 0.08),
-        0 12px 28px rgba(31, 29, 26, 0.12);
-}
-
-.map-node::before {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.68);
-}
-
-.map-node-source {
-    top: 18%;
-    left: 14%;
-}
-
-.map-node-people {
-    top: 25%;
-    right: 22%;
-}
-
-.map-node-evidence {
-    top: 45%;
-    left: 42%;
-}
-
-.map-node-review {
-    right: 25%;
-    bottom: 34%;
-}
-
-.map-node-writeback {
-    bottom: 28%;
-    left: 16%;
-}
-
-.map-line {
-    position: absolute;
-    z-index: 1;
-    height: 2px;
-    border-radius: 999px;
-    background: rgba(224, 83, 60, 0.35);
-    transform-origin: left center;
-}
-
-.map-line-a {
-    top: 32%;
-    left: 27%;
-    width: 38%;
-    transform: rotate(16deg);
-}
-
-.map-line-b {
-    top: 41%;
-    left: 54%;
-    width: 28%;
-    transform: rotate(42deg);
-}
-
-.map-line-c {
-    top: 58%;
-    left: 28%;
-    width: 34%;
-    transform: rotate(-32deg);
-}
-
-.map-line-d {
-    top: 68%;
-    left: 28%;
-    width: 50%;
-    transform: rotate(-5deg);
+#flowCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .map-caption {
@@ -389,6 +307,16 @@ h2 {
     color: #f3b097;
     font-size: 0.72rem;
     font-weight: 820;
+}
+
+.step-icon svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
 }
 
 .step-number {

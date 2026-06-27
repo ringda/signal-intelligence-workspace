@@ -31,17 +31,9 @@
             </div>
         </div>
 
-        <div class="hero-visual" aria-label="System map">
+        <div class="hero-visual" aria-label="Animated system map">
             <div class="system-map">
-                <div class="map-node map-node-source">Job signals</div>
-                <div class="map-node map-node-people">People signals</div>
-                <div class="map-node map-node-evidence">Evidence</div>
-                <div class="map-node map-node-review">Human review</div>
-                <div class="map-node map-node-writeback">Write-back</div>
-                <div class="map-line map-line-a"></div>
-                <div class="map-line map-line-b"></div>
-                <div class="map-line map-line-c"></div>
-                <div class="map-line map-line-d"></div>
+                <canvas id="flowCanvas" aria-hidden="true"></canvas>
                 <div class="map-caption">
                     <span>Job signals</span>
                     <span>People signals</span>
@@ -68,7 +60,7 @@
                 @foreach (var step in WorkflowSteps)
                 {
                     <article class="workflow-step">
-                        <span class="step-icon" aria-hidden="true">@step.Number.ToString("00")</span>
+                        <span class="step-icon" aria-hidden="true">@WorkflowIcon(step.Number)</span>
                         <span class="step-number">@step.Number.ToString("00")</span>
                         <h3>@step.Title</h3>
                         <span class="step-dot" aria-hidden="true"></span>
@@ -426,6 +418,44 @@
         "Guarded" => "public-status-guarded",
         "Review gate" => "public-status-review",
         _ => "public-status-neutral"
+    };
+
+    private static RenderFragment WorkflowIcon(int number) => number switch
+    {
+        1 => @<svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.5-3.5"></path>
+        </svg>,
+        2 => @<svg viewBox="0 0 24 24">
+            <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"></path>
+            <path d="M14 2v5h5"></path>
+            <path d="M8 13h8"></path>
+            <path d="M8 17h6"></path>
+        </svg>,
+        3 => @<svg viewBox="0 0 24 24">
+            <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"></path>
+            <path d="M14 2v5h5"></path>
+            <path d="m9 15 2 2 4-5"></path>
+        </svg>,
+        4 => @<svg viewBox="0 0 24 24">
+            <path d="m22 2-7 20-4-9-9-4Z"></path>
+            <path d="M22 2 11 13"></path>
+        </svg>,
+        5 => @<svg viewBox="0 0 24 24">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9.5" cy="7" r="4"></circle>
+            <path d="M17 11h4"></path>
+            <path d="M19 9v4"></path>
+        </svg>,
+        6 => @<svg viewBox="0 0 24 24">
+            <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path>
+            <path d="M3 21v-5h5"></path>
+        </svg>,
+        _ => @<svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8"></circle>
+        </svg>
     };
 
     private sealed record PublicMetric(string Label, string Value, string Detail);
