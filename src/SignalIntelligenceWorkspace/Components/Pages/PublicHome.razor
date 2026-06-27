@@ -2,29 +2,37 @@
 @page "/home"
 @layout PublicLayout
 
-<PageTitle>Johanna Fan | GTM Signal Intelligence</PageTitle>
+<PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
 <main class="public-home public-proof-dashboard" data-testid="public-proof-dashboard">
     <section class="public-dashboard-hero" aria-labelledby="public-home-title">
         <div class="public-dashboard-copy">
-            <p class="public-kicker">Public GTM signal proof</p>
-            <h1 id="public-home-title">Johanna Fan</h1>
+            <p class="public-kicker">Johanna Fan | Marketing / GTM / Customer Signal Analytics</p>
+            <h1 id="public-home-title">Candidate Go-to-Market Pipeline</h1>
             <p class="public-lede">
-                A public-safe view of how messy market, customer, and pipeline signals become
-                structured evidence, reviewable judgment, and guarded next action.
+                I run my job search as a live candidate GTM pipeline, turning broad market and role
+                signals into <strong>fit decisions, role-relevant proof, and tracked outreach</strong>
+                that help hiring teams quickly see where I can contribute.
             </p>
+            <div class="public-hero-notes" aria-label="Pipeline positioning">
+                <span>Quality over quantity</span>
+                <span>Review-gated AI</span>
+                <span>Dashboard-backed proof</span>
+            </div>
         </div>
 
         <aside class="public-governance-card" aria-label="Public data boundary">
-            <span>Data boundary</span>
-            <strong>No raw applications, outreach, company records, private notes, or HubSpot data.</strong>
+            <span>Public boundary</span>
+            <strong>Telerik dashboard proof without private cockpit detail.</strong>
             <p>
-                This page uses sanitized aggregates and projection rows only. The private cockpit stays behind auth.
+                This page uses sanitized aggregates, synthetic timeline rows, and public-safe work
+                patterns. Raw applications, outreach, company records, private notes, and HubSpot data
+                stay behind authenticated routes.
             </p>
         </aside>
     </section>
 
-    <section class="public-kpi-strip" aria-label="Public-safe proof metrics" data-testid="public-kpi-strip">
+    <section class="public-kpi-strip" aria-label="Public-safe pipeline metrics" data-testid="public-kpi-strip">
         @foreach (var metric in Metrics)
         {
             <article class="public-kpi">
@@ -38,11 +46,11 @@
     <section id="proof" class="public-dashboard-grid" aria-labelledby="public-proof-title">
         <div class="public-panel public-chart-panel" data-testid="public-proof-chart">
             <div class="public-section-head">
-                <p class="public-kicker">Pipeline proof</p>
-                <h2 id="public-proof-title">Sanitized signal-to-decision flow</h2>
+                <p class="public-kicker">Telerik dashboard proof surface</p>
+                <h2 id="public-proof-title">Sanitized candidate GTM flow</h2>
                 <p>
-                    Aggregated counts show how candidate proof is managed as an operating pipeline,
-                    without exposing source rows or private systems.
+                    The chart keeps the proof inspectable: broad signals become screened opportunities,
+                    tailored proof, reviewed outreach, and learning loops without exposing source rows.
                 </p>
             </div>
 
@@ -52,7 +60,7 @@
                                  Data="@StageAggregates"
                                  Field="@nameof(PipelineAggregate.SignalVolume)"
                                  CategoryField="@nameof(PipelineAggregate.Stage)"
-                                 Name="Signal volume" />
+                                 Name="Public signal volume" />
                     <ChartSeries Type="@ChartSeriesType.Line"
                                  Data="@StageAggregates"
                                  Field="@nameof(PipelineAggregate.ReviewedItems)"
@@ -96,12 +104,110 @@
         </aside>
     </section>
 
+    <section id="workflow" class="public-content-band public-workflow-band" aria-labelledby="public-workflow-title">
+        <div class="public-section-head">
+            <p class="public-kicker">Workflow</p>
+            <h2 id="public-workflow-title">Quality over quantity, made repeatable</h2>
+            <p>
+                Each application moves through the same public-safe operating logic: choose the right
+                opportunity, translate evidence for that role, review what can be claimed, and learn
+                from the result before the next cycle.
+            </p>
+        </div>
+
+        <ol class="public-roadmap-list" aria-label="Roadmap for each application">
+            @foreach (var step in WorkflowSteps)
+            {
+                <li>
+                    <span>@step.Number</span>
+                    <div>
+                        <h3>@step.Title</h3>
+                        <p>@step.Detail</p>
+                    </div>
+                </li>
+            }
+        </ol>
+    </section>
+
+    <section id="reliability" class="public-content-band" aria-labelledby="public-reliability-title">
+        <div class="public-split-copy">
+            <div class="public-section-head">
+                <p class="public-kicker">Reliability layer</p>
+                <h2 id="public-reliability-title">Context, knowledge, and tools keep AI-assisted work reviewable</h2>
+                <p>
+                    AI can structure research, pressure-test wording, and surface gaps. Source checks,
+                    human review, and writeback rules decide what becomes a real claim or next action.
+                </p>
+            </div>
+
+            <div class="public-reliability-summary">
+                <strong>What stays protected</strong>
+                <p>
+                    Private cockpit details never become public proof by default. The homepage shows
+                    aggregate logic and inspected work patterns, not raw CRM or application records.
+                </p>
+            </div>
+        </div>
+
+        <div class="public-card-grid public-reliability-grid">
+            @foreach (var layer in ReliabilityLayers)
+            {
+                <article class="public-info-card">
+                    <span>@layer.Name</span>
+                    <h3>@layer.Summary</h3>
+                    <p>@layer.Detail</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section id="marketing-fit" class="public-content-band" aria-labelledby="public-marketing-title">
+        <div class="public-section-head public-narrow-copy">
+            <p class="public-kicker">Marketing / GTM analytics relevance</p>
+            <h2 id="public-marketing-title">Noisy signals become trusted context, clearer readouts, and next actions</h2>
+            <p>
+                I am not claiming mature campaign ownership. I am showing upstream work quality that
+                marketing analytics teams need: cleaner inputs, clearer definitions, visible review
+                gates, and handoffs that can support action.
+            </p>
+        </div>
+
+        <div class="public-card-grid public-marketing-grid">
+            @foreach (var card in MarketingFitCards)
+            {
+                <article class="public-info-card">
+                    <span>@card.Title</span>
+                    <p>@card.Detail</p>
+                </article>
+            }
+        </div>
+
+        <div class="public-proof-boundary">
+            <div>
+                <h3>What this proves</h3>
+                <p>
+                    I can turn messy business signals into structured, reviewable context while keeping
+                    sources, decision criteria, and handoff visible across the workflow.
+                </p>
+            </div>
+            <div>
+                <h3>What it does not overclaim</h3>
+                <p>
+                    This is not production CRM administration or a substitute for learning a team's
+                    actual marketing motion. It is a disciplined proof surface for the work quality I
+                    want to bring into that environment.
+                </p>
+            </div>
+        </div>
+    </section>
+
     <section class="public-panel public-grid-panel" aria-labelledby="public-grid-title" data-testid="public-proof-grid">
         <div class="public-section-head">
             <p class="public-kicker">Public-safe grid</p>
             <h2 id="public-grid-title">Inspectable proof rows, not private records</h2>
             <p>
-                Rows describe reusable work patterns and judgment surfaces. Select a row to inspect the public detail panel.
+                Rows describe reusable work patterns and judgment surfaces. Select a row to inspect the
+                public detail panel above.
             </p>
         </div>
 
@@ -124,7 +230,7 @@
                         </div>
                     </Template>
                 </GridColumn>
-                <GridColumn Field="@nameof(PublicProofRow.Decision)" Title="Decision Signal" Width="220px" />
+                <GridColumn Field="@nameof(PublicProofRow.Decision)" Title="Decision Signal" Width="240px" />
                 <GridColumn Field="@nameof(PublicProofRow.Status)" Title="Public Status" Width="150px">
                     <Template>
                         @{
@@ -134,18 +240,18 @@
                     </Template>
                 </GridColumn>
                 <GridColumn Field="@nameof(PublicProofRow.Confidence)" Title="Confidence" Width="130px" />
-                <GridColumn Field="@nameof(PublicProofRow.NextReview)" Title="Next Review" Width="280px" />
+                <GridColumn Field="@nameof(PublicProofRow.NextReview)" Title="Next Review" Width="300px" />
             </GridColumns>
         </TelerikGrid>
     </section>
 
-    <section id="workflow" class="public-panel public-gantt-panel" aria-labelledby="public-gantt-title" data-testid="public-proof-gantt">
+    <section id="roadmap" class="public-panel public-gantt-panel" aria-labelledby="public-gantt-title" data-testid="public-proof-gantt">
         <div class="public-section-head">
-            <p class="public-kicker">Timeline proof</p>
-            <h2 id="public-gantt-title">Public milestone track for the signal workflow</h2>
+            <p class="public-kicker">Roadmap proof</p>
+            <h2 id="public-gantt-title">Milestone track from signal to hiring conversation</h2>
             <p>
-                The timeline shows how the proof system moves from signal intake through protected writeback.
-                Dates are illustrative milestones, not private application history.
+                The Gantt turns the workflow into a visible operating cadence. Dates are illustrative
+                public milestones, not private application history.
             </p>
         </div>
 
@@ -167,83 +273,150 @@
                 <GanttMonthView />
             </GanttViews>
             <GanttColumns>
-                <GanttColumn Field="@nameof(PublicTimelineItem.Title)" Title="Proof Milestone" Expandable="true" Width="220px" />
+                <GanttColumn Field="@nameof(PublicTimelineItem.Title)" Title="Pipeline Milestone" Expandable="true" Width="220px" />
                 <GanttColumn Field="@nameof(PublicTimelineItem.SignalSurface)" Title="Signal Surface" Width="150px" />
                 <GanttColumn Field="@nameof(PublicTimelineItem.ReviewGate)" Title="Review Gate" Width="170px" />
             </GanttColumns>
         </TelerikGantt>
+    </section>
+
+    <section id="conversation" class="public-content-band public-conversation-band" aria-labelledby="public-conversation-title">
+        <div class="public-section-head">
+            <p class="public-kicker">Conversation use</p>
+            <h2 id="public-conversation-title">A concise context page for networking conversations</h2>
+            <p>
+                The page gives context without making the other person feel like one item in a campaign.
+                It works best with a small question about how their team uses marketing, GTM, customer,
+                or revenue signals to decide what happens next.
+            </p>
+        </div>
+
+        <blockquote class="public-message-sample">
+            <p>
+                I am building toward marketing / GTM analytics roles, especially the part where messy
+                customer, campaign, or market signals become clearer reporting and next-step decisions.
+            </p>
+            <p>
+                From your view, where would this kind of judgment-building profile be useful on a
+                marketing or GTM analytics team?
+            </p>
+        </blockquote>
     </section>
 </main>
 
 @code {
     private static readonly IReadOnlyList<PublicMetric> Metrics =
     [
-        new("Signal pool", "20k+", "Sanitized opportunity, market, and customer signals considered at aggregate level."),
-        new("Decision pipeline", "370+", "Structured judgment records reduced into public-safe themes and stages."),
-        new("Applied workflow", "280+", "Action lifecycle represented as counts and gates, not raw application detail."),
-        new("Writeback policy", "0 auto-writes", "Private systems remain human-gated behind authenticated routes.")
+        new("Reviewed signal pool", "20K+", "Job-market signals screened with rules, source checks, and public-safe aggregation."),
+        new("Repeatable gates", "6", "A consistent path from role screening to proof, outreach review, and next-cycle learning."),
+        new("Learning loop", "1", "Evidence, outreach, application status, and judgment stay connected instead of becoming one-off notes."),
+        new("Auto-write policy", "0", "No assistant output writes to private systems without a human review and explicit confirmation gate.")
     ];
 
     private static readonly IReadOnlyList<PipelineAggregate> StageAggregates =
     [
-        new("Capture", 128, 92),
-        new("Normalize", 96, 84),
-        new("Score", 72, 66),
-        new("Review", 48, 44),
-        new("Handoff", 28, 28)
+        new("Screen", 128, 92),
+        new("Tailor", 96, 84),
+        new("Proof", 72, 66),
+        new("Apply", 48, 44),
+        new("Connect", 34, 31),
+        new("Learn", 26, 26)
+    ];
+
+    private static readonly IReadOnlyList<PipelineStep> WorkflowSteps =
+    [
+        new(1, "Find the right role", "Screen the market for fit, constraints, audience, and proof density before spending tailoring time."),
+        new(2, "Tailor the resume to the JD", "Translate source-backed experience into the role's language without inventing claims."),
+        new(3, "Prepare proof", "Package work samples, metrics, and system evidence into a hiring-manager-readable story."),
+        new(4, "Apply", "Keep the official submission and status trail distinct from draft material and experiments."),
+        new(5, "Connect with relevant people", "Use low-pressure questions tied to real work objects, team context, or handoff reality."),
+        new(6, "Improve the next cycle", "Review what changed, what got a response, what was overfit, and what should be reused.")
+    ];
+
+    private static readonly IReadOnlyList<ReliabilityLayer> ReliabilityLayers =
+    [
+        new(
+            "Context",
+            "Each opportunity stays in its task world.",
+            "Role, company, source, status, constraints, gaps, and next action are tracked before a claim is made."),
+        new(
+            "Knowledge",
+            "Reusable judgment has a source boundary.",
+            "Fit standards, correct pools, defensible proof, quality gates, and exception rules can be reused without becoming folklore."),
+        new(
+            "Tools",
+            "Action is controlled by review gates.",
+            "AI research and drafting, tracker checks, source review, submission records, and writeback routines stay separated.")
+    ];
+
+    private static readonly IReadOnlyList<MarketingFitCard> MarketingFitCards =
+    [
+        new("Analysis-ready inputs", "Source fields, status definitions, validation needs, and evidence gaps become visible before reporting."),
+        new("KPI definitions and reporting logic", "Each metric says what it counts, which source or status it trusts, and what action the readout should support."),
+        new("Stakeholder handoff", "Artifacts are written for a reader: recruiter, peer, manager, analyst, or cross-functional partner."),
+        new("Review-gated AI", "AI structures and drafts. Human checkpoints decide what gets sent, written back, or treated as true.")
     ];
 
     private static readonly IReadOnlyList<PublicProofRow> ProofRows =
     [
         new(
-            "GTM operations lane",
-            "Role and market signals grouped into repeatable operating pools.",
-            "Pool fit, sponsor risk, and proof density become comparable decision fields.",
+            "Candidate GTM operating system",
+            "Role, company, and people signals are organized into a tracked path from market screening to hiring conversation.",
+            "Fit, constraints, proof density, and next action become comparable decision fields.",
             "Ready",
             "High",
             "Refresh public aggregate after each verified private run.",
-            "Segmentation"),
+            "Pipeline"),
         new(
             "Marketing signal analytics",
-            "Campaign, lifecycle, and customer-language evidence summarized without source records.",
-            "Best public proof comes from explaining the decision logic, not showing the private row.",
+            "Market, customer-language, campaign, and revenue-adjacent signals are summarized without source records.",
+            "The strongest public proof is the reasoning path, not the private row.",
             "Ready",
             "High",
             "Keep one concise public example per proof theme.",
             "Analytics"),
         new(
-            "CRM handoff hygiene",
-            "CRM readiness is represented as policy states and review counts only.",
-            "Unsafe or unclear writeback remains blocked until a human confirms context.",
-            "Guarded",
-            "Medium",
-            "Show proposal quality, not HubSpot record contents.",
-            "Governance"),
+            "KPI and reporting logic",
+            "Dashboard rows show what each metric counts and which status or source it trusts.",
+            "A readout is only useful when it names the action it should support.",
+            "Ready",
+            "High",
+            "Keep metric definitions visible near the proof surface.",
+            "Measurement"),
         new(
-            "Interview proof packaging",
-            "Private work products are translated into short, inspectable operating claims.",
-            "A hiring manager should see the loop: signal, evidence, judgment, next action.",
+            "Stakeholder handoff",
+            "Proof is translated for the reader rather than dumped as internal process.",
+            "Recruiter, peer, manager, and analyst audiences need different evidence packaging.",
             "Ready",
             "High",
             "Pair each claim with a public-safe evidence category.",
             "Narrative"),
         new(
-            "Human approval boundary",
-            "Assistant outputs are treated as drafts until reviewed and explicitly accepted.",
-            "The strongest proof is a visible boundary between analysis and writeback.",
+            "Review-gated AI",
+            "Assistant outputs are drafts until reviewed and explicitly accepted.",
+            "The boundary between analysis and writeback is part of the proof.",
             "Review gate",
             "High",
             "Keep private routes authenticated and public routes source-redacted.",
+            "Reliability"),
+        new(
+            "Private CRM and cockpit boundary",
+            "CRM readiness and application status can be represented as policy states and counts only.",
+            "Raw records, notes, and writeback operations stay behind authentication.",
+            "Guarded",
+            "Medium",
+            "Show proposal quality and governance, not record contents.",
             "Safety")
     ];
 
     private static readonly IReadOnlyList<PublicTimelineItem> TimelineItems =
     [
-        new(1, null, "Signal intake model", "Research", "Source boundary", new DateTime(2026, 6, 1), new DateTime(2026, 6, 8), 1),
-        new(2, null, "Evidence normalization", "Pipeline", "Human review", new DateTime(2026, 6, 6), new DateTime(2026, 6, 15), 0.9),
-        new(3, null, "Public proof projection", "Portfolio", "Redaction check", new DateTime(2026, 6, 12), new DateTime(2026, 6, 22), 0.75),
-        new(4, null, "Dashboard proof surface", "Telerik UI", "Browser smoke", new DateTime(2026, 6, 20), new DateTime(2026, 6, 29), 0.65),
-        new(5, null, "Protected cockpit handoff", "Private app", "Basic Auth", new DateTime(2026, 6, 24), new DateTime(2026, 7, 3), 0.55)
+        new(1, null, "Find the right role", "Market/JD", "Fit screen", new DateTime(2026, 6, 1), new DateTime(2026, 6, 7), 1),
+        new(2, null, "Tailor resume to JD", "Evidence", "Claim boundary", new DateTime(2026, 6, 6), new DateTime(2026, 6, 13), 0.92),
+        new(3, null, "Prepare proof", "Portfolio", "Redaction check", new DateTime(2026, 6, 11), new DateTime(2026, 6, 18), 0.84),
+        new(4, null, "Apply", "Submission", "Official record", new DateTime(2026, 6, 16), new DateTime(2026, 6, 22), 0.76),
+        new(5, null, "Connect with relevant people", "Outreach", "Human review", new DateTime(2026, 6, 21), new DateTime(2026, 6, 28), 0.68),
+        new(6, null, "Improve the next cycle", "Learning loop", "Writeback policy", new DateTime(2026, 6, 26), new DateTime(2026, 7, 3), 0.58)
     ];
 
     private PublicProofRow SelectedProof { get; set; } = ProofRows[0];
@@ -272,6 +445,12 @@
 
     private sealed record PipelineAggregate(string Stage, int SignalVolume, int ReviewedItems);
 
+    private sealed record PipelineStep(int Number, string Title, string Detail);
+
+    private sealed record ReliabilityLayer(string Name, string Summary, string Detail);
+
+    private sealed record MarketingFitCard(string Title, string Detail);
+
     private sealed record PublicProofRow(
         string Theme,
         string PublicEvidence,
@@ -281,13 +460,46 @@
         string NextReview,
         string Scope);
 
-    private sealed record PublicTimelineItem(
-        int Id,
-        int? ParentId,
-        string Title,
-        string SignalSurface,
-        string ReviewGate,
-        DateTime Start,
-        DateTime End,
-        double PercentComplete);
+    private sealed class PublicTimelineItem
+    {
+        public PublicTimelineItem()
+        {
+        }
+
+        public PublicTimelineItem(
+            int id,
+            int? parentId,
+            string title,
+            string signalSurface,
+            string reviewGate,
+            DateTime start,
+            DateTime end,
+            double percentComplete)
+        {
+            Id = id;
+            ParentId = parentId;
+            Title = title;
+            SignalSurface = signalSurface;
+            ReviewGate = reviewGate;
+            Start = start;
+            End = end;
+            PercentComplete = percentComplete;
+        }
+
+        public int Id { get; set; }
+
+        public int? ParentId { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public string SignalSurface { get; set; } = string.Empty;
+
+        public string ReviewGate { get; set; } = string.Empty;
+
+        public DateTime Start { get; set; }
+
+        public DateTime End { get; set; }
+
+        public double PercentComplete { get; set; }
+    }
 }

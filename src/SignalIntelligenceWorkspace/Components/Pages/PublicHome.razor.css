@@ -1,6 +1,6 @@
 .public-home {
     display: grid;
-    gap: 18px;
+    gap: 20px;
     max-width: 1280px;
     margin: 0 auto;
     padding: 12px 28px 56px;
@@ -13,13 +13,16 @@
 .public-dashboard-hero,
 .public-kpi-strip,
 .public-dashboard-grid,
-.public-panel {
+.public-content-band,
+.public-panel,
+.public-card-grid,
+.public-proof-boundary {
     min-width: 0;
 }
 
 .public-dashboard-hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.48fr);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.48fr);
     gap: 16px;
     align-items: stretch;
 }
@@ -27,7 +30,12 @@
 .public-dashboard-copy,
 .public-governance-card,
 .public-panel,
-.public-kpi {
+.public-kpi,
+.public-content-band,
+.public-info-card,
+.public-roadmap-list li,
+.public-proof-boundary > div,
+.public-message-sample {
     border: 1px solid #dce6e1;
     border-radius: 8px;
     background: #ffffff;
@@ -36,9 +44,9 @@
 .public-dashboard-copy {
     display: grid;
     align-content: center;
-    gap: 14px;
-    min-height: 260px;
-    padding: clamp(24px, 5vw, 52px);
+    gap: 16px;
+    min-height: 310px;
+    padding: 52px;
 }
 
 .public-kicker {
@@ -51,19 +59,45 @@
 }
 
 .public-dashboard-copy h1 {
+    max-width: 860px;
     margin: 0;
     color: #17231f;
-    font-size: clamp(2.3rem, 6vw, 4.6rem);
-    line-height: 0.98;
+    font-size: 4.15rem;
+    line-height: 1.02;
     letter-spacing: 0;
 }
 
 .public-lede {
-    max-width: 760px;
+    max-width: 790px;
     margin: 0;
     color: #45544f;
     font-size: 1.08rem;
     line-height: 1.58;
+}
+
+.public-lede strong {
+    color: #17231f;
+    font-weight: 800;
+}
+
+.public-hero-notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.public-hero-notes span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    border: 1px solid #c9ddd5;
+    border-radius: 999px;
+    background: #f4f8f6;
+    padding: 4px 10px;
+    color: #24493b;
+    font-size: 0.86rem;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
 .public-governance-card {
@@ -71,7 +105,8 @@
     align-content: end;
     gap: 10px;
     padding: 22px;
-    background: #f4f8f6;
+    background: #f8fbff;
+    border-color: #dbe7f4;
 }
 
 .public-governance-card span,
@@ -92,7 +127,12 @@
 .public-section-head p,
 .public-kpi p,
 .public-detail-list dd,
-.public-grid-title span {
+.public-grid-title span,
+.public-info-card p,
+.public-roadmap-list p,
+.public-reliability-summary p,
+.public-proof-boundary p,
+.public-message-sample p {
     margin: 0;
     color: #53645e;
     line-height: 1.5;
@@ -125,7 +165,8 @@
     align-items: stretch;
 }
 
-.public-panel {
+.public-panel,
+.public-content-band {
     display: grid;
     gap: 16px;
     padding: 20px;
@@ -138,10 +179,15 @@
 }
 
 .public-section-head h2 {
+    max-width: 900px;
     margin: 0;
     color: #17231f;
-    font-size: clamp(1.35rem, 3vw, 2rem);
-    line-height: 1.15;
+    font-size: 1.85rem;
+    line-height: 1.16;
+}
+
+.public-narrow-copy {
+    max-width: 860px;
 }
 
 .public-chart-panel,
@@ -178,6 +224,131 @@
 
 .public-detail-list dd {
     color: #23313a;
+}
+
+.public-workflow-band {
+    background: #fcfbf7;
+    border-color: #e5dcc2;
+}
+
+.public-roadmap-list {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.public-roadmap-list li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+    padding: 14px;
+    background: #ffffff;
+}
+
+.public-roadmap-list li > span {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 999px;
+    background: #184f85;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.public-roadmap-list h3,
+.public-info-card h3,
+.public-proof-boundary h3 {
+    margin: 0 0 5px;
+    color: #17231f;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.public-roadmap-list div,
+.public-info-card,
+.public-proof-boundary > div {
+    min-width: 0;
+}
+
+.public-card-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.public-reliability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.public-marketing-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.public-info-card {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    padding: 16px;
+}
+
+.public-info-card span {
+    color: #0f6048;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.public-split-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+.public-reliability-summary {
+    display: grid;
+    align-content: center;
+    gap: 8px;
+    border: 1px solid #e6d5a9;
+    border-radius: 8px;
+    background: #fffaf0;
+    padding: 16px;
+}
+
+.public-reliability-summary strong {
+    color: #3d3218;
+    font-size: 1.05rem;
+    line-height: 1.25;
+}
+
+.public-proof-boundary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.public-proof-boundary > div {
+    padding: 16px;
+    background: #fbfcfd;
+}
+
+.public-conversation-band {
+    background: #f7fbf8;
+}
+
+.public-message-sample {
+    display: grid;
+    gap: 10px;
+    max-width: 860px;
+    margin: 0;
+    padding: 18px;
+    border-color: #cbded4;
+    background: #ffffff;
 }
 
 .public-grid-title {
@@ -240,14 +411,31 @@
     width: 100%;
 }
 
+@media (max-width: 1180px) {
+    .public-roadmap-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .public-marketing-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 1060px) {
     .public-dashboard-hero,
-    .public-dashboard-grid {
+    .public-dashboard-grid,
+    .public-split-copy {
         grid-template-columns: 1fr;
     }
 
-    .public-kpi-strip {
+    .public-kpi-strip,
+    .public-reliability-grid,
+    .public-proof-boundary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .public-dashboard-copy h1 {
+        font-size: 3.2rem;
     }
 }
 
@@ -256,7 +444,11 @@
         padding: 8px 16px 40px;
     }
 
-    .public-kpi-strip {
+    .public-kpi-strip,
+    .public-roadmap-list,
+    .public-reliability-grid,
+    .public-marketing-grid,
+    .public-proof-boundary {
         grid-template-columns: 1fr;
     }
 
@@ -265,8 +457,22 @@
         padding: 24px;
     }
 
-    .public-panel {
+    .public-dashboard-copy h1 {
+        font-size: 2.45rem;
+    }
+
+    .public-section-head h2 {
+        font-size: 1.45rem;
+    }
+
+    .public-panel,
+    .public-content-band {
         padding: 16px;
+    }
+
+    .public-hero-notes span {
+        width: 100%;
+        white-space: normal;
     }
 
     .public-grid-panel ::deep .k-grid,
