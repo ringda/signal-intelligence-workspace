@@ -4,7 +4,7 @@
 
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
-<main class="public-home" data-testid="public-proof-dashboard">
+<main class="public-home" data-testid="candidate-gtm-page">
     <section class="hero" id="top" aria-labelledby="public-home-title">
         <div class="hero-copy">
             <p class="eyebrow">Live GTM pipeline context</p>
@@ -144,124 +144,6 @@
         </div>
     </section>
 
-    <section class="band-white proof-dashboard-section" id="proof" aria-labelledby="public-proof-title">
-        <div class="section-inner">
-            <p class="section-kicker">Telerik proof surface</p>
-            <h2 id="public-proof-title">A public-safe dashboard layer, not private records.</h2>
-            <p class="section-text">
-                The Blazor / Telerik layer keeps the proof inspectable while keeping raw applications,
-                outreach, company records, private notes, and HubSpot data behind authenticated routes.
-            </p>
-
-            <div class="proof-dashboard-grid">
-                <div class="dashboard-panel public-chart-panel" data-testid="public-proof-chart">
-                    <TelerikChart Height="310px">
-                        <ChartSeriesItems>
-                            <ChartSeries Type="@ChartSeriesType.Column"
-                                         Data="@StageAggregates"
-                                         Field="@nameof(PipelineAggregate.SignalVolume)"
-                                         CategoryField="@nameof(PipelineAggregate.Stage)"
-                                         Name="Public signal volume" />
-                            <ChartSeries Type="@ChartSeriesType.Line"
-                                         Data="@StageAggregates"
-                                         Field="@nameof(PipelineAggregate.ReviewedItems)"
-                                         CategoryField="@nameof(PipelineAggregate.Stage)"
-                                         Name="Human-reviewed items" />
-                        </ChartSeriesItems>
-                        <ChartValueAxes>
-                            <ChartValueAxis Min="0">
-                                <ChartValueAxisLabels Format="{0}" />
-                            </ChartValueAxis>
-                        </ChartValueAxes>
-                        <ChartLegend Position="@ChartLegendPosition.Bottom" Visible="true" />
-                    </TelerikChart>
-                </div>
-
-                <aside class="dashboard-panel public-detail-panel" data-testid="public-proof-detail" aria-labelledby="public-detail-title">
-                    <p class="section-kicker">Selected proof row</p>
-                    <h3 id="public-detail-title">@SelectedProof.Theme</h3>
-                    <p>@SelectedProof.PublicEvidence</p>
-
-                    <dl class="public-detail-list">
-                        <div>
-                            <dt>Decision signal</dt>
-                            <dd>@SelectedProof.Decision</dd>
-                        </div>
-                        <div>
-                            <dt>Public status</dt>
-                            <dd><span class="public-status @StatusClass(SelectedProof.Status)">@SelectedProof.Status</span></dd>
-                        </div>
-                        <div>
-                            <dt>Next human review</dt>
-                            <dd>@SelectedProof.NextReview</dd>
-                        </div>
-                    </dl>
-                </aside>
-            </div>
-
-            <div class="dashboard-panel public-grid-panel" data-testid="public-proof-grid">
-                <TelerikGrid Data="@ProofRows"
-                             Height="360px"
-                             Sortable="true"
-                             Resizable="true"
-                             SelectionMode="@GridSelectionMode.Single"
-                             SelectedItems="@SelectedProofRows"
-                             OnRowClick="@OnProofRowClick">
-                    <GridColumns>
-                        <GridColumn Field="@nameof(PublicProofRow.Theme)" Title="Proof Theme" Width="230px">
-                            <Template>
-                                @{
-                                    var row = (PublicProofRow)context;
-                                }
-                                <div class="public-grid-title">
-                                    <strong>@row.Theme</strong>
-                                    <span>@row.Scope</span>
-                                </div>
-                            </Template>
-                        </GridColumn>
-                        <GridColumn Field="@nameof(PublicProofRow.Decision)" Title="Decision Signal" Width="240px" />
-                        <GridColumn Field="@nameof(PublicProofRow.Status)" Title="Public Status" Width="150px">
-                            <Template>
-                                @{
-                                    var row = (PublicProofRow)context;
-                                }
-                                <span class="public-status @StatusClass(row.Status)">@row.Status</span>
-                            </Template>
-                        </GridColumn>
-                        <GridColumn Field="@nameof(PublicProofRow.Confidence)" Title="Confidence" Width="130px" />
-                        <GridColumn Field="@nameof(PublicProofRow.NextReview)" Title="Next Review" Width="300px" />
-                    </GridColumns>
-                </TelerikGrid>
-            </div>
-
-            <div class="dashboard-panel public-gantt-panel" id="roadmap" data-testid="public-proof-gantt">
-                <TelerikGantt Data="@TimelineItems"
-                              Height="360px"
-                              Width="100%"
-                              IdField="@nameof(PublicTimelineItem.Id)"
-                              ParentIdField="@nameof(PublicTimelineItem.ParentId)"
-                              TitleField="@nameof(PublicTimelineItem.Title)"
-                              StartField="@nameof(PublicTimelineItem.Start)"
-                              EndField="@nameof(PublicTimelineItem.End)"
-                              PercentCompleteField="@nameof(PublicTimelineItem.PercentComplete)"
-                              View="@GanttView.Month"
-                              TreeListWidth="360px"
-                              ColumnResizable="true"
-                              Navigable="true"
-                              ShowTooltip="true">
-                    <GanttViews>
-                        <GanttMonthView />
-                    </GanttViews>
-                    <GanttColumns>
-                        <GanttColumn Field="@nameof(PublicTimelineItem.Title)" Title="Pipeline Milestone" Expandable="true" Width="220px" />
-                        <GanttColumn Field="@nameof(PublicTimelineItem.SignalSurface)" Title="Signal Surface" Width="150px" />
-                        <GanttColumn Field="@nameof(PublicTimelineItem.ReviewGate)" Title="Review Gate" Width="170px" />
-                    </GanttColumns>
-                </TelerikGantt>
-            </div>
-        </div>
-    </section>
-
     <section class="band-white" id="conversation" aria-labelledby="public-conversation-title">
         <div class="section-inner">
             <p class="section-kicker">Conversation use</p>
@@ -311,24 +193,6 @@
 </main>
 
 @code {
-    private static readonly IReadOnlyList<PublicMetric> Metrics =
-    [
-        new("Reviewed signal pool", "20K+", "Job-market signals screened with rules, source checks, and public-safe aggregation."),
-        new("Repeatable gates", "6", "A consistent path from role screening to proof, outreach review, and next-cycle learning."),
-        new("Learning loop", "1", "Evidence, outreach, application status, and judgment stay connected instead of becoming one-off notes."),
-        new("Auto-write policy", "0", "No assistant output writes to private systems without a human review and explicit confirmation gate.")
-    ];
-
-    private static readonly IReadOnlyList<PipelineAggregate> StageAggregates =
-    [
-        new("Screen", 128, 92),
-        new("Tailor", 96, 84),
-        new("Proof", 72, 66),
-        new("Apply", 48, 44),
-        new("Connect", 34, 31),
-        new("Learn", 26, 26)
-    ];
-
     private static readonly IReadOnlyList<PipelineStep> WorkflowSteps =
     [
         new(1, "Find the right role", "Screen the market for fit, constraints, audience, and proof density before spending tailoring time."),
@@ -362,90 +226,6 @@
         new("Stakeholder handoff", "Each artifact is written for a reader: recruiter, peer, manager, analyst, or cross-functional partner."),
         new("Review-gated AI", "AI structures and drafts. Human checkpoints decide what gets sent, written back, or treated as true.")
     ];
-
-    private static readonly IReadOnlyList<PublicProofRow> ProofRows =
-    [
-        new(
-            "Candidate GTM operating system",
-            "Role, company, and people signals are organized into a tracked path from market screening to hiring conversation.",
-            "Fit, constraints, proof density, and next action become comparable decision fields.",
-            "Ready",
-            "High",
-            "Refresh public aggregate after each verified private run.",
-            "Pipeline"),
-        new(
-            "Marketing signal analytics",
-            "Market, customer-language, campaign, and revenue-adjacent signals are summarized without source records.",
-            "The strongest public proof is the reasoning path, not the private row.",
-            "Ready",
-            "High",
-            "Keep one concise public example per proof theme.",
-            "Analytics"),
-        new(
-            "KPI and reporting logic",
-            "Dashboard rows show what each metric counts and which status or source it trusts.",
-            "A readout is only useful when it names the action it should support.",
-            "Ready",
-            "High",
-            "Keep metric definitions visible near the proof surface.",
-            "Measurement"),
-        new(
-            "Stakeholder handoff",
-            "Proof is translated for the reader rather than dumped as internal process.",
-            "Recruiter, peer, manager, and analyst audiences need different evidence packaging.",
-            "Ready",
-            "High",
-            "Pair each claim with a public-safe evidence category.",
-            "Narrative"),
-        new(
-            "Review-gated AI",
-            "Assistant outputs are drafts until reviewed and explicitly accepted.",
-            "The boundary between analysis and writeback is part of the proof.",
-            "Review gate",
-            "High",
-            "Keep private routes authenticated and public routes source-redacted.",
-            "Reliability"),
-        new(
-            "Private CRM and cockpit boundary",
-            "CRM readiness and application status can be represented as policy states and counts only.",
-            "Raw records, notes, and writeback operations stay behind authentication.",
-            "Guarded",
-            "Medium",
-            "Show proposal quality and governance, not record contents.",
-            "Safety")
-    ];
-
-    private static readonly IReadOnlyList<PublicTimelineItem> TimelineItems =
-    [
-        new(1, null, "Find the right role", "Market/JD", "Fit screen", new DateTime(2026, 6, 1), new DateTime(2026, 6, 7), 1),
-        new(2, null, "Tailor resume to JD", "Evidence", "Claim boundary", new DateTime(2026, 6, 6), new DateTime(2026, 6, 13), 0.92),
-        new(3, null, "Prepare proof", "Portfolio", "Redaction check", new DateTime(2026, 6, 11), new DateTime(2026, 6, 18), 0.84),
-        new(4, null, "Apply", "Submission", "Official record", new DateTime(2026, 6, 16), new DateTime(2026, 6, 22), 0.76),
-        new(5, null, "Connect with relevant people", "Outreach", "Human review", new DateTime(2026, 6, 21), new DateTime(2026, 6, 28), 0.68),
-        new(6, null, "Improve the next cycle", "Learning loop", "Writeback policy", new DateTime(2026, 6, 26), new DateTime(2026, 7, 3), 0.58)
-    ];
-
-    private PublicProofRow SelectedProof { get; set; } = ProofRows[0];
-
-    private IEnumerable<PublicProofRow> SelectedProofRows => [SelectedProof];
-
-    private Task OnProofRowClick(GridRowClickEventArgs args)
-    {
-        if (args.Item is PublicProofRow selected)
-        {
-            SelectedProof = selected;
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private static string StatusClass(string status) => status switch
-    {
-        "Ready" => "public-status-ready",
-        "Guarded" => "public-status-guarded",
-        "Review gate" => "public-status-review",
-        _ => "public-status-neutral"
-    };
 
     private static RenderFragment WorkflowIcon(int number) => number switch
     {
@@ -485,65 +265,9 @@
         </svg>
     };
 
-    private sealed record PublicMetric(string Label, string Value, string Detail);
-
-    private sealed record PipelineAggregate(string Stage, int SignalVolume, int ReviewedItems);
-
     private sealed record PipelineStep(int Number, string Title, string Detail);
 
     private sealed record ReliabilityLayer(string Name, string Summary, string Detail);
 
     private sealed record MarketingFitCard(string Title, string Detail);
-
-    private sealed record PublicProofRow(
-        string Theme,
-        string PublicEvidence,
-        string Decision,
-        string Status,
-        string Confidence,
-        string NextReview,
-        string Scope);
-
-    private sealed class PublicTimelineItem
-    {
-        public PublicTimelineItem()
-        {
-        }
-
-        public PublicTimelineItem(
-            int id,
-            int? parentId,
-            string title,
-            string signalSurface,
-            string reviewGate,
-            DateTime start,
-            DateTime end,
-            double percentComplete)
-        {
-            Id = id;
-            ParentId = parentId;
-            Title = title;
-            SignalSurface = signalSurface;
-            ReviewGate = reviewGate;
-            Start = start;
-            End = end;
-            PercentComplete = percentComplete;
-        }
-
-        public int Id { get; set; }
-
-        public int? ParentId { get; set; }
-
-        public string Title { get; set; } = string.Empty;
-
-        public string SignalSurface { get; set; } = string.Empty;
-
-        public string ReviewGate { get; set; } = string.Empty;
-
-        public DateTime Start { get; set; }
-
-        public DateTime End { get; set; }
-
-        public double PercentComplete { get; set; }
-    }
 }
