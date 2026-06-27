@@ -1,0 +1,78 @@
+.public-shell {
+    min-height: 100vh;
+    background: #f7f9f8;
+    color: #18231f;
+}
+
+.public-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 20px 28px;
+}
+
+.public-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #17231f;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.public-brand-mark {
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid #cbd8d3;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f6048;
+    font-size: 0.88rem;
+    letter-spacing: 0;
+}
+
+.public-links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.public-links a {
+    color: #4e5f58;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.public-links a:hover,
+.public-links a:focus {
+    color: #0f6048;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.public-private-link {
+    border: 1px solid #b9d7cb;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 9px 12px;
+}
+
+@media (max-width: 720px) {
+    .public-nav {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    .public-links {
+        justify-content: flex-start;
+    }
+}

@@ -1,0 +1,111 @@
+@page "/"
+@page "/home"
+@layout PublicLayout
+
+<PageTitle>Johanna Fan | GTM Signal Intelligence</PageTitle>
+
+<main class="public-home">
+    <section class="public-hero" aria-labelledby="public-home-title">
+        <div class="public-hero-copy">
+            <p class="public-kicker">GTM / customer signal analytics</p>
+            <h1 id="public-home-title">Johanna Fan</h1>
+            <p class="public-lede">
+                I turn noisy market, customer, and pipeline signals into structured operating context:
+                what changed, what matters, what evidence supports it, and what a human should review next.
+            </p>
+            <div class="public-actions">
+                <a class="public-primary-action" href="#proof">Review public proof</a>
+                <a class="public-secondary-action" href="/cockpit">Open private cockpit</a>
+            </div>
+        </div>
+
+        <aside class="public-proof-card" aria-label="Public-safe proof snapshot">
+            <span>Current public frame</span>
+            <strong>Signal-to-action GTM operator</strong>
+            <p>
+                Portfolio evidence is summarized here without exposing raw applications, private notes,
+                outreach, HubSpot data, or company-specific records.
+            </p>
+        </aside>
+    </section>
+
+    <section id="proof" class="public-section" aria-labelledby="public-proof-title">
+        <div class="public-section-head">
+            <p class="public-kicker">Public-safe operating proof</p>
+            <h2 id="public-proof-title">The visible layer: decisions, not private records</h2>
+        </div>
+
+        <div class="public-kpi-grid" aria-label="Public proof metrics">
+            @foreach (var metric in Metrics)
+            {
+                <article class="public-kpi">
+                    <span>@metric.Label</span>
+                    <strong>@metric.Value</strong>
+                    <p>@metric.Detail</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section id="workflow" class="public-section public-workflow" aria-labelledby="public-workflow-title">
+        <div class="public-section-head">
+            <p class="public-kicker">How the work is governed</p>
+            <h2 id="public-workflow-title">A repeatable pipeline for GTM judgment</h2>
+        </div>
+
+        <div class="public-stage-grid">
+            @foreach (var stage in Stages)
+            {
+                <article class="public-stage">
+                    <span>@stage.Step</span>
+                    <h3>@stage.Title</h3>
+                    <p>@stage.Body</p>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section id="roadmap" class="public-section public-roadmap" aria-labelledby="public-roadmap-title">
+        <div class="public-section-head">
+            <p class="public-kicker">Built for future Telerik views</p>
+            <h2 id="public-roadmap-title">Homepage structure ready for richer proof modules</h2>
+        </div>
+
+        <div class="public-roadmap-grid">
+            <article class="public-roadmap-card">
+                <h3>KPI tiles</h3>
+                <p>Public aggregate numbers can graduate into Telerik card or tile modules without exposing source rows.</p>
+            </article>
+            <article class="public-roadmap-card">
+                <h3>Pipeline chart</h3>
+                <p>A future chart can show volume by stage or theme using sanitized aggregate counts only.</p>
+            </article>
+            <article class="public-roadmap-card">
+                <h3>Gantt-style timeline</h3>
+                <p>Milestones can show project cadence and handoff points while keeping private systems behind auth.</p>
+            </article>
+        </div>
+    </section>
+</main>
+
+@code {
+    private static readonly IReadOnlyList<PublicMetric> Metrics =
+    [
+        new("Signal pool", "20k+", "AI/rubric-screened opportunity signals summarized at aggregate level."),
+        new("Decision pipeline", "370+", "Structured role and market decisions without exposing individual records."),
+        new("Applied workflow", "280+", "Lifecycle evidence translated into safe public proof, not raw application detail."),
+        new("Governed handoff", "Human gate", "AI helps structure analysis; sensitive writeback remains review-bound.")
+    ];
+
+    private static readonly IReadOnlyList<PublicStage> Stages =
+    [
+        new("01", "Capture signal", "Collect market, customer, and pipeline inputs from live systems or structured research."),
+        new("02", "Normalize evidence", "Turn messy facts into comparable fields, status, risk, source, and next-action context."),
+        new("03", "Review decision", "Separate evidence from inference so a human can approve, reject, or inspect further."),
+        new("04", "Protect writeback", "Keep private records, CRM data, outreach, and application details behind authenticated routes.")
+    ];
+
+    private sealed record PublicMetric(string Label, string Value, string Detail);
+
+    private sealed record PublicStage(string Step, string Title, string Body);
+}

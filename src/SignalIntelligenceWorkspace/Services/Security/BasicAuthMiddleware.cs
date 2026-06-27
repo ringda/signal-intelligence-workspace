@@ -7,6 +7,12 @@ public sealed class BasicAuthMiddleware(
 {
     public async Task InvokeAsync(HttpContext context)
     {
+        if (AllowsAnonymous(context.Request.Path))
+        {
+            await next(context);
+            return;
+        }
+
         var options = BasicAuthOptions.FromConfiguration(configuration);
 
         if (!options.IsConfigured)
@@ -40,6 +46,23 @@ public sealed class BasicAuthMiddleware(
             .Replace("\"", "\\\"", StringComparison.Ordinal);
 
         return $"Basic realm=\"{escapedRealm}\", charset=\"UTF-8\"";
+    }
+
+    private static bool AllowsAnonymous(PathString path)
+    {
+        var value = path.Value ?? string.Empty;
+        if (string.IsNullOrEmpty(value) || value is "/" or "/home")
+        {
+            return true;
+        }
+
+        return value.StartsWith("/_framework/", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("/_blazor", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("/Components/", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("/favicon.png", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("/app.css", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("/SignalIntelligenceWorkspace.styles.css", StringComparison.OrdinalIgnoreCase);
     }
 }
 
