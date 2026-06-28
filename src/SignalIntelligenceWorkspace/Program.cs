@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using SignalIntelligenceWorkspace.Components;
 using SignalIntelligenceWorkspace.Services;

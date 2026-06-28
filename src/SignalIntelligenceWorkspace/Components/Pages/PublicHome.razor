@@ -2,6 +2,7 @@
 @page "/home"
 @layout PublicLayout
 @inject NavigationManager Navigation
+@inject PublicFeedbackInbox FeedbackInbox
 
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
@@ -183,16 +184,24 @@
                                                Layout="@RadioGroupLayout.Horizontal"
                                                AriaLabel="Choose a feedback type" />
                         </div>
-                        <TelerikTextArea @bind-Value="@FeedbackMessage"
+                        <TelerikTextArea Value="@FeedbackMessage"
+                                         ValueChanged="@OnFeedbackMessageChanged"
                                          Placeholder="A quick read in one or two sentences..."
                                          Rows="4"
                                          MaxLength="600"
+                                         DebounceDelay="0"
                                          ResizeMode="@TextAreaResizeMode.Vertical"
                                          Width="100%"
                                          AriaLabel="Quick feedback message" />
+                        <input class="feedback-honeypot"
+                               aria-hidden="true"
+                               tabindex="-1"
+                               autocomplete="off"
+                               @bind="FeedbackWebsite" />
                         <TelerikButton ButtonType="@ButtonType.Button"
                                        Class="feedback-submit"
-                                       OnClick="@DraftFeedbackEmail">
+                                       Enabled="@(!IsSubmittingFeedback)"
+                                       OnClick="@SubmitFeedbackAsync">
                             Send a quick read
                         </TelerikButton>
                     </div>
@@ -229,6 +238,10 @@
     private string SelectedFeedbackType { get; set; } = "most-useful";
 
     private string FeedbackMessage { get; set; } = string.Empty;
+
+    private string FeedbackWebsite { get; set; } = string.Empty;
+
+    private bool IsSubmittingFeedback { get; set; }
 
     private TelerikNotification? NotificationReference { get; set; }
 
@@ -291,7 +304,12 @@
 
     private sealed record FeedbackOption(string Value, string Label);
 
-    private void DraftFeedbackEmail()
+    private void OnFeedbackMessageChanged(string value)
+    {
+        FeedbackMessage = value;
+    }
+
+    private async Task SubmitFeedbackAsync()
     {
         if (string.IsNullOrWhiteSpace(FeedbackMessage))
         {
@@ -305,11 +323,50 @@
             return;
         }
 
-        var selectedLabel = FeedbackOptions.FirstOrDefault(option => option.Value == SelectedFeedbackType)?.Label ?? "Quick read";
-        var subject = Uri.EscapeDataString("Quick read on your Candidate GTM page");
-        var body = Uri.EscapeDataString(
-            $"I read your Candidate GTM page. My quick read: {selectedLabel}.{Environment.NewLine}{Environment.NewLine}{FeedbackMessage.Trim()}");
+        if (!string.IsNullOrWhiteSpace(FeedbackWebsite))
+        {
+            FeedbackMessage = string.Empty;
+            FeedbackWebsite = string.Empty;
+            ShowFeedbackReceived();
+            return;
+        }
 
-        Navigation.NavigateTo($"mailto:xxfan9@gmail.com?subject={subject}&body={body}", forceLoad: true);
+        IsSubmittingFeedback = true;
+        try
+        {
+            var pagePath = new Uri(Navigation.Uri).PathAndQuery;
+            await FeedbackInbox.SubmitAsync(new PublicFeedbackSubmission(
+                SelectedFeedbackType,
+                FeedbackMessage,
+                pagePath));
+
+            FeedbackMessage = string.Empty;
+            ShowFeedbackReceived();
+        }
+        catch (ArgumentException exception)
+        {
+            NotificationReference?.Show(new NotificationModel
+            {
+                Text = exception.Message,
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                ShowIcon = true,
+                CloseAfter = 3600
+            });
+        }
+        finally
+        {
+            IsSubmittingFeedback = false;
+        }
+    }
+
+    private void ShowFeedbackReceived()
+    {
+        NotificationReference?.Show(new NotificationModel
+        {
+            Text = "Received. Thank you for the quick read.",
+            ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
+            ShowIcon = true,
+            CloseAfter = 4200
+        });
     }
 }

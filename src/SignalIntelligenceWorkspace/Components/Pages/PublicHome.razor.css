@@ -580,6 +580,15 @@ h2 {
     gap: 12px;
 }
 
+.feedback-honeypot {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .feedback-type {
     border: 1px solid rgba(224, 83, 60, 0.22);
     border-radius: 8px;
