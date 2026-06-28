@@ -92,6 +92,7 @@ app.UseBasicAuthentication();
 
 app.UseRequestLocalization();
 app.UseRateLimiter();
+app.UseStaticFiles();
 
 app.MapStaticAssets();
 app.UseAntiforgery();
