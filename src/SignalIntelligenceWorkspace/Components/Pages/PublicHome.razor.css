@@ -564,6 +564,37 @@ h2 {
     margin-bottom: 0;
 }
 
+.reply-card {
+    display: grid;
+    gap: 16px;
+}
+
+.reply-card p:first-child {
+    color: var(--ink);
+    font-size: 1.1rem;
+    font-weight: 760;
+}
+
+.reply-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.reply-options span {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(224, 83, 60, 0.22);
+    border-radius: 999px;
+    background: rgba(224, 83, 60, 0.06);
+    color: var(--brick-deep);
+    font-size: 0.86rem;
+    font-weight: 820;
+    text-align: center;
+}
+
 .footer {
     border-top: 1px solid rgba(31, 29, 26, 0.12);
     background: var(--paper);
@@ -681,6 +712,10 @@ h2 {
 
     .decision-chips {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reply-options {
+        grid-template-columns: 1fr;
     }
 
     .system-map {
