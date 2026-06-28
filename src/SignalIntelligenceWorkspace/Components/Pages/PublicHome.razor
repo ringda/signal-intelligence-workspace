@@ -102,52 +102,62 @@
     </section>
 
     <section class="band-white" id="marketing-fit" aria-labelledby="public-marketing-title">
-        <div class="section-inner">
-            <p class="section-kicker">Marketing Fit</p>
-            <h2 id="public-marketing-title">Why it matters for Marketing / GTM analytics</h2>
-            <p class="section-text">
-                That reliability layer is what makes the pipeline relevant to Marketing / GTM analytics:
-                scattered signals become trusted context, a clearer readout, and a next action.
-            </p>
-            <p class="section-text">
-                I am not claiming mature campaign ownership. I am showing the upstream work quality
-                marketing analytics teams need: cleaner inputs, clearer definitions, visible review
-                gates, and readouts that can support action.
-            </p>
-
-            <div class="capability-grid">
-                @foreach (var card in MarketingFitCards)
-                {
-                    <article class="capability">
-                        <span class="capability-mark" aria-hidden="true"></span>
-                        <h3>@card.Title</h3>
-                        <p>@card.Detail</p>
-                    </article>
-                }
+        <div class="section-inner marketing-fit-layout">
+            <div class="marketing-fit-copy">
+                <p class="section-kicker">Marketing Fit</p>
+                <h2 id="public-marketing-title">Why it matters for <span>Marketing / GTM analytics</span></h2>
+                <p class="section-text">
+                    Good marketing analytics depends on the work that happens <span class="copy-emphasis">before the dashboard</span>:
+                    <strong>clean source context</strong>, <strong>meaningful audience logic</strong>,
+                    <strong>focused KPI questions</strong>, and handoffs that turn reporting into clearer
+                    <strong>campaign, channel, audience, or workflow decisions</strong>.
+                </p>
+                <p class="section-text">
+                    This pipeline practices that same pattern. Each role, company signal, or stakeholder
+                    question becomes a small signal system: define the context, map the source, check the
+                    claim, choose the audience, prepare the handoff, and write back what should improve next.
+                </p>
+                <p class="section-text">
+                    It is not production CRM administration, campaign ownership, or attribution ownership.
+                    It is a public proof of the work habits I want to bring into Marketing / GTM analytics:
+                    cleaner inputs, clearer definitions, useful reporting questions, and decisions that
+                    improve with each cycle.
+                </p>
             </div>
 
-            <div class="split-list">
-                <div class="role-block">
-                    <h3>What this proves</h3>
-                    <ul>
-                        <li>I can turn noisy business signals into structured, reviewable context.</li>
-                        <li>I can keep source, decision criteria, and handoff visible across a workflow.</li>
-                        <li>I can use AI as a disciplined quality layer, not a black-box shortcut.</li>
-                    </ul>
-                    <p class="role-note">
-                        That is the work quality I want to bring into Marketing / GTM analytics:
-                        cleaner source context, safer review gates, clearer handoff, and judgment
-                        that improves with each cycle.
-                    </p>
+            <aside class="decision-map" aria-label="Marketing analytics decision map">
+                <div class="decision-map-header">
+                    <span class="decision-map-kicker">Before the dashboard</span>
+                    <h3>Decision quality starts upstream</h3>
                 </div>
-                <div class="role-block">
-                    <h3>What it does not overclaim</h3>
-                    <ul>
-                        <li>It is not production CRM administration or campaign ownership.</li>
-                        <li>It is not a substitute for learning the team's actual marketing motion.</li>
-                    </ul>
+                <ol class="decision-steps">
+                    <li>
+                        <span>01</span>
+                        <strong>Clean source context</strong>
+                    </li>
+                    <li>
+                        <span>02</span>
+                        <strong>Meaningful audience logic</strong>
+                    </li>
+                    <li>
+                        <span>03</span>
+                        <strong>Focused KPI questions</strong>
+                    </li>
+                    <li>
+                        <span>04</span>
+                        <strong>Handoff-ready readout</strong>
+                    </li>
+                </ol>
+                <div class="decision-outcomes">
+                    <span>Turns into decisions about</span>
+                    <div class="decision-chips" aria-label="Decision types">
+                        <b>Campaign</b>
+                        <b>Channel</b>
+                        <b>Audience</b>
+                        <b>Workflow</b>
+                    </div>
                 </div>
-            </div>
+            </aside>
         </div>
     </section>
 
@@ -210,14 +220,6 @@
         new(6, "Improve the next cycle", "Review what changed, what got a response, what was overfit, and what should be reused.")
     ];
 
-    private static readonly IReadOnlyList<MarketingFitCard> MarketingFitCards =
-    [
-        new("Analysis-ready inputs", "Source fields, status definitions, validation needs, and evidence gaps become visible before reporting."),
-        new("KPI definitions and reporting logic", "Define what each metric counts, which source or status it trusts, and what action the readout should support before it becomes a dashboard."),
-        new("Stakeholder handoff", "Each artifact is written for a reader: recruiter, peer, manager, analyst, or cross-functional partner."),
-        new("Review-gated AI", "AI structures and drafts. Human checkpoints decide what gets sent, written back, or treated as true.")
-    ];
-
     private static RenderFragment WorkflowIcon(int number) => number switch
     {
         1 => @<svg viewBox="0 0 24 24">
@@ -258,5 +260,4 @@
 
     private sealed record PipelineStep(int Number, string Title, string Detail);
 
-    private sealed record MarketingFitCard(string Title, string Detail);
 }
