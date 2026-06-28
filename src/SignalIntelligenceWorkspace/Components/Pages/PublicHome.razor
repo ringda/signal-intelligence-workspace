@@ -1,6 +1,7 @@
 @page "/"
 @page "/home"
 @layout PublicLayout
+@inject NavigationManager Navigation
 
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
@@ -171,12 +172,29 @@
                     best: marketing analytics, GTM operations, customer signal work, reporting handoff, or another
                     part of the workflow.
                 </p>
-                <div class="message reply-card" aria-label="Ways to reply">
+                <div class="message reply-card" aria-label="Send a quick read">
                     <p>A small reply is enough.</p>
-                    <div class="reply-options">
-                        <span>Most useful</span>
-                        <span>Least relevant</span>
-                        <span>Best-fit team</span>
+                    <div class="feedback-form">
+                        <div class="feedback-type" aria-label="Feedback type">
+                            <TelerikRadioGroup Data="@FeedbackOptions"
+                                               TextField="@nameof(FeedbackOption.Label)"
+                                               ValueField="@nameof(FeedbackOption.Value)"
+                                               @bind-Value="@SelectedFeedbackType"
+                                               Layout="@RadioGroupLayout.Horizontal"
+                                               AriaLabel="Choose a feedback type" />
+                        </div>
+                        <TelerikTextArea @bind-Value="@FeedbackMessage"
+                                         Placeholder="A quick read in one or two sentences..."
+                                         Rows="4"
+                                         MaxLength="600"
+                                         ResizeMode="@TextAreaResizeMode.Vertical"
+                                         Width="100%"
+                                         AriaLabel="Quick feedback message" />
+                        <TelerikButton ButtonType="@ButtonType.Button"
+                                       Class="feedback-submit"
+                                       OnClick="@DraftFeedbackEmail">
+                            Send a quick read
+                        </TelerikButton>
                     </div>
                     <p>
                         Which part feels most useful, which part feels least relevant, or what kind of team
@@ -205,7 +223,22 @@
     </footer>
 </main>
 
+<TelerikNotification @ref="@NotificationReference" />
+
 @code {
+    private string SelectedFeedbackType { get; set; } = "most-useful";
+
+    private string FeedbackMessage { get; set; } = string.Empty;
+
+    private TelerikNotification? NotificationReference { get; set; }
+
+    private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
+    [
+        new("most-useful", "Most useful"),
+        new("least-relevant", "Least relevant"),
+        new("best-fit-team", "Best-fit team")
+    ];
+
     private static readonly IReadOnlyList<PipelineStep> WorkflowSteps =
     [
         new(1, "Find the right role", "Screen the market for fit, constraints, audience, and proof density before spending tailoring time."),
@@ -256,4 +289,27 @@
 
     private sealed record PipelineStep(int Number, string Title, string Detail);
 
+    private sealed record FeedbackOption(string Value, string Label);
+
+    private void DraftFeedbackEmail()
+    {
+        if (string.IsNullOrWhiteSpace(FeedbackMessage))
+        {
+            NotificationReference?.Show(new NotificationModel
+            {
+                Text = "Add a short note first.",
+                ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
+                ShowIcon = true,
+                CloseAfter = 3200
+            });
+            return;
+        }
+
+        var selectedLabel = FeedbackOptions.FirstOrDefault(option => option.Value == SelectedFeedbackType)?.Label ?? "Quick read";
+        var subject = Uri.EscapeDataString("Quick read on your Candidate GTM page");
+        var body = Uri.EscapeDataString(
+            $"I read your Candidate GTM page. My quick read: {selectedLabel}.{Environment.NewLine}{Environment.NewLine}{FeedbackMessage.Trim()}");
+
+        Navigation.NavigateTo($"mailto:xxfan9@gmail.com?subject={subject}&body={body}", forceLoad: true);
+    }
 }

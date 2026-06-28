@@ -575,24 +575,62 @@ h2 {
     font-weight: 760;
 }
 
-.reply-options {
+.feedback-form {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px;
+    gap: 12px;
 }
 
-.reply-options span {
-    display: inline-flex;
-    min-height: 42px;
-    align-items: center;
-    justify-content: center;
+.feedback-type {
     border: 1px solid rgba(224, 83, 60, 0.22);
-    border-radius: 999px;
+    border-radius: 8px;
     background: rgba(224, 83, 60, 0.06);
+    padding: 12px 14px;
+}
+
+.feedback-type ::deep .k-radio-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.feedback-type ::deep .k-radio-item {
+    min-width: 0;
+}
+
+.feedback-type ::deep .k-radio-label {
     color: var(--brick-deep);
     font-size: 0.86rem;
     font-weight: 820;
-    text-align: center;
+    line-height: 1.2;
+}
+
+.feedback-type ::deep .k-radio:checked,
+.feedback-type ::deep .k-radio.k-checked {
+    border-color: var(--brick-deep);
+    background-color: var(--brick-deep);
+    color: #ffffff;
+}
+
+.feedback-form ::deep .k-textarea {
+    border-color: rgba(31, 29, 26, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.feedback-form ::deep .feedback-submit {
+    justify-self: start;
+    border-color: var(--brick-deep);
+    border-radius: 999px;
+    background: var(--brick-deep);
+    color: #ffffff;
+    font-weight: 820;
+}
+
+.feedback-form ::deep .feedback-submit:hover,
+.feedback-form ::deep .feedback-submit:focus-visible {
+    border-color: #a93423;
+    background: #a93423;
+    color: #ffffff;
 }
 
 .footer {
@@ -714,7 +752,7 @@ h2 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .reply-options {
+    .feedback-type ::deep .k-radio-list {
         grid-template-columns: 1fr;
     }
 
