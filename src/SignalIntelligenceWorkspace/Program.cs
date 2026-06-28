@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.RateLimiting;
 using SignalIntelligenceWorkspace.Components;
 using SignalIntelligenceWorkspace.Services;
 using SignalIntelligenceWorkspace.Services.ApplicationIntelligence;
@@ -18,12 +20,37 @@ builder.Services.AddControllers();
 builder.Services.AddLocalization();
 
 builder.Services.AddTelerikBlazor();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new PublicFeedbackErrorResponse("Too many quick reads. Please try again in a minute."),
+            cancellationToken);
+    };
+    options.AddPolicy(PublicFeedbackEndpoints.RateLimitPolicyName, context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            GetPublicFeedbackRateLimitPartition(context),
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            }));
+});
 
 // Scenario-neutral engine: swapping to another scenario pack is this one line.
 builder.Services.AddSingleton(DksProposalScenario.Create());
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<PublicFeedbackOptions>(builder.Configuration.GetSection("PublicFeedback"));
 builder.Services.AddSingleton<PublicFeedbackInbox>();
+builder.Services.AddSingleton<IPublicFeedbackWriter, PostgresPublicFeedbackWriter>();
+builder.Services.AddSingleton<PublicFeedbackSchemaInitializer>();
 // Singleton so demo state (drafts, filter, audit) survives full-page navigation
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();
@@ -44,6 +71,12 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
 
 var app = builder.Build();
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<PublicFeedbackSchemaInitializer>();
+    await initializer.EnsureCreatedAsync();
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -58,13 +91,25 @@ app.UseHttpsRedirection();
 app.UseBasicAuthentication();
 
 app.UseRequestLocalization();
+app.UseRateLimiter();
 
 app.MapStaticAssets();
 app.UseAntiforgery();
 
+app.MapPublicFeedbackEndpoints();
 app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
 
+static string GetPublicFeedbackRateLimitPartition(HttpContext context)
+{
+    var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+    if (!string.IsNullOrWhiteSpace(forwardedFor))
+    {
+        return forwardedFor.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)[0];
+    }
+
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}

@@ -1,13 +1,8 @@
-using System.Text.Json;
-using Microsoft.Extensions.Options;
-
 namespace SignalIntelligenceWorkspace.Services.PublicFeedback;
 
 public sealed class PublicFeedbackInbox
 {
     private const int MaxMessageLength = 600;
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly SemaphoreSlim WriteLock = new(1, 1);
     private static readonly HashSet<string> AllowedFeedbackTypes = new(StringComparer.Ordinal)
     {
         "most-useful",
@@ -15,18 +10,15 @@ public sealed class PublicFeedbackInbox
         "best-fit-team"
     };
 
-    private readonly IHostEnvironment environment;
-    private readonly PublicFeedbackOptions options;
     private readonly TimeProvider timeProvider;
+    private readonly IPublicFeedbackWriter writer;
 
     public PublicFeedbackInbox(
-        IHostEnvironment environment,
-        IOptions<PublicFeedbackOptions> options,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IPublicFeedbackWriter writer)
     {
-        this.environment = environment;
-        this.options = options.Value;
         this.timeProvider = timeProvider;
+        this.writer = writer;
     }
 
     public async Task<PublicFeedbackReceipt> SubmitAsync(
@@ -39,35 +31,10 @@ public sealed class PublicFeedbackInbox
         var submittedAt = timeProvider.GetUtcNow();
         var receipt = new PublicFeedbackReceipt(CreateId(submittedAt), submittedAt);
         var record = new PublicFeedbackRecord(receipt.Id, submittedAt, feedbackType, message, pagePath);
-        var line = JsonSerializer.Serialize(record, JsonOptions) + Environment.NewLine;
-        var inboxPath = ResolveInboxPath();
-        var directory = Path.GetDirectoryName(inboxPath);
 
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        await WriteLock.WaitAsync(cancellationToken);
-        try
-        {
-            await File.AppendAllTextAsync(inboxPath, line, cancellationToken);
-        }
-        finally
-        {
-            WriteLock.Release();
-        }
+        await writer.WriteAsync(record, cancellationToken);
 
         return receipt;
-    }
-
-    private string ResolveInboxPath()
-    {
-        var configuredPath = string.IsNullOrWhiteSpace(options.InboxPath)
-            ? Path.Combine("App_Data", "public-feedback.jsonl")
-            : options.InboxPath;
-
-        return Path.GetFullPath(configuredPath, environment.ContentRootPath);
     }
 
     private static string NormalizeFeedbackType(string feedbackType)
@@ -101,11 +68,4 @@ public sealed class PublicFeedbackInbox
     {
         return $"pf_{submittedAt:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}"[..31];
     }
-
-    private sealed record PublicFeedbackRecord(
-        string Id,
-        DateTimeOffset SubmittedAt,
-        string FeedbackType,
-        string Message,
-        string PagePath);
 }

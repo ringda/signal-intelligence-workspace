@@ -73,6 +73,7 @@ public sealed class BasicAuthMiddleware(
         return value.StartsWith("/_framework/", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("/_blazor", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("/api/public-feedback", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("/Components/", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/favicon.png", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/app.css", StringComparison.OrdinalIgnoreCase) ||

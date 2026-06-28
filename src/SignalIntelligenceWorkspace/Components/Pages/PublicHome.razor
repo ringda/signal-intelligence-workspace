@@ -2,7 +2,7 @@
 @page "/home"
 @layout PublicLayout
 @inject NavigationManager Navigation
-@inject PublicFeedbackInbox FeedbackInbox
+@inject IJSRuntime JS
 
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
@@ -188,7 +188,6 @@
                                          ValueChanged="@OnFeedbackMessageChanged"
                                          Placeholder="A quick read in one or two sentences..."
                                          Rows="4"
-                                         MaxLength="600"
                                          DebounceDelay="0"
                                          ResizeMode="@TextAreaResizeMode.Vertical"
                                          Width="100%"
@@ -198,11 +197,22 @@
                                tabindex="-1"
                                autocomplete="off"
                                @bind="FeedbackWebsite" />
+                        <div class="feedback-meta" aria-live="polite">
+                            <span>@FeedbackMessage.Length / 600</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(FeedbackError))
+                        {
+                            <p class="feedback-status feedback-error" role="alert">@FeedbackError</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(FeedbackSuccess))
+                        {
+                            <p class="feedback-status feedback-success" role="status">@FeedbackSuccess</p>
+                        }
                         <TelerikButton ButtonType="@ButtonType.Button"
                                        Class="feedback-submit"
                                        Enabled="@(!IsSubmittingFeedback)"
                                        OnClick="@SubmitFeedbackAsync">
-                            Send a quick read
+                            @FeedbackButtonText
                         </TelerikButton>
                     </div>
                     <p>
@@ -232,18 +242,22 @@
     </footer>
 </main>
 
-<TelerikNotification @ref="@NotificationReference" />
-
 @code {
+    private const int MaxFeedbackLength = 600;
+
     private string SelectedFeedbackType { get; set; } = "most-useful";
 
     private string FeedbackMessage { get; set; } = string.Empty;
 
     private string FeedbackWebsite { get; set; } = string.Empty;
 
+    private string? FeedbackError { get; set; }
+
+    private string? FeedbackSuccess { get; set; }
+
     private bool IsSubmittingFeedback { get; set; }
 
-    private TelerikNotification? NotificationReference { get; set; }
+    private string FeedbackButtonText => IsSubmittingFeedback ? "Sending..." : "Send a quick read";
 
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
@@ -307,19 +321,25 @@
     private void OnFeedbackMessageChanged(string value)
     {
         FeedbackMessage = value;
+        FeedbackError = null;
+        FeedbackSuccess = null;
     }
 
     private async Task SubmitFeedbackAsync()
     {
-        if (string.IsNullOrWhiteSpace(FeedbackMessage))
+        FeedbackError = null;
+        FeedbackSuccess = null;
+
+        var trimmedMessage = FeedbackMessage.Trim();
+        if (string.IsNullOrWhiteSpace(trimmedMessage))
         {
-            NotificationReference?.Show(new NotificationModel
-            {
-                Text = "Add a short note first.",
-                ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
-                ShowIcon = true,
-                CloseAfter = 3200
-            });
+            FeedbackError = "Add a short note first.";
+            return;
+        }
+
+        if (trimmedMessage.Length > MaxFeedbackLength)
+        {
+            FeedbackError = "Keep the note under 600 characters.";
             return;
         }
 
@@ -327,7 +347,7 @@
         {
             FeedbackMessage = string.Empty;
             FeedbackWebsite = string.Empty;
-            ShowFeedbackReceived();
+            FeedbackSuccess = "Received. Thank you for the quick read.";
             return;
         }
 
@@ -335,23 +355,25 @@
         try
         {
             var pagePath = new Uri(Navigation.Uri).PathAndQuery;
-            await FeedbackInbox.SubmitAsync(new PublicFeedbackSubmission(
+            await JS.InvokeAsync<PublicFeedbackClientResponse>("publicFeedback.submit",
+                "/api/public-feedback",
+                new PublicFeedbackClientRequest(
                 SelectedFeedbackType,
-                FeedbackMessage,
+                trimmedMessage,
                 pagePath));
 
             FeedbackMessage = string.Empty;
-            ShowFeedbackReceived();
+            FeedbackSuccess = "Received. Thank you for the quick read.";
         }
-        catch (ArgumentException exception)
+        catch (JSException exception)
         {
-            NotificationReference?.Show(new NotificationModel
-            {
-                Text = exception.Message,
-                ThemeColor = ThemeConstants.Notification.ThemeColor.Warning,
-                ShowIcon = true,
-                CloseAfter = 3600
-            });
+            FeedbackError = string.IsNullOrWhiteSpace(exception.Message)
+                ? "The feedback could not be saved. Please try again."
+                : exception.Message;
+        }
+        catch
+        {
+            FeedbackError = "The feedback could not be saved. Please try again.";
         }
         finally
         {
@@ -359,14 +381,12 @@
         }
     }
 
-    private void ShowFeedbackReceived()
-    {
-        NotificationReference?.Show(new NotificationModel
-        {
-            Text = "Received. Thank you for the quick read.",
-            ThemeColor = ThemeConstants.Notification.ThemeColor.Success,
-            ShowIcon = true,
-            CloseAfter = 4200
-        });
-    }
+    private sealed record PublicFeedbackClientRequest(
+        string FeedbackType,
+        string Message,
+        string PagePath);
+
+    private sealed record PublicFeedbackClientResponse(
+        string Id,
+        DateTimeOffset SubmittedAt);
 }
