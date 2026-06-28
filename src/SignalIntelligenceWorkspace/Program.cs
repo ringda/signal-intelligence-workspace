@@ -5,6 +5,7 @@ using SignalIntelligenceWorkspace.Services;
 using SignalIntelligenceWorkspace.Services.ApplicationIntelligence;
 using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.HubSpot;
+using SignalIntelligenceWorkspace.Services.PublicFeedback;
 using SignalIntelligenceWorkspace.Services.Scenarios;
 using SignalIntelligenceWorkspace.Services.Security;
 
@@ -21,6 +22,8 @@ builder.Services.AddTelerikBlazor();
 // Scenario-neutral engine: swapping to another scenario pack is this one line.
 builder.Services.AddSingleton(DksProposalScenario.Create());
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.Configure<PublicFeedbackOptions>(builder.Configuration.GetSection("PublicFeedback"));
+builder.Services.AddSingleton<PublicFeedbackInbox>();
 // Singleton so demo state (drafts, filter, audit) survives full-page navigation
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();
@@ -64,3 +67,4 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
