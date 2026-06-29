@@ -11,6 +11,7 @@ public sealed class BasicAuthMiddlewareTests
     [Theory]
     [InlineData("/")]
     [InlineData("/home")]
+    [InlineData("/r/ft_20260629_credit-one_test")]
     [InlineData("/_framework/blazor.web.js")]
     [InlineData("/_content/Telerik.UI.for.Blazor/js/telerik-blazor.js")]
     [InlineData("/_blazor")]
@@ -46,6 +47,7 @@ public sealed class BasicAuthMiddlewareTests
     [Theory]
     [InlineData("/cockpit")]
     [InlineData("/hubspot")]
+    [InlineData("/r")]
     [InlineData("/governance")]
     [InlineData("/application-intelligence")]
     public async Task InvokeAsync_RejectsPrivateRoutesWithoutCredentials(string path)

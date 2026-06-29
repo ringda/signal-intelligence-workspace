@@ -1,6 +1,10 @@
 @page "/"
 @page "/home"
+@page "/r/{DeliveryToken}"
 @layout PublicLayout
+@using SignalIntelligenceWorkspace.Services.Frontstage
+@inject IFrontstageDeliveryResolver FrontstageDelivery
+@inject IHttpContextAccessor HttpContextAccessor
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -11,12 +15,20 @@
         <div class="hero-copy">
             <p class="eyebrow">Live GTM pipeline context</p>
             <h1 id="public-home-title">Candidate Go-to-Market Pipeline</h1>
-            <p class="lead">
-                I use a Candidate Go-to-Market system to turn market signals, role context, and real
-                conversations into <strong>clearer fit decisions, role-relevant proof, and context-aware
-                follow-up</strong>. Each cycle sharpens the evidence and shows me what to learn next
-                from the market.
-            </p>
+            @if (DeliveryCopy is not null)
+            {
+                <p id="frontstage-context" class="frontstage-context">@DeliveryCopy.ContextLabel</p>
+                <p class="lead">@DeliveryCopy.HeroLead</p>
+            }
+            else
+            {
+                <p class="lead">
+                    I use a Candidate Go-to-Market system to turn market signals, role context, and real
+                    conversations into <strong>clearer fit decisions, role-relevant proof, and context-aware
+                    follow-up</strong>. Each cycle sharpens the evidence and shows me what to learn next
+                    from the market.
+                </p>
+            }
 
             <div class="proof-strip" aria-label="System proof points" data-testid="public-kpi-strip">
                 <div class="proof">
@@ -109,12 +121,19 @@
             <div class="marketing-fit-copy">
                 <p class="section-kicker">Marketing Fit</p>
                 <h2 id="public-marketing-title">Why it matters for <span>Marketing / GTM analytics</span></h2>
-                <p class="section-text">
-                    Good marketing analytics depends on the work that happens <span class="copy-emphasis">before the dashboard</span>:
-                    <strong>clean source context</strong>, <strong>meaningful audience logic</strong>,
-                    <strong>focused KPI questions</strong>, and handoffs that turn reporting into clearer
-                    <strong>campaign, channel, audience, or workflow decisions</strong>.
-                </p>
+                @if (DeliveryCopy is not null)
+                {
+                    <p class="section-text">@DeliveryCopy.MarketingText</p>
+                }
+                else
+                {
+                    <p class="section-text">
+                        Good marketing analytics depends on the work that happens <span class="copy-emphasis">before the dashboard</span>:
+                        <strong>clean source context</strong>, <strong>meaningful audience logic</strong>,
+                        <strong>focused KPI questions</strong>, and handoffs that turn reporting into clearer
+                        <strong>campaign, channel, audience, or workflow decisions</strong>.
+                    </p>
+                }
                 <p class="section-text">
                     This pipeline practices that same pattern. Each role, company read, or conversation
                     becomes a small GTM signal system: define the context, map the source, check the claim,
@@ -168,11 +187,18 @@
             <p class="section-kicker">Conversation</p>
             <h2 id="public-conversation-title">Where this work could fit</h2>
             <div class="reply-box">
-                <p class="section-text">
-                    If this way of working feels relevant to your team, I would value your read on where it fits
-                    best: marketing analytics, GTM operations, customer signal work, reporting handoff, or another
-                    part of the workflow.
-                </p>
+                @if (DeliveryCopy is not null)
+                {
+                    <p class="section-text">@DeliveryCopy.ConversationText</p>
+                }
+                else
+                {
+                    <p class="section-text">
+                        If this way of working feels relevant to your team, I would value your read on where it fits
+                        best: marketing analytics, GTM operations, customer signal work, reporting handoff, or another
+                        part of the workflow.
+                    </p>
+                }
                 <div class="message reply-card" aria-label="Send a quick read">
                     <p>A small reply is enough.</p>
                     <div class="feedback-form">
@@ -245,6 +271,9 @@
 @code {
     private const int MaxFeedbackLength = 600;
 
+    [Parameter]
+    public string? DeliveryToken { get; set; }
+
     private string SelectedFeedbackType { get; set; } = "most-useful";
 
     private string FeedbackMessage { get; set; } = string.Empty;
@@ -258,6 +287,14 @@
     private bool IsSubmittingFeedback { get; set; }
 
     private string FeedbackButtonText => IsSubmittingFeedback ? "Sending..." : "Send a quick read";
+
+    private FrontstageDeliveryContext? DeliveryContext { get; set; }
+
+    private FrontstageDeliveryCopy? DeliveryCopy => DeliveryContext?.GetCopy(DeliveryLanguage);
+
+    private string DeliveryLanguage { get; set; } = "en";
+
+    private string? LastResolvedDeliveryKey { get; set; }
 
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
@@ -317,6 +354,43 @@
     private sealed record PipelineStep(int Number, string Title, string Detail);
 
     private sealed record FeedbackOption(string Value, string Label);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        DeliveryLanguage = GetRequestedLanguage();
+
+        if (string.IsNullOrWhiteSpace(DeliveryToken))
+        {
+            DeliveryContext = null;
+            LastResolvedDeliveryKey = null;
+            return;
+        }
+
+        var deliveryKey = $"{DeliveryToken}|{DeliveryLanguage}";
+        if (string.Equals(deliveryKey, LastResolvedDeliveryKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        LastResolvedDeliveryKey = deliveryKey;
+
+        var httpContext = HttpContextAccessor.HttpContext;
+        DeliveryContext = await FrontstageDelivery.ResolveAsync(new FrontstageDeliveryRequest(
+            DeliveryToken,
+            DeliveryLanguage,
+            httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Referer].ToString(),
+            httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.UserAgent].ToString(),
+            httpContext is not null && HttpMethods.IsGet(httpContext.Request.Method)));
+    }
+
+    private string GetRequestedLanguage()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        return query.TryGetValue("lang", out var language)
+            ? PostgresFrontstageDeliveryResolver.NormalizeLanguage(language.ToString())
+            : "en";
+    }
 
     private void OnFeedbackMessageChanged(string value)
     {
