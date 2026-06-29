@@ -276,6 +276,8 @@
 
     private string? LastTrackedDeliveryKey { get; set; }
 
+    private string? LastAnonymousPageViewKey { get; set; }
+
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
         new("most-useful", "Most useful"),
@@ -343,6 +345,7 @@
         {
             DeliveryContext = null;
             LastResolvedDeliveryKey = null;
+            await LogAnonymousPageViewOnceAsync();
             return;
         }
 
@@ -357,6 +360,25 @@
         var httpContext = HttpContextAccessor.HttpContext;
         DeliveryContext = await FrontstageDelivery.ResolveAsync(new FrontstageDeliveryRequest(
             DeliveryToken,
+            DeliveryLanguage,
+            httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Referer].ToString(),
+            httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.UserAgent].ToString(),
+            httpContext is not null && HttpMethods.IsGet(httpContext.Request.Method)));
+    }
+
+    private async Task LogAnonymousPageViewOnceAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var pagePath = httpContext?.Request.Path.Value ?? "/";
+        var trackingKey = $"anonymous|{pagePath}|{DeliveryLanguage}";
+        if (string.Equals(trackingKey, LastAnonymousPageViewKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        LastAnonymousPageViewKey = trackingKey;
+        await FrontstageDelivery.LogAnonymousPageViewAsync(new FrontstageAnonymousPageViewRequest(
+            pagePath,
             DeliveryLanguage,
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Referer].ToString(),
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.UserAgent].ToString(),

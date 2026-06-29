@@ -8,6 +8,8 @@ namespace SignalIntelligenceWorkspace.Services.Frontstage;
 
 public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeliveryResolver
 {
+    private const string AnonymousPageVersion = "frontstage-public-v1";
+
     private static readonly HashSet<string> AllowedSectionKeys = new(StringComparer.Ordinal)
     {
         "hero",
@@ -79,6 +81,47 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         {
             logger.LogWarning(exception, "Frontstage delivery fell back to the generic public page.");
             return null;
+        }
+    }
+
+    public async Task<bool> LogAnonymousPageViewAsync(
+        FrontstageAnonymousPageViewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!request.LogVisit)
+        {
+            return false;
+        }
+
+        var connectionString = configuration[connectionStringKey];
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            logger.LogWarning(
+                "Anonymous frontstage page view requested, but {ConnectionStringKey} is not configured.",
+                connectionStringKey);
+            return false;
+        }
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            await LogAnonymousEventAsync(
+                connection,
+                "page_view",
+                request.PagePath,
+                request.Language,
+                request.Referrer,
+                request.UserAgent,
+                cancellationToken);
+
+            return true;
+        }
+        catch (Exception exception) when (exception is NpgsqlException or InvalidOperationException)
+        {
+            logger.LogWarning(exception, "Anonymous frontstage page view logging failed.");
+            return false;
         }
     }
 
@@ -196,6 +239,21 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         {
             "zh" => "/r/[redacted-token]?lang=zh",
             _ => "/r/[redacted-token]?lang=en",
+        };
+    }
+
+    internal static string BuildAnonymousPath(string pagePath, string language)
+    {
+        var normalizedPath = pagePath switch
+        {
+            "/home" => "/home",
+            _ => "/",
+        };
+
+        return NormalizeLanguage(language) switch
+        {
+            "zh" => $"{normalizedPath}?lang=zh",
+            _ => $"{normalizedPath}?lang=en",
         };
     }
 
@@ -383,6 +441,31 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         command.Parameters.AddWithValue("path", sectionKey is null
             ? BuildRedactedPath(language)
             : $"{BuildRedactedPath(language)}#{sectionKey}");
+        command.Parameters.AddWithValue("referrerDomain", (object?)GetReferrerDomain(referrer) ?? DBNull.Value);
+        command.Parameters.AddWithValue("userAgentFamily", GetUserAgentFamily(userAgent));
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private async Task LogAnonymousEventAsync(
+        NpgsqlConnection connection,
+        string eventType,
+        string pagePath,
+        string language,
+        string? referrer,
+        string? userAgent,
+        CancellationToken cancellationToken)
+    {
+        var sql = $"""
+            INSERT INTO {Quote(schemaName)}.visit_events
+                (token_hash, page_version, event_type, path, referrer_domain, user_agent_family, hubspot_sync_status)
+            VALUES
+                (NULL, @pageVersion, @eventType, @path, @referrerDomain, @userAgentFamily, 'skipped')
+            """;
+
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("pageVersion", AnonymousPageVersion);
+        command.Parameters.AddWithValue("eventType", eventType);
+        command.Parameters.AddWithValue("path", BuildAnonymousPath(pagePath, language));
         command.Parameters.AddWithValue("referrerDomain", (object?)GetReferrerDomain(referrer) ?? DBNull.Value);
         command.Parameters.AddWithValue("userAgentFamily", GetUserAgentFamily(userAgent));
         await command.ExecuteNonQueryAsync(cancellationToken);

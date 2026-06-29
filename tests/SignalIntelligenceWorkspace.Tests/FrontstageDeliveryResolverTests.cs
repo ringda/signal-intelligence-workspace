@@ -22,6 +22,18 @@ public sealed class FrontstageDeliveryResolverTests
     }
 
     [Theory]
+    [InlineData("/", "en", "/?lang=en")]
+    [InlineData("/home", "zh-Hant", "/home?lang=zh")]
+    [InlineData("/unexpected", "fr", "/?lang=en")]
+    public void BuildAnonymousPath_StoresOnlyCanonicalPublicPath(
+        string pagePath,
+        string language,
+        string expected)
+    {
+        Assert.Equal(expected, PostgresFrontstageDeliveryResolver.BuildAnonymousPath(pagePath, language));
+    }
+
+    [Theory]
     [InlineData("https://www.linkedin.com/messaging/thread/abc", "www.linkedin.com")]
     [InlineData("not-a-url", null)]
     [InlineData("", null)]

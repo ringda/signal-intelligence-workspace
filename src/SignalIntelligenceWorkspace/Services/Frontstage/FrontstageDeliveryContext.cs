@@ -17,6 +17,13 @@ public sealed record FrontstageDeliveryRequest(
     string? UserAgent,
     bool LogVisit);
 
+public sealed record FrontstageAnonymousPageViewRequest(
+    string PagePath,
+    string Language,
+    string? Referrer,
+    string? UserAgent,
+    bool LogVisit);
+
 public sealed record FrontstageSectionViewRequest(
     string Token,
     string SectionKey,
@@ -36,6 +43,10 @@ public interface IFrontstageDeliveryResolver
 {
     Task<FrontstageTokenContext?> ResolveAsync(
         FrontstageDeliveryRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> LogAnonymousPageViewAsync(
+        FrontstageAnonymousPageViewRequest request,
         CancellationToken cancellationToken = default);
 
     Task<bool> LogSectionViewAsync(
