@@ -40,4 +40,21 @@ public sealed class FrontstageDeliveryResolverTests
     {
         Assert.Equal(expected, PostgresFrontstageDeliveryResolver.GetUserAgentFamily(userAgent));
     }
+
+    [Theory]
+    [InlineData("hero", true, "hero")]
+    [InlineData("marketing-fit", true, "marketing-fit")]
+    [InlineData("Conversation", true, "conversation")]
+    [InlineData("raw-token", false, "")]
+    [InlineData("", false, "")]
+    public void TryNormalizeSectionKey_AllowsOnlyPublicPageSections(
+        string input,
+        bool expectedResult,
+        string expectedSectionKey)
+    {
+        var result = PostgresFrontstageDeliveryResolver.TryNormalizeSectionKey(input, out var sectionKey);
+
+        Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedSectionKey, sectionKey);
+    }
 }

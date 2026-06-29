@@ -9,6 +9,15 @@ namespace SignalIntelligenceWorkspace.Services.Frontstage;
 
 public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeliveryResolver
 {
+    private static readonly HashSet<string> AllowedSectionKeys = new(StringComparer.Ordinal)
+    {
+        "hero",
+        "workflow",
+        "reliability",
+        "marketing-fit",
+        "conversation",
+    };
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -76,6 +85,57 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         {
             logger.LogWarning(exception, "Frontstage delivery fell back to the generic public page.");
             return null;
+        }
+    }
+
+    public async Task<bool> LogSectionViewAsync(
+        FrontstageSectionViewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Token) ||
+            !TryNormalizeSectionKey(request.SectionKey, out var sectionKey))
+        {
+            return false;
+        }
+
+        var connectionString = configuration[connectionStringKey];
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            logger.LogWarning(
+                "Frontstage section view requested, but {ConnectionStringKey} is not configured.",
+                connectionStringKey);
+            return false;
+        }
+
+        var tokenHash = ComputeTokenHash(request.Token, tokenPepper);
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            var context = await ResolveContextAsync(connection, tokenHash, cancellationToken);
+            if (context is null)
+            {
+                return false;
+            }
+
+            await LogEventAsync(
+                connection,
+                context,
+                "section_view",
+                request.Language,
+                sectionKey,
+                request.Referrer,
+                request.UserAgent,
+                cancellationToken);
+
+            return true;
+        }
+        catch (Exception exception) when (exception is NpgsqlException or JsonException or InvalidOperationException)
+        {
+            logger.LogWarning(exception, "Frontstage section view logging failed.");
+            return false;
         }
     }
 
@@ -151,6 +211,24 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         return "other";
     }
 
+    internal static bool TryNormalizeSectionKey(string sectionKey, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(sectionKey))
+        {
+            return false;
+        }
+
+        var candidate = sectionKey.Trim().ToLowerInvariant();
+        if (!AllowedSectionKeys.Contains(candidate))
+        {
+            return false;
+        }
+
+        normalized = candidate;
+        return true;
+    }
+
     private async Task<FrontstageDeliveryContext?> ResolveContextAsync(
         NpgsqlConnection connection,
         string tokenHash,
@@ -204,25 +282,49 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
     {
         try
         {
-            var sql = $"""
-                INSERT INTO {Quote(schemaName)}.visit_events
-                    (token_hash, page_version, event_type, path, referrer_domain, user_agent_family)
-                VALUES
-                    (@tokenHash, @pageVersion, 'page_view', @path, @referrerDomain, @userAgentFamily)
-                """;
-
-            await using var command = new NpgsqlCommand(sql, connection);
-            command.Parameters.AddWithValue("tokenHash", context.TokenHash);
-            command.Parameters.AddWithValue("pageVersion", context.PageVersion);
-            command.Parameters.AddWithValue("path", BuildRedactedPath(request.Language));
-            command.Parameters.AddWithValue("referrerDomain", (object?)GetReferrerDomain(request.Referrer) ?? DBNull.Value);
-            command.Parameters.AddWithValue("userAgentFamily", GetUserAgentFamily(request.UserAgent));
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            await LogEventAsync(
+                connection,
+                context,
+                "page_view",
+                request.Language,
+                sectionKey: null,
+                request.Referrer,
+                request.UserAgent,
+                cancellationToken);
         }
         catch (NpgsqlException exception)
         {
             logger.LogWarning(exception, "Frontstage visit logging failed; personalized page rendering continued.");
         }
+    }
+
+    private async Task LogEventAsync(
+        NpgsqlConnection connection,
+        FrontstageDeliveryContext context,
+        string eventType,
+        string language,
+        string? sectionKey,
+        string? referrer,
+        string? userAgent,
+        CancellationToken cancellationToken)
+    {
+        var sql = $"""
+            INSERT INTO {Quote(schemaName)}.visit_events
+                (token_hash, page_version, event_type, path, referrer_domain, user_agent_family)
+            VALUES
+                (@tokenHash, @pageVersion, @eventType, @path, @referrerDomain, @userAgentFamily)
+            """;
+
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("tokenHash", context.TokenHash);
+        command.Parameters.AddWithValue("pageVersion", context.PageVersion);
+        command.Parameters.AddWithValue("eventType", eventType);
+        command.Parameters.AddWithValue("path", sectionKey is null
+            ? BuildRedactedPath(language)
+            : $"{BuildRedactedPath(language)}#{sectionKey}");
+        command.Parameters.AddWithValue("referrerDomain", (object?)GetReferrerDomain(referrer) ?? DBNull.Value);
+        command.Parameters.AddWithValue("userAgentFamily", GetUserAgentFamily(userAgent));
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static string ValidateIdentifier(string value, string optionName)

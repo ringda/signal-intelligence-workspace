@@ -103,6 +103,7 @@ app.MapStaticAssets();
 app.UseAntiforgery();
 
 app.MapPublicFeedbackEndpoints();
+app.MapFrontstageTrackingEndpoints();
 app.MapControllers();
 app.MapMethods("/", new[] { HttpMethods.Head }, () => Results.Ok());
 app.MapMethods("/home", new[] { HttpMethods.Head }, () => Results.Ok());

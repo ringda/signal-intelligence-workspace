@@ -75,6 +75,7 @@ public sealed class BasicAuthMiddleware(
             value.StartsWith("/_blazor", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("/r/", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/api/public-feedback", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("/api/frontstage/section-view", StringComparison.OrdinalIgnoreCase) ||
             value.StartsWith("/Components/", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/favicon.png", StringComparison.OrdinalIgnoreCase) ||
             value.Equals("/app.css", StringComparison.OrdinalIgnoreCase) ||

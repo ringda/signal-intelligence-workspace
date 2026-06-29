@@ -11,7 +11,7 @@
 <PageTitle>Candidate Go-to-Market Pipeline | Johanna Fan</PageTitle>
 
 <main class="public-home" data-testid="candidate-gtm-page">
-    <section class="hero" id="top" aria-labelledby="public-home-title">
+    <section class="hero" id="top" data-frontstage-section="hero" aria-labelledby="public-home-title">
         <div class="hero-copy">
             <p class="eyebrow">Live GTM pipeline context</p>
             <h1 id="public-home-title">Candidate Go-to-Market Pipeline</h1>
@@ -60,7 +60,7 @@
         </div>
     </section>
 
-    <section class="band-ink" id="workflow" aria-labelledby="public-workflow-title">
+    <section class="band-ink" id="workflow" data-frontstage-section="workflow" aria-labelledby="public-workflow-title">
         <div class="section-inner">
             <p class="section-kicker">Workflow</p>
             <h2 id="public-workflow-title">Quality over quantity.</h2>
@@ -85,7 +85,7 @@
         </div>
     </section>
 
-    <section class="band-white" id="reliability" aria-labelledby="public-reliability-title">
+    <section class="band-white" id="reliability" data-frontstage-section="reliability" aria-labelledby="public-reliability-title">
         <div class="section-inner grid-2 reliability-grid">
             <figure class="reliability-visual">
                 <img
@@ -116,7 +116,7 @@
         </div>
     </section>
 
-    <section class="band-white" id="marketing-fit" aria-labelledby="public-marketing-title">
+    <section class="band-white" id="marketing-fit" data-frontstage-section="marketing-fit" aria-labelledby="public-marketing-title">
         <div class="section-inner marketing-fit-layout">
             <div class="marketing-fit-copy">
                 <p class="section-kicker">Marketing Fit</p>
@@ -182,7 +182,7 @@
         </div>
     </section>
 
-    <section class="band-white" id="conversation" aria-labelledby="public-conversation-title">
+    <section class="band-white" id="conversation" data-frontstage-section="conversation" aria-labelledby="public-conversation-title">
         <div class="section-inner">
             <p class="section-kicker">Conversation</p>
             <h2 id="public-conversation-title">Where this work could fit</h2>
@@ -296,6 +296,8 @@
 
     private string? LastResolvedDeliveryKey { get; set; }
 
+    private string? LastTrackedDeliveryKey { get; set; }
+
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
         new("most-useful", "Most useful"),
@@ -383,6 +385,28 @@
             httpContext is not null && HttpMethods.IsGet(httpContext.Request.Method)));
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (DeliveryContext is null || string.IsNullOrWhiteSpace(DeliveryToken))
+        {
+            return;
+        }
+
+        var trackingKey = $"{DeliveryToken}|{DeliveryLanguage}";
+        if (string.Equals(trackingKey, LastTrackedDeliveryKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        LastTrackedDeliveryKey = trackingKey;
+        await JS.InvokeVoidAsync(
+            "frontstageTracking.watchSections",
+            new FrontstageTrackingClientRequest(
+                DeliveryToken,
+                DeliveryLanguage,
+                "/api/frontstage/section-view"));
+    }
+
     private string GetRequestedLanguage()
     {
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
@@ -463,4 +487,9 @@
     private sealed record PublicFeedbackClientResponse(
         string Id,
         DateTimeOffset SubmittedAt);
+
+    private sealed record FrontstageTrackingClientRequest(
+        string Token,
+        string Language,
+        string Endpoint);
 }

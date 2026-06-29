@@ -36,9 +36,20 @@ public sealed record FrontstageDeliveryRequest(
     string? UserAgent,
     bool LogVisit);
 
+public sealed record FrontstageSectionViewRequest(
+    string Token,
+    string SectionKey,
+    string Language,
+    string? Referrer,
+    string? UserAgent);
+
 public interface IFrontstageDeliveryResolver
 {
     Task<FrontstageDeliveryContext?> ResolveAsync(
         FrontstageDeliveryRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> LogSectionViewAsync(
+        FrontstageSectionViewRequest request,
         CancellationToken cancellationToken = default);
 }
