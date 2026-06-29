@@ -18,9 +18,10 @@ The workspace has three surfaces:
   directly from `core.jobs`, `core.applications`, and `core.descriptions`, then
   shows the JD/application pipeline, evidence, readiness cards, and next-step
   reasoning.
-- **HubSpot CRM (`/hubspot`)**: reads live HubSpot contacts, companies, and
-  deals with a scoped private app token, then turns CRM hygiene into GTM handoff
-  readiness cards.
+- **HubSpot Workflow Quality (`/hubspot`)**: reads live HubSpot contacts,
+  companies, and deals with a scoped private app token, then runs shared,
+  versioned workflow rules that turn CRM hygiene into reviewable GTM next-action
+  proposals, policy decisions, and a quality cockpit.
 - **AI Review (`/governance`)**: keeps the original fictional governance lab
   where AI-proposed actions are previewed, approved/rejected, and logged.
 
@@ -53,17 +54,20 @@ Open `http://localhost:8240/cockpit` for the Application Tracker:
 5. Select a row and inspect the role summary, hiring focus, fit notes, and next
    step.
 
-Open `http://localhost:8240/hubspot` for the HubSpot CRM surface:
+Open `http://localhost:8240/hubspot` for the HubSpot workflow quality surface:
 
-1. Confirm contacts, companies, and deals load from the connected HubSpot
-   portal.
-2. Inspect the CRM Handoff Readiness cards.
-3. Ask the HubSpot CRM Assistant to audit hygiene, rank cleanup work, or draft a
-   next-touch memo from the loaded snapshot.
-4. Open a record in HubSpot from the row or contact card.
+1. Confirm the first screen shows workflow quality: records scanned, actionable
+   proposals, human-review cases, blocked actions, and unsafe writes.
+2. Inspect the proposal review queue and a representative good, unclear, or
+   blocked case.
+3. Ask the HubSpot CRM Assistant to audit workflow quality, rank review cases,
+   or draft a next-touch memo from the current run.
+4. Use Source Records only as evidence behind the workflow run, not as the main
+   product surface.
 
-The HubSpot page is read-only in this repo. The assistant can draft proposed
-notes/tasks/field changes, but it does not execute CRM writes.
+The HubSpot page is read-only in this repo. The workflow engine can generate
+notes/tasks/field-change proposals and policy decisions, but it does not execute
+CRM writes.
 
 For the original AI governance lab, open **AI Review** and use the three built-in
 prompt suggestions:
@@ -167,8 +171,14 @@ app picks Gemini when a Gemini key exists, then OpenAI when an OpenAI key exists
 The app sends only the user's Grid prompt and the allowed command schema to the
 configured provider, then validates the structured response before changing the
 local Grid filter state. The HubSpot assistant sends the currently loaded
-HubSpot snapshot context to Gemini and returns text only; it does not call
-HubSpot write APIs.
+workflow run context to Gemini and returns text only; it does not call HubSpot
+write APIs.
+
+The installed HubSpot plugin or connector can help during development and
+operator exploration, but it is not the runtime product dependency. The reusable
+CRM handoff rules, policy gates, proposal logic, audit events, and quality
+summary live in this repo so the workflow can be tested and shared instead of
+depending on one person's local Codex or Claude skill setup.
 
 ## What This Is — And Is Not
 
@@ -178,13 +188,14 @@ clear boundary before writeback.
 
 It is not a production AI platform, not an official HubSpot project, not a
 production HubSpot administration system, and not a claim of ownership over any
-company's internal CRM/GTM system. The governance scenario data is fictional;
-the Application Tracker and HubSpot pages can read real configured systems.
+company's internal CRM/GTM system. It does not automatically write to HubSpot.
+The governance scenario data is fictional; the Application Tracker and HubSpot
+pages can read real configured systems.
 
 ## Roadmap
 
-- Add a dedicated HubSpot detail page for one contact/deal.
-- Add confirmation-gated CRM write proposals after the read-only surface is
-  stable.
+- Add a dedicated HubSpot detail page for one proposal/contact/deal.
+- Add confirmation-gated CRM writeback execution after the proposal-only surface
+  is stable.
 - Add a shared "next actions" view across Application Tracker and HubSpot CRM.
 - Keep the governance lab as the review/audit pattern for future write paths.

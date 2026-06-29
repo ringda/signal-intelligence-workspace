@@ -1,5 +1,6 @@
 @page "/hubspot"
 @inject HubSpotCrmService HubSpotData
+@inject HubSpotWorkflowEngine WorkflowEngine
 @inject HubSpotAssistantAiService HubSpotAssistant
 @inject IStringLocalizer<Ui> L
 @using System.Globalization
@@ -7,52 +8,222 @@
 
 <PageTitle>@L["Nav.HubSpot"] | @L["App.Name"]</PageTitle>
 
-<div class="hubspot-page">
-    <div class="hubspot-header">
+<div class="hubspot-page hubspot-quality-page">
+    <div class="hubspot-quality-hero">
         <div>
-            <div class="hubspot-kicker">HubSpot CRM Signals</div>
-            <h2>Live CRM readiness</h2>
-            <p class="muted">
-                Read-only HubSpot records in the same Signal Intelligence Workspace:
-                CRM facts from HubSpot, judgment surfaced as handoff risk and next action.
+            <div class="hubspot-kicker">AI-Governed CRM Handoff Quality</div>
+            <h2>Today&apos;s HubSpot handoff review</h2>
+            <p>
+                Find the CRM records that should not move to follow-up yet, turn the safe ones into reviewable
+                next-action drafts, and keep every writeback behind a policy gate.
             </p>
         </div>
 
-        @if (Snapshot is not null)
+        @if (WorkflowRun is not null)
         {
-            <div class="hubspot-source-card">
-                <span>Source</span>
-                <strong>HubSpot API</strong>
-                <span>@TotalRows records loaded</span>
-                <span>Refreshed @Snapshot.RefreshedAt.ToString("MMM d, yyyy h:mm tt")</span>
+            <div class="hubspot-quality-status" data-testid="hubspot-quality-status">
+                <span>Current feel</span>
+                <strong>@WorkflowRun.Quality.StatusLabel</strong>
+                <small>@WorkflowRun.Quality.StatusDetail</small>
             </div>
         }
     </div>
+
+    <section class="hubspot-use-case-panel" data-testid="hubspot-use-case">
+        <div>
+            <span>Use this page to answer</span>
+            <strong>What should a GTM operator review before touching HubSpot?</strong>
+        </div>
+        <ol>
+            <li>Spot records that block clean handoff: missing owner, weak lifecycle, stale deal timing.</li>
+            <li>Inspect the agent proposal and the evidence it used.</li>
+            <li>Approve, reject, or rewrite the next action outside HubSpot before any CRM update exists.</li>
+        </ol>
+    </section>
 
     @if (LoadError is not null)
     {
         <div class="cockpit-alert">@LoadError</div>
     }
-    else if (Snapshot is null)
+    else if (Snapshot is null || WorkflowRun is null)
     {
-        <div class="cockpit-loading">Loading HubSpot CRM records...</div>
+        <div class="hubspot-loading-panel">
+            <strong>Loading live HubSpot records into the workflow engine...</strong>
+            <span>Expected output: records scanned, proposal queue, selected case evidence, policy decisions, and source records.</span>
+        </div>
     }
     else
     {
+        <section class="hubspot-next-move" data-testid="hubspot-next-move">
+            <div>
+                <span>Operator next move</span>
+                <strong>@NextMoveTitle</strong>
+                <small>@NextMoveDetail</small>
+            </div>
+            @if (SelectedProposal is not null)
+            {
+                <button type="button" class="hubspot-jump-button" @onclick="@(() => SelectProposal(SelectedProposal))">
+                    Review selected case
+                </button>
+            }
+        </section>
+
         <div class="hubspot-action-row">
             <a class="hubspot-link-button" href="@Snapshot.PortalUrl" target="_blank" rel="noreferrer">
                 Open HubSpot portal
             </a>
-            <span class="hubspot-policy">Read-only page. No write executed.</span>
+            <span class="hubspot-policy">Read-only API. Proposal-only workflow. No HubSpot write executed.</span>
         </div>
 
         <section class="hubspot-truth-panel">
             <strong>What is real here</strong>
             <span>
-                Contacts, companies, deals, owners, and lifecycle fields are fetched from the
-                connected HubSpot portal with the server token. The readiness score is local
-                GTM handoff logic copied from the HubSpot demo into this Blazor workspace.
+                Contacts, companies, deals, and owners are fetched from the connected HubSpot portal.
+                Workflow rules, policies, proposals, and audit events are versioned in this repo so they can be shared,
+                tested, and reviewed outside any one local Codex or Claude skill.
             </span>
+        </section>
+
+        <section class="hubspot-quality-grid" aria-label="HubSpot workflow quality metrics">
+            <div class="hubspot-quality-tile">
+                <span>Records scanned</span>
+                <strong>@WorkflowRun.Quality.RecordsScanned</strong>
+                <small>HubSpot source rows</small>
+            </div>
+            <div class="hubspot-quality-tile hubspot-quality-good">
+                <span>Actionable</span>
+                <strong>@WorkflowRun.Quality.ActionableProposals</strong>
+                <small>safe draft proposals</small>
+            </div>
+            <div class="hubspot-quality-tile hubspot-quality-watch">
+                <span>Need review</span>
+                <strong>@WorkflowRun.Quality.NeedsHumanReview</strong>
+                <small>human CRM truth required</small>
+            </div>
+            <div class="hubspot-quality-tile hubspot-quality-blocked">
+                <span>Blocked</span>
+                <strong>@WorkflowRun.Quality.BlockedProposals</strong>
+                <small>policy stopped writeback</small>
+            </div>
+            <div class="hubspot-quality-tile">
+                <span>Unsafe writes</span>
+                <strong>@WorkflowRun.Quality.UnsafeWrites</strong>
+                <small>must stay zero</small>
+            </div>
+        </section>
+
+        <section class="hubspot-review-layout" data-testid="hubspot-proposal-review">
+            <div class="hubspot-panel hubspot-proposal-queue">
+                <div class="cockpit-section-head">
+                    <div>
+                        <h3>Proposal Review Queue</h3>
+                        <p class="muted">This is the working list: review these before creating tasks, notes, or field updates in HubSpot.</p>
+                    </div>
+                </div>
+
+                @if (WorkflowRun.Proposals.Count == 0)
+                {
+                    <div class="cockpit-empty">No proposals were generated from this HubSpot snapshot.</div>
+                }
+                else
+                {
+                    @foreach (var group in ProposalGroups)
+                    {
+                        <div class="hubspot-proposal-group">
+                            <div class="hubspot-proposal-group-title">
+                                <span>@group.Label</span>
+                                <strong>@group.Proposals.Count</strong>
+                            </div>
+                            @foreach (var proposal in group.Proposals)
+                            {
+                                <button type="button"
+                                        class="hubspot-proposal-button @(SelectedProposal?.Id == proposal.Id ? "is-selected" : string.Empty)"
+                                        data-testid="hubspot-proposal-button"
+                                        @onclick="@(() => SelectProposal(proposal))">
+                                    <span class="cockpit-pill @PriorityClass(proposal.Priority)">@proposal.Policy.Label</span>
+                                    <strong>@proposal.Title</strong>
+                                    <small>@proposal.EvidenceSummary</small>
+                                    <em>@UseCaseFor(proposal)</em>
+                                </button>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="hubspot-panel hubspot-case-detail" data-testid="hubspot-selected-case">
+                @if (SelectedProposal is null)
+                {
+                    <div class="cockpit-empty">Select a proposal to inspect evidence and policy.</div>
+                }
+                else
+                {
+                    <div class="hubspot-case-head">
+                        <div>
+                            <span>@SelectedProposal.ObjectType.ToUpperInvariant() · @SelectedProposal.Kind</span>
+                            <h3>@SelectedProposal.RecordName</h3>
+                        </div>
+                        <span class="cockpit-pill @PriorityClass(SelectedProposal.Priority)">@SelectedProposal.Policy.Label</span>
+                    </div>
+
+                    <p class="hubspot-case-summary">@SelectedProposal.Summary</p>
+
+                    <div class="hubspot-case-section">
+                        <small>Why this matters</small>
+                        <p>@UseCaseFor(SelectedProposal)</p>
+                    </div>
+
+                    <div class="hubspot-case-section">
+                        <small>Evidence</small>
+                        <ul>
+                            @foreach (var evidence in SelectedProposal.Evidence)
+                            {
+                                <li>@evidence</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="hubspot-case-section">
+                        <small>Recommended operator action</small>
+                        <p>@SelectedProposal.ProposedAction</p>
+                    </div>
+
+                    <div class="hubspot-case-section hubspot-policy-box">
+                        <small>Policy decision</small>
+                        <strong>@SelectedProposal.Policy.Label</strong>
+                        <p>@SelectedProposal.Policy.Reason</p>
+                    </div>
+
+                    <pre class="hubspot-note">@SelectedProposal.SuggestedNoteBody</pre>
+
+                    <a class="hubspot-record-link" href="@SelectedProposal.HubSpotUrl" target="_blank" rel="noreferrer">
+                        Open source record
+                    </a>
+                }
+            </div>
+        </section>
+
+        <section class="hubspot-panel" data-testid="hubspot-representative-cases">
+            <div class="cockpit-section-head">
+                <div>
+                    <h3>Representative Cases</h3>
+                    <p class="muted">A quick feel for what the agent got right, what needs judgment, and what policy stopped.</p>
+                </div>
+            </div>
+
+            <div class="hubspot-representative-grid">
+                @foreach (var proposal in RepresentativeCases)
+                {
+                    <button type="button"
+                            class="hubspot-representative-case"
+                            @onclick="@(() => SelectProposal(proposal))">
+                        <span class="cockpit-pill @PriorityClass(proposal.Priority)">@proposal.Priority</span>
+                        <strong>@proposal.Title</strong>
+                        <small>@proposal.EvidenceSummary</small>
+                        <em>@UseCaseFor(proposal)</em>
+                    </button>
+                }
+            </div>
         </section>
 
         <section class="hubspot-panel hubspot-assistant-panel" data-testid="hubspot-assistant">
@@ -70,8 +241,8 @@
             </div>
 
             <div class="cockpit-assistant-context">
-                Ask Gemini about the live HubSpot snapshot now loaded here: @TotalRows CRM rows,
-                @Snapshot.ReadinessCards.Count readiness cards, @NeedsCleanupCount cleanup risks.
+                Ask Gemini about the current workflow run: @WorkflowRun.Proposals.Count proposals,
+                @WorkflowRun.Quality.NeedsHumanReview human-review cases, @WorkflowRun.Quality.BlockedProposals blocked actions.
                 It can draft analysis and memos, but this page does not write to HubSpot.
             </div>
 
@@ -97,7 +268,7 @@
             else if (IsAssistantResponding)
             {
                 <div class="cockpit-assistant-status">
-                    @HubSpotAssistant.ProviderName is reading the current HubSpot snapshot...
+                    @HubSpotAssistant.ProviderName is reading the current workflow run...
                 </div>
             }
 
@@ -113,146 +284,99 @@
             </div>
         </section>
 
-        <section class="hubspot-summary-grid" aria-label="HubSpot CRM summary">
-            @foreach (var section in Snapshot.Sections)
-            {
-                <div class="hubspot-summary-tile">
-                    <span>@section.Title</span>
-                    <strong>@section.Rows.Count</strong>
-                    <small>@(section.Error is null ? "Live read" : "Read error")</small>
-                </div>
-            }
-            <div class="hubspot-summary-tile hubspot-summary-primary">
-                <span>Needs cleanup</span>
-                <strong>@NeedsCleanupCount</strong>
-                <small>contact handoff cards</small>
-            </div>
-        </section>
-
-        <section class="hubspot-grid-stack">
-            @foreach (var section in Snapshot.Sections)
-            {
-                <section class="hubspot-panel">
-                    <div class="cockpit-section-head">
-                        <div>
-                            <h3>@section.Title</h3>
-                            <p class="muted">@section.Subtitle</p>
-                        </div>
-                        <a class="hubspot-record-link" href="@section.IndexUrl" target="_blank" rel="noreferrer">
-                            View in HubSpot
-                        </a>
-                    </div>
-
-                    @if (section.Error is not null)
-                    {
-                        <div class="cockpit-alert">@section.Error</div>
-                    }
-                    else if (section.Rows.Count == 0)
-                    {
-                        <div class="cockpit-empty">No records returned by HubSpot.</div>
-                    }
-                    else
-                    {
-                        <TelerikGrid Data="@section.Rows"
-                                     Sortable="true"
-                                     FilterMode="@GridFilterMode.FilterMenu"
-                                     Pageable="true"
-                                     PageSize="5">
-                            <GridColumns>
-                                <GridColumn Field="@nameof(HubSpotCrmRow.Primary)" Title="Name" Width="220px" />
-                                <GridColumn Field="@nameof(HubSpotCrmRow.Secondary)" Title="Secondary" Width="220px" />
-                                <GridColumn Field="@nameof(HubSpotCrmRow.Status)" Title="Status" Width="170px">
-                                    <Template>
-                                        @{
-                                            var row = (HubSpotCrmRow)context;
-                                        }
-                                        <span class="cockpit-pill cockpit-pill-neutral">@row.Status</span>
-                                    </Template>
-                                </GridColumn>
-                                <GridColumn Field="@nameof(HubSpotCrmRow.Detail)" Title="Detail" />
-                                <GridColumn Field="@nameof(HubSpotCrmRow.UpdatedAt)" Title="Updated" Width="140px" />
-                                <GridColumn Title="Record" Width="110px">
-                                    <Template>
-                                        @{
-                                            var row = (HubSpotCrmRow)context;
-                                        }
-                                        <a class="hubspot-record-link" href="@row.HubSpotUrl" target="_blank" rel="noreferrer">
-                                            Open
-                                        </a>
-                                    </Template>
-                                </GridColumn>
-                            </GridColumns>
-                        </TelerikGrid>
-                    }
-                </section>
-            }
-        </section>
-
-        <section class="hubspot-panel">
+        <section class="hubspot-panel" data-testid="hubspot-audit-events">
             <div class="cockpit-section-head">
                 <div>
-                    <h3>CRM Handoff Readiness</h3>
-                    <p class="muted">Contact records translated into missing fields, risk level, and a concrete next action.</p>
+                    <h3>Workflow Audit Trail</h3>
+                    <p class="muted">Generated locally from the shared workflow engine; newest events appear first.</p>
+                </div>
+            </div>
+            <div class="hubspot-audit-list">
+                @foreach (var audit in WorkflowRun.AuditEvents.Take(8))
+                {
+                    <div class="hubspot-audit-row">
+                        <span>@audit.Id</span>
+                        <strong>@audit.Decision</strong>
+                        <small>@audit.Reason</small>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="hubspot-source-records" data-testid="hubspot-source-records">
+            <div class="cockpit-section-head">
+                <div>
+                    <h3>Source Records</h3>
+                    <p class="muted">Raw read-only HubSpot evidence used by the workflow engine.</p>
                 </div>
             </div>
 
-            @if (Snapshot.ReadinessCards.Count == 0)
-            {
-                <div class="cockpit-empty">No contact readiness cards are available.</div>
-            }
-            else
-            {
-                <div class="hubspot-readiness-grid">
-                    @foreach (var card in Snapshot.ReadinessCards)
-                    {
-                        <article class="hubspot-readiness-card">
-                            <div class="hubspot-card-head">
-                                <div>
-                                    <strong>@card.Name</strong>
-                                    <span>@card.Email</span>
-                                </div>
-                                <span class="cockpit-pill @ReadinessClass(card.Status)">@card.Status</span>
+            <div class="hubspot-grid-stack">
+                @foreach (var section in Snapshot.Sections)
+                {
+                    <section class="hubspot-panel">
+                        <div class="cockpit-section-head">
+                            <div>
+                                <h3>@section.Title</h3>
+                                <p class="muted">@section.Subtitle</p>
                             </div>
-
-                            <div class="hubspot-card-meta">
-                                <span>@card.Company</span>
-                                <span>@card.Title</span>
-                                <span>@card.Lifecycle</span>
-                                <span>@card.Owner</span>
-                            </div>
-
-                            <div class="hubspot-score">
-                                <span>@card.Score / 100</span>
-                                <div class="hubspot-score-track">
-                                    <div style="@($"width: {card.Score}%")"></div>
-                                </div>
-                            </div>
-
-                            <div class="hubspot-card-block">
-                                <small>Missing</small>
-                                <span>@(card.Missing.Count == 0 ? "none" : string.Join(", ", card.Missing))</span>
-                            </div>
-
-                            <div class="hubspot-card-block">
-                                <small>Next action</small>
-                                <span>@card.NextAction</span>
-                            </div>
-
-                            <pre class="hubspot-note">@card.SuggestedNoteBody</pre>
-
-                            <a class="hubspot-record-link" href="@card.HubSpotUrl" target="_blank" rel="noreferrer">
-                                Open contact
+                            <a class="hubspot-record-link" href="@section.IndexUrl" target="_blank" rel="noreferrer">
+                                View in HubSpot
                             </a>
-                        </article>
-                    }
-                </div>
-            }
+                        </div>
+
+                        @if (section.Error is not null)
+                        {
+                            <div class="cockpit-alert">@section.Error</div>
+                        }
+                        else if (section.Rows.Count == 0)
+                        {
+                            <div class="cockpit-empty">No records returned by HubSpot.</div>
+                        }
+                        else
+                        {
+                            <TelerikGrid Data="@section.Rows"
+                                         Sortable="true"
+                                         FilterMode="@GridFilterMode.FilterMenu"
+                                         Pageable="true"
+                                         PageSize="5">
+                                <GridColumns>
+                                    <GridColumn Field="@nameof(HubSpotCrmRow.Primary)" Title="Name" Width="220px" />
+                                    <GridColumn Field="@nameof(HubSpotCrmRow.Secondary)" Title="Secondary" Width="220px" />
+                                    <GridColumn Field="@nameof(HubSpotCrmRow.Status)" Title="Status" Width="170px">
+                                        <Template>
+                                            @{
+                                                var row = (HubSpotCrmRow)context;
+                                            }
+                                            <span class="cockpit-pill cockpit-pill-neutral">@row.Status</span>
+                                        </Template>
+                                    </GridColumn>
+                                    <GridColumn Field="@nameof(HubSpotCrmRow.Detail)" Title="Detail" />
+                                    <GridColumn Field="@nameof(HubSpotCrmRow.UpdatedAt)" Title="Updated" Width="140px" />
+                                    <GridColumn Title="Record" Width="110px">
+                                        <Template>
+                                            @{
+                                                var row = (HubSpotCrmRow)context;
+                                            }
+                                            <a class="hubspot-record-link" href="@row.HubSpotUrl" target="_blank" rel="noreferrer">
+                                                Open
+                                            </a>
+                                        </Template>
+                                    </GridColumn>
+                                </GridColumns>
+                            </TelerikGrid>
+                        }
+                    </section>
+                }
+            </div>
         </section>
     }
 </div>
 
 @code {
     private HubSpotCrmSnapshot? Snapshot { get; set; }
+    private HubSpotWorkflowRun? WorkflowRun { get; set; }
+    private HubSpotActionProposal? SelectedProposal { get; set; }
     private string? LoadError { get; set; }
     private TelerikChat<AssistantChatMessage>? AssistantChatRef { get; set; }
     private List<AssistantChatMessage> AssistantMessages { get; set; } = [];
@@ -263,22 +387,72 @@
 
     private static readonly IReadOnlyList<AssistantSuggestion> AssistantSuggestions =
     [
-        new("Audit CRM hygiene risks", "hubspot-assistant-suggestion-hygiene"),
-        new("Which contacts need cleanup first?", "hubspot-assistant-suggestion-cleanup"),
+        new("Audit workflow quality risks", "hubspot-assistant-suggestion-quality"),
+        new("Which proposals need human review first?", "hubspot-assistant-suggestion-review"),
         new("Draft a next-touch memo", "hubspot-assistant-suggestion-memo"),
-        new("List writeback proposals only", "hubspot-assistant-suggestion-writeback"),
+        new("List blocked writeback proposals only", "hubspot-assistant-suggestion-blocked"),
     ];
 
-    private int TotalRows => Snapshot?.Sections.Sum(section => section.Rows.Count) ?? 0;
+    private IReadOnlyList<ProposalGroup> ProposalGroups =>
+        WorkflowRun is null
+            ? []
+            :
+            [
+                new("Good", WorkflowRun.Proposals.Where(p => p.Priority == HubSpotProposalPriority.Good).ToList()),
+                new("Unclear", WorkflowRun.Proposals.Where(p => p.Priority == HubSpotProposalPriority.Unclear).ToList()),
+                new("Blocked", WorkflowRun.Proposals.Where(p => p.Priority == HubSpotProposalPriority.Blocked).ToList()),
+            ];
 
-    private int NeedsCleanupCount =>
-        Snapshot?.ReadinessCards.Count(card => card.Status is "Needs Cleanup" or "Blocked") ?? 0;
+    private IReadOnlyList<HubSpotActionProposal> RepresentativeCases =>
+        WorkflowRun?.Proposals
+            .GroupBy(proposal => proposal.Priority)
+            .OrderBy(group => group.Key)
+            .Select(group => group.First())
+            .ToList() ?? [];
+
+    private string NextMoveTitle
+    {
+        get
+        {
+            if (WorkflowRun is null || WorkflowRun.Proposals.Count == 0)
+            {
+                return "No CRM handoff action is ready from this snapshot";
+            }
+
+            if (WorkflowRun.Quality.BlockedProposals > 0)
+            {
+                return "Start with blocked handoffs";
+            }
+
+            if (WorkflowRun.Quality.NeedsHumanReview > 0)
+            {
+                return "Resolve unclear CRM truth before follow-up";
+            }
+
+            return "Review safe next-touch drafts";
+        }
+    }
+
+    private string NextMoveDetail
+    {
+        get
+        {
+            if (WorkflowRun is null || WorkflowRun.Proposals.Count == 0)
+            {
+                return "The page still shows source records, but the agent did not find a useful handoff proposal.";
+            }
+
+            return $"{WorkflowRun.Quality.BlockedProposals} blocked, {WorkflowRun.Quality.NeedsHumanReview} need human review, {WorkflowRun.Quality.ActionableProposals} safe for draft review.";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             Snapshot = await HubSpotData.GetSnapshotAsync();
+            WorkflowRun = WorkflowEngine.Run(Snapshot);
+            SelectedProposal = WorkflowRun.Proposals.FirstOrDefault();
         }
         catch (Exception ex)
         {
@@ -288,12 +462,32 @@
         EnsureAssistantWelcomeMessage();
     }
 
-    private static string ReadinessClass(string status) => status switch
+    private void SelectProposal(HubSpotActionProposal proposal)
     {
-        "Ready" => "cockpit-pill-good",
-        "Needs Cleanup" => "cockpit-pill-watch",
-        "Blocked" => "hubspot-pill-blocked",
+        SelectedProposal = proposal;
+    }
+
+    private static string PriorityClass(HubSpotProposalPriority priority) => priority switch
+    {
+        HubSpotProposalPriority.Good => "cockpit-pill-good",
+        HubSpotProposalPriority.Unclear => "cockpit-pill-watch",
+        HubSpotProposalPriority.Blocked => "hubspot-pill-blocked",
         _ => "cockpit-pill-neutral",
+    };
+
+    private static string UseCaseFor(HubSpotActionProposal proposal) => proposal.Kind switch
+    {
+        HubSpotProposalKind.ReviewOwnerAssignment =>
+            "Use this to prevent an orphaned record from becoming a generic or unowned follow-up.",
+        HubSpotProposalKind.ReviewLifecycleStage =>
+            "Use this to confirm where the account/contact really sits before changing CRM status.",
+        HubSpotProposalKind.CleanContactFields =>
+            "Use this to clean the minimum handoff context before a seller or marketer acts.",
+        HubSpotProposalKind.DraftNextTouchMemo =>
+            "Use this as a reviewable follow-up draft, not an automatic HubSpot note.",
+        HubSpotProposalKind.ReviewStaleDeal =>
+            "Use this to catch stale pipeline timing before forecast or next-step decisions.",
+        _ => "Use this to inspect the CRM evidence before deciding the next action.",
     };
 
     private async Task OnAssistantSendMessageAsync(ChatSendMessageEventArgs args)
@@ -316,9 +510,9 @@
 
         AddAssistantMessage(AssistantUserId, "You", message);
 
-        if (Snapshot is null)
+        if (Snapshot is null || WorkflowRun is null)
         {
-            AddAssistantMessage(AssistantBotId, "HubSpot AI", "HubSpot snapshot is not loaded yet.");
+            AddAssistantMessage(AssistantBotId, "HubSpot AI", "HubSpot workflow run is not loaded yet.");
             return;
         }
 
@@ -358,9 +552,9 @@
             return;
         }
 
-        var summary = Snapshot is null
-            ? "Load HubSpot first, then ask me to inspect CRM readiness."
-            : $"I can analyze the current HubSpot snapshot: {TotalRows} CRM rows, {Snapshot.ReadinessCards.Count} readiness cards, {NeedsCleanupCount} cleanup risks. I will not write to HubSpot from this page.";
+        var summary = WorkflowRun is null
+            ? "Load HubSpot first, then inspect workflow quality."
+            : $"I can analyze the current HubSpot workflow run: {WorkflowRun.Proposals.Count} proposals, {WorkflowRun.Quality.NeedsHumanReview} human-review cases, {WorkflowRun.Quality.BlockedProposals} blocked actions. I will not write to HubSpot from this page.";
         AddAssistantMessage(AssistantBotId, "HubSpot AI", summary);
     }
 
@@ -381,78 +575,43 @@
     {
         var builder = new StringBuilder();
         builder.AppendLine($"Today: {DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}");
-        builder.AppendLine("Page boundary: read-only HubSpot CRM cockpit. The assistant can draft analysis, notes, and writeback proposals, but no HubSpot write is available on this page.");
+        builder.AppendLine("Page boundary: read-only HubSpot workflow quality cockpit. The assistant can analyze proposals, draft memos, and explain policy decisions, but no HubSpot write is available on this page.");
 
-        if (Snapshot is null)
+        if (Snapshot is null || WorkflowRun is null)
         {
-            builder.AppendLine("HubSpot snapshot is not loaded.");
+            builder.AppendLine("HubSpot workflow run is not loaded.");
             return builder.ToString();
         }
 
         builder.AppendLine($"Source: HubSpot API. Portal URL: {Snapshot.PortalUrl}.");
-        builder.AppendLine($"Refreshed: {Snapshot.RefreshedAt.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)}.");
-        builder.AppendLine($"Loaded records: {TotalRows}. Readiness cards: {Snapshot.ReadinessCards.Count}. Cleanup risks: {NeedsCleanupCount}.");
+        builder.AppendLine($"Workflow run: {WorkflowRun.Id}. Refreshed: {WorkflowRun.RefreshedAt.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)}.");
+        builder.AppendLine($"Quality: {WorkflowRun.Quality.StatusLabel}. Records scanned: {WorkflowRun.Quality.RecordsScanned}. Actionable: {WorkflowRun.Quality.ActionableProposals}. Human review: {WorkflowRun.Quality.NeedsHumanReview}. Blocked: {WorkflowRun.Quality.BlockedProposals}. Unsafe writes: {WorkflowRun.Quality.UnsafeWrites}.");
 
-        builder.AppendLine("CRM sections:");
-        foreach (var section in Snapshot.Sections)
-        {
-            builder.AppendLine($"Section: {section.Title}. Rows: {section.Rows.Count}. Read status: {(section.Error is null ? "ok" : section.Error)}.");
-            foreach (var row in section.Rows.Take(5))
-            {
-                AppendRowContext(builder, row);
-            }
-
-            if (section.Rows.Count > 5)
-            {
-                builder.AppendLine($"Additional {section.Title} rows omitted: {section.Rows.Count - 5}.");
-            }
-        }
-
-        builder.AppendLine("Contact readiness cards:");
-        foreach (var card in Snapshot.ReadinessCards.Take(10))
+        builder.AppendLine("Workflow proposals:");
+        foreach (var proposal in WorkflowRun.Proposals.Take(12))
         {
             builder.Append("- ");
-            builder.Append(card.Name);
-            builder.Append(" | email ");
-            builder.Append(card.Email);
-            builder.Append(" | company ");
-            builder.Append(card.Company);
-            builder.Append(" | title ");
-            builder.Append(card.Title);
-            builder.Append(" | lifecycle ");
-            builder.Append(card.Lifecycle);
-            builder.Append(" | owner ");
-            builder.Append(card.Owner);
-            builder.Append(" | status ");
-            builder.Append(card.Status);
-            builder.Append(" | score ");
-            builder.Append(card.Score.ToString(CultureInfo.InvariantCulture));
-            builder.Append(" | missing ");
-            builder.Append(card.Missing.Count == 0 ? "none" : string.Join(", ", card.Missing));
-            AppendContextLine(builder, "next action", card.NextAction, inline: true);
-            AppendContextLine(builder, "reason", card.Why, inline: true);
+            builder.Append(proposal.Title);
+            builder.Append(" | object ");
+            builder.Append(proposal.ObjectType);
+            builder.Append(" ");
+            builder.Append(proposal.ObjectId);
+            builder.Append(" | kind ");
+            builder.Append(proposal.Kind);
+            builder.Append(" | priority ");
+            builder.Append(proposal.Priority);
+            builder.Append(" | policy ");
+            builder.Append(proposal.Policy.Label);
+            AppendContextLine(builder, "evidence", proposal.EvidenceSummary, inline: true);
+            AppendContextLine(builder, "proposed action", proposal.ProposedAction, inline: true);
         }
 
-        if (Snapshot.ReadinessCards.Count > 10)
+        if (WorkflowRun.Proposals.Count > 12)
         {
-            builder.AppendLine($"Additional readiness cards omitted: {Snapshot.ReadinessCards.Count - 10}.");
+            builder.AppendLine($"Additional proposals omitted: {WorkflowRun.Proposals.Count - 12}.");
         }
 
         return builder.ToString();
-    }
-
-    private static void AppendRowContext(StringBuilder builder, HubSpotCrmRow row)
-    {
-        builder.Append("- ");
-        builder.Append(row.Primary);
-        builder.Append(" | secondary ");
-        builder.Append(row.Secondary);
-        builder.Append(" | status ");
-        builder.Append(row.Status);
-        builder.Append(" | detail ");
-        builder.Append(TrimContextValue(row.Detail));
-        builder.Append(" | updated ");
-        builder.AppendLine(row.UpdatedAt);
     }
 
     private static void AppendContextLine(StringBuilder builder, string label, string? value, bool inline = false)
@@ -483,6 +642,8 @@
             ? normalized
             : normalized[..360];
     }
+
+    private sealed record ProposalGroup(string Label, IReadOnlyList<HubSpotActionProposal> Proposals);
 
     private sealed record AssistantSuggestion(string Label, string TestId);
 

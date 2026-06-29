@@ -58,3 +58,18 @@ public sealed record CockpitAssistantAiResult(
     public static CockpitAssistantAiResult Failed(string error) =>
         new(true, null, error);
 }
+
+public sealed record CockpitAnalysisDigestAiResult(
+    bool Attempted,
+    string? Message,
+    string? Error)
+{
+    public static CockpitAnalysisDigestAiResult NotConfigured() =>
+        new(false, null, null);
+
+    public static CockpitAnalysisDigestAiResult Answered(string message) =>
+        new(true, message, null);
+
+    public static CockpitAnalysisDigestAiResult Failed(string error) =>
+        new(true, null, error);
+}

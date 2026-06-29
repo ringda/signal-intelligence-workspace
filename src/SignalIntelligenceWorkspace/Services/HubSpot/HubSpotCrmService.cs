@@ -68,6 +68,11 @@ public sealed class HubSpotCrmService(HttpClient http, IConfiguration configurat
 
     public async Task<HubSpotCrmSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(Token))
+        {
+            throw new InvalidOperationException("PRIVATE_APP_ACCESS_TOKEN is not set in the server environment.");
+        }
+
         var sections = await Task.WhenAll(
             BuildSectionAsync("contacts", cancellationToken),
             BuildSectionAsync("companies", cancellationToken),

@@ -227,6 +227,59 @@
                 }
             </aside>
 
+            <aside class="cockpit-digest-panel" aria-labelledby="cockpit-analysis-digest-title">
+                <div class="cockpit-assistant-header">
+                    <div class="cockpit-assistant-title">
+                        <TelerikSvgIcon Icon="@SvgIcon.Sparkles" />
+                        <h3 id="cockpit-analysis-digest-title">Analysis Digest</h3>
+                    </div>
+                    <TelerikButton ButtonType="@ButtonType.Button"
+                                   Icon="@SvgIcon.Sparkles"
+                                   OnClick="@GenerateAnalysisDigestAsync"
+                                   Enabled="@(SelectedJobProcess is not null && !IsAnalysisDigestGenerating)"
+                                   AriaLabel="Generate read-only analysis digest">
+                        @(string.IsNullOrWhiteSpace(AnalysisDigest) ? "Generate Digest" : "Regenerate")
+                    </TelerikButton>
+                </div>
+
+                <div class="cockpit-assistant-context">
+                    Read-only selected-job digest. Uses only the loaded cockpit snapshot.
+                </div>
+
+                @if (SelectedJobProcess is null)
+                {
+                    <div class="cockpit-empty">Select a job to generate an Analysis Digest.</div>
+                }
+                else if (!SemanticGridAiParser.IsConfigured)
+                {
+                    <div class="cockpit-assistant-status cockpit-assistant-status-error">
+                        AI provider is not configured. Add Gemini or OpenAI settings, then restart the app.
+                    </div>
+                }
+                else if (IsAnalysisDigestGenerating)
+                {
+                    <div class="cockpit-loading">@SemanticGridAiParser.ProviderName is generating the digest...</div>
+                }
+                else if (!string.IsNullOrWhiteSpace(AnalysisDigestError))
+                {
+                    <div class="cockpit-alert">@AnalysisDigestError</div>
+                }
+                else if (!string.IsNullOrWhiteSpace(AnalysisDigest))
+                {
+                    <pre class="cockpit-digest-output">@AnalysisDigest</pre>
+                    @if (AnalysisDigestGeneratedAt is not null)
+                    {
+                        <div class="cockpit-digest-meta">
+                            Generated @AnalysisDigestGeneratedAt.Value.ToString("MMM d, yyyy h:mm tt", CultureInfo.InvariantCulture)
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="cockpit-empty">Generate a concise current read, evidence check, risk note, and next step.</div>
+                }
+            </aside>
+
             <aside class="cockpit-assistant-panel" aria-label="@L["Cockpit.Assistant"]">
                 <div class="cockpit-assistant-header">
                     <div class="cockpit-assistant-title">
@@ -364,6 +417,10 @@
     private TelerikChat<AssistantChatMessage>? AssistantChatRef { get; set; }
     private List<AssistantChatMessage> AssistantMessages = [];
     private bool IsAssistantResponding;
+    private bool IsAnalysisDigestGenerating;
+    private string? AnalysisDigest;
+    private string? AnalysisDigestError;
+    private DateTimeOffset? AnalysisDigestGeneratedAt;
 
     private const string AssistantUserId = "cockpit-user";
     private const string AssistantBotId = "cockpit-assistant";
@@ -516,6 +573,7 @@
     {
         SelectedJobs = [selected];
         SelectedJobProcess = null;
+        ClearAnalysisDigest();
 
         try
         {
@@ -703,6 +761,56 @@
         AssistantChatRef?.Refresh();
     }
 
+    private async Task GenerateAnalysisDigestAsync()
+    {
+        if (SelectedJobProcess is null || IsAnalysisDigestGenerating)
+        {
+            return;
+        }
+
+        AnalysisDigestError = null;
+
+        if (!SemanticGridAiParser.IsConfigured)
+        {
+            AnalysisDigestError = "AI provider is not configured. Add Gemini or OpenAI settings, then restart the app.";
+            return;
+        }
+
+        try
+        {
+            IsAnalysisDigestGenerating = true;
+            await InvokeAsync(StateHasChanged);
+
+            var result = await SemanticGridAiParser.GenerateAnalysisDigestAsync(BuildAnalysisDigestContext());
+            if (!result.Attempted)
+            {
+                AnalysisDigestError = "AI provider is not configured. Add Gemini or OpenAI settings, then restart the app.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(result.Message))
+            {
+                AnalysisDigestError = result.Error ?? L["Cockpit.Semantic.AiUnknownError"].Value;
+                return;
+            }
+
+            AnalysisDigest = result.Message;
+            AnalysisDigestGeneratedAt = DateTimeOffset.Now;
+        }
+        finally
+        {
+            IsAnalysisDigestGenerating = false;
+        }
+    }
+
+    private void ClearAnalysisDigest()
+    {
+        IsAnalysisDigestGenerating = false;
+        AnalysisDigest = null;
+        AnalysisDigestError = null;
+        AnalysisDigestGeneratedAt = null;
+    }
+
     private void AddAssistantMessage(string authorId, string authorName, string text)
     {
         AssistantMessages.Add(new AssistantChatMessage
@@ -760,6 +868,58 @@
         if (visibleJobs.Count > 8)
         {
             builder.AppendLine($"Additional visible jobs omitted: {visibleJobs.Count - 8}.");
+        }
+
+        return builder.ToString();
+    }
+
+    private string BuildAnalysisDigestContext()
+    {
+        var selectedJob = SelectedJobs.FirstOrDefault();
+        var builder = new StringBuilder();
+
+        builder.AppendLine($"Today: {(Metrics?.LocalToday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))}");
+        builder.AppendLine($"Snapshot loaded at: {SnapshotLoadedAt.ToString("yyyy-MM-dd HH:mm zzz", CultureInfo.InvariantCulture)}.");
+        builder.AppendLine("Page boundary: read-only Application Tracker cockpit.");
+        builder.AppendLine("No file-system artifacts, live web, ATS, LinkedIn, or DB writes were accessed during this digest generation.");
+
+        if (selectedJob is not null)
+        {
+            builder.AppendLine("Selected grid row:");
+            AppendContextLine(builder, "Job ID", selectedJob.JobId);
+            AppendContextLine(builder, "Company", selectedJob.Company);
+            AppendContextLine(builder, "Title", selectedJob.Title);
+            AppendContextLine(builder, "Location", selectedJob.Location);
+            AppendContextLine(builder, "Status", StatusDisplay(selectedJob.StatusCode));
+            AppendContextLine(builder, "Disposition state", selectedJob.DispositionState);
+            AppendContextLine(builder, "Match", MatchDisplay(selectedJob.MatchLevel));
+            AppendContextLine(builder, "Match score", selectedJob.MatchScore?.ToString(CultureInfo.InvariantCulture));
+            AppendContextLine(builder, "Win score", selectedJob.WinScore?.ToString(CultureInfo.InvariantCulture));
+            AppendContextLine(builder, "Created", selectedJob.CreatedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+            AppendContextLine(builder, "Judgement summary", selectedJob.JudgementSummary);
+            AppendContextLine(builder, "Pipeline folder", selectedJob.PipelineFolder is null ? null : $"80-applications/{selectedJob.PipelineFolder}");
+        }
+
+        if (SelectedJobProcess is not null)
+        {
+            builder.AppendLine("Selected application process snapshot:");
+            AppendContextLine(builder, "Job ID", SelectedJobProcess.JobId);
+            AppendContextLine(builder, "Company", SelectedJobProcess.Company);
+            AppendContextLine(builder, "Title", SelectedJobProcess.Title);
+            AppendContextLine(builder, "Status", StatusDisplay(SelectedJobProcess.StatusCode));
+            AppendContextLine(builder, "Status detail", SelectedJobProcess.StatusDetail);
+            AppendContextLine(builder, "Disposition state", SelectedJobProcess.DispositionState);
+            AppendContextLine(builder, "Disposition note", SelectedJobProcess.DispositionNote);
+            AppendContextLine(builder, "Match", MatchDisplay(SelectedJobProcess.MatchLevel));
+            AppendContextLine(builder, "Win score", SelectedJobProcess.WinScore?.ToString(CultureInfo.InvariantCulture));
+            AppendContextLine(builder, "AI reason", SelectedJobProcess.AiReason);
+            AppendContextLine(builder, "AI summary", SelectedJobProcess.AiSummary);
+            AppendContextLine(builder, "Role summary", SelectedJobProcess.PjdRoleSummary);
+            AppendContextLine(builder, "Hiring focus", SelectedJobProcess.PjdHiringFocus);
+            AppendContextLine(builder, "Win reasoning", SelectedJobProcess.WinReasoning);
+            AppendContextLine(builder, "Visa note", SelectedJobProcess.VisaNote);
+            AppendContextLine(builder, "Pipeline folder", SelectedJobProcess.PipelineFolder is null ? null : $"80-applications/{SelectedJobProcess.PipelineFolder}");
+            AppendContextLine(builder, "JD text excerpt", SelectedJobProcess.JdFullText);
         }
 
         return builder.ToString();
@@ -899,6 +1059,7 @@
 
         SelectedJobs = [];
         SelectedJobProcess = null;
+        ClearAnalysisDigest();
     }
 
     private SemanticGridParseResult ParseSemanticGridCommand(string command)

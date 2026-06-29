@@ -287,6 +287,7 @@ h1:focus {
 .cockpit-chart-panel,
 .cockpit-grid-panel,
 .cockpit-detail-panel,
+.cockpit-digest-panel,
 .cockpit-assistant-panel {
     border: 1px solid #e3e8ec;
     border-radius: 8px;
@@ -458,7 +459,7 @@ h1:focus {
     grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.15fr);
     grid-template-areas:
         "chart detail"
-        "grid grid"
+        "grid digest"
         "assistant assistant";
     gap: 16px;
     align-items: stretch;
@@ -479,6 +480,15 @@ h1:focus {
 
 .cockpit-detail-panel {
     min-height: 300px;
+}
+
+.cockpit-digest-panel {
+    grid-area: digest;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 300px;
+    overflow: hidden;
 }
 
 .cockpit-assistant-panel {
@@ -567,6 +577,28 @@ h1:focus {
 
 .cockpit-assistant-chat .k-chat {
     height: 100%;
+}
+
+.cockpit-digest-output {
+    flex: 1;
+    min-height: 180px;
+    margin: 0;
+    border: 1px solid #e7ecef;
+    border-radius: 6px;
+    background: #fbfcfd;
+    padding: 12px;
+    color: #2f3d47;
+    font: inherit;
+    font-size: 0.9rem;
+    line-height: 1.48;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: auto;
+}
+
+.cockpit-digest-meta {
+    color: #65727d;
+    font-size: 0.8rem;
 }
 
 .cockpit-readiness-panel {
@@ -1106,6 +1138,346 @@ h1:focus {
     line-height: 1.42;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+}
+
+.hubspot-quality-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+    gap: 20px;
+    align-items: stretch;
+    border: 1px solid #d7e2df;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 22px;
+}
+
+.hubspot-quality-hero h2 {
+    margin: 0 0 8px;
+    color: #17231f;
+}
+
+.hubspot-quality-hero p {
+    max-width: 760px;
+    margin: 0;
+    color: #52615a;
+    line-height: 1.55;
+}
+
+.hubspot-quality-status {
+    display: grid;
+    align-content: center;
+    gap: 6px;
+    border: 1px solid #f0d28a;
+    border-radius: 8px;
+    background: #fffaf0;
+    padding: 16px;
+}
+
+.hubspot-quality-status span,
+.hubspot-quality-status small {
+    color: #6f5b28;
+}
+
+.hubspot-quality-status strong {
+    color: #392f15;
+    font-size: 1.24rem;
+    line-height: 1.25;
+}
+
+.hubspot-use-case-panel,
+.hubspot-next-move,
+.hubspot-loading-panel {
+    display: grid;
+    gap: 12px;
+    border: 1px solid #d7e2df;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 16px 18px;
+}
+
+.hubspot-use-case-panel {
+    grid-template-columns: minmax(260px, 0.55fr) minmax(0, 1fr);
+    align-items: start;
+    border-left: 4px solid #0f7b55;
+}
+
+.hubspot-use-case-panel div,
+.hubspot-next-move div,
+.hubspot-loading-panel {
+    min-width: 0;
+}
+
+.hubspot-use-case-panel span,
+.hubspot-next-move span {
+    display: block;
+    margin-bottom: 4px;
+    color: #0f7b55;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.hubspot-use-case-panel strong,
+.hubspot-next-move strong,
+.hubspot-loading-panel strong {
+    color: #17231f;
+    font-size: 1.05rem;
+    line-height: 1.35;
+}
+
+.hubspot-use-case-panel ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 20px;
+    color: #33423b;
+}
+
+.hubspot-use-case-panel li {
+    line-height: 1.4;
+}
+
+.hubspot-next-move {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    background: #f7fbf8;
+}
+
+.hubspot-next-move small,
+.hubspot-loading-panel span {
+    display: block;
+    margin-top: 4px;
+    color: #5f6b73;
+}
+
+.hubspot-jump-button {
+    border: 1px solid #b9d9cb;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 10px 12px;
+    color: #0c5f45;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.hubspot-jump-button:hover,
+.hubspot-jump-button:focus {
+    border-color: #0f7b55;
+    outline: none;
+}
+
+.hubspot-quality-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.hubspot-quality-tile {
+    display: grid;
+    gap: 5px;
+    border: 1px solid #e3e8ec;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 14px;
+    min-width: 0;
+}
+
+.hubspot-quality-tile span,
+.hubspot-quality-tile small {
+    color: #5f6b73;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-quality-tile strong {
+    color: #16261f;
+    font-size: 1.9rem;
+    line-height: 1;
+}
+
+.hubspot-quality-good {
+    border-color: #bde5cc;
+    background: #f4fbf6;
+}
+
+.hubspot-quality-watch {
+    border-color: #f0d28a;
+    background: #fffaf0;
+}
+
+.hubspot-quality-blocked {
+    border-color: #efc5c5;
+    background: #fff5f5;
+}
+
+.hubspot-review-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.hubspot-proposal-queue,
+.hubspot-case-detail {
+    min-height: 520px;
+}
+
+.hubspot-proposal-group {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.hubspot-proposal-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #52615a;
+    font-size: 0.84rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.hubspot-proposal-button,
+.hubspot-representative-case {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+    border: 1px solid #e1e7e5;
+    border-radius: 8px;
+    background: #fbfcfd;
+    padding: 12px;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.hubspot-proposal-button:hover,
+.hubspot-proposal-button:focus,
+.hubspot-proposal-button.is-selected,
+.hubspot-representative-case:hover,
+.hubspot-representative-case:focus {
+    border-color: #88b8a7;
+    background: #f4fbf7;
+    outline: none;
+}
+
+.hubspot-proposal-button strong,
+.hubspot-representative-case strong {
+    color: #17231f;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-proposal-button small,
+.hubspot-representative-case small {
+    color: #5f6b73;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-proposal-button em,
+.hubspot-representative-case em {
+    color: #3f4d46;
+    font-size: 0.84rem;
+    font-style: normal;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-case-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.hubspot-case-head h3 {
+    margin: 4px 0 0;
+}
+
+.hubspot-case-head span:first-child {
+    color: #5f6b73;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.hubspot-case-summary {
+    color: #3f4d46;
+    line-height: 1.5;
+}
+
+.hubspot-case-section {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+.hubspot-case-section small {
+    color: #5f6b73;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.hubspot-case-section ul {
+    margin: 0;
+    padding-left: 18px;
+    color: #33423b;
+}
+
+.hubspot-case-section li {
+    margin: 3px 0;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-case-section p {
+    margin: 0;
+    color: #33423b;
+}
+
+.hubspot-policy-box {
+    border: 1px solid #e3e8ec;
+    border-radius: 8px;
+    background: #fbfcfd;
+    padding: 12px;
+}
+
+.hubspot-representative-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.hubspot-audit-list {
+    display: grid;
+    gap: 8px;
+}
+
+.hubspot-audit-row {
+    display: grid;
+    grid-template-columns: 54px 150px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid #edf1f3;
+    padding: 10px 0;
+}
+
+.hubspot-audit-row span {
+    color: #5f6b73;
+    font-size: 0.82rem;
+}
+
+.hubspot-audit-row strong {
+    color: #17231f;
+}
+
+.hubspot-audit-row small {
+    color: #5f6b73;
+    overflow-wrap: anywhere;
+}
+
+.hubspot-source-records {
+    display: grid;
+    gap: 14px;
 }
 
 /* ---- HM-facing Application Intelligence prototype ---- */
@@ -1679,9 +2051,9 @@ h1:focus {
 
 @media (min-width: 1450px) {
     .cockpit-main {
-        grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.25fr) minmax(360px, 0.95fr);
+        grid-template-columns: minmax(320px, 0.85fr) minmax(460px, 1fr) minmax(360px, 0.95fr);
         grid-template-areas:
-            "chart detail assistant"
+            "chart detail digest"
             "grid grid assistant";
     }
 
@@ -1697,6 +2069,7 @@ h1:focus {
             "chart"
             "grid"
             "detail"
+            "digest"
             "assistant";
     }
 
@@ -1715,8 +2088,17 @@ h1:focus {
     .cockpit-summary-grid,
     .application-readiness-grid,
     .hubspot-summary-grid,
-    .hubspot-readiness-grid {
+    .hubspot-readiness-grid,
+    .hubspot-quality-grid,
+    .hubspot-representative-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hubspot-quality-hero,
+    .hubspot-review-layout,
+    .hubspot-use-case-panel,
+    .hubspot-next-move {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1740,7 +2122,17 @@ h1:focus {
     .cockpit-summary-grid,
     .application-readiness-grid,
     .hubspot-summary-grid,
-    .hubspot-readiness-grid {
+    .hubspot-readiness-grid,
+    .hubspot-quality-grid,
+    .hubspot-representative-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hubspot-quality-hero,
+    .hubspot-review-layout,
+    .hubspot-audit-row,
+    .hubspot-use-case-panel,
+    .hubspot-next-move {
         grid-template-columns: 1fr;
     }
 

@@ -83,6 +83,23 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
         };
     }
 
+    public async Task<CockpitAnalysisDigestAiResult> GenerateAnalysisDigestAsync(
+        string cockpitContext,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured)
+        {
+            return CockpitAnalysisDigestAiResult.NotConfigured();
+        }
+
+        return _provider switch
+        {
+            CockpitSemanticGridAiProvider.Gemini => await GenerateAnalysisDigestWithGeminiAsync(cockpitContext, cancellationToken),
+            CockpitSemanticGridAiProvider.OpenAi => await GenerateAnalysisDigestWithOpenAiAsync(cockpitContext, cancellationToken),
+            _ => CockpitAnalysisDigestAiResult.NotConfigured(),
+        };
+    }
+
     private async Task<CockpitSemanticGridAiParseResult> ParseWithOpenAiAsync(
         string prompt,
         CancellationToken cancellationToken)
@@ -249,6 +266,82 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
         }
     }
 
+    private async Task<CockpitAnalysisDigestAiResult> GenerateAnalysisDigestWithOpenAiAsync(
+        string cockpitContext,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/responses");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _openAiApiKey);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(CreateAnalysisDigestOpenAiRequestBody(cockpitContext), JsonOptions),
+            Encoding.UTF8,
+            "application/json");
+
+        try
+        {
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return CockpitAnalysisDigestAiResult.Failed(
+                    $"OpenAI analysis digest request failed with HTTP {(int)response.StatusCode}.");
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            var outputText = ExtractOutputText(document.RootElement);
+            return string.IsNullOrWhiteSpace(outputText)
+                ? CockpitAnalysisDigestAiResult.Failed("OpenAI returned no analysis digest text output.")
+                : CockpitAnalysisDigestAiResult.Answered(NormalizeAssistantAnswer(outputText));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return CockpitAnalysisDigestAiResult.Failed(ex.Message);
+        }
+    }
+
+    private async Task<CockpitAnalysisDigestAiResult> GenerateAnalysisDigestWithGeminiAsync(
+        string cockpitContext,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(_geminiModel)}:generateContent");
+        request.Headers.Add("x-goog-api-key", _geminiApiKey);
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(CreateAnalysisDigestGeminiRequestBody(cockpitContext), JsonOptions),
+            Encoding.UTF8,
+            "application/json");
+
+        try
+        {
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return CockpitAnalysisDigestAiResult.Failed(
+                    $"Gemini analysis digest request failed with HTTP {(int)response.StatusCode}.");
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            var outputText = ExtractGeminiOutputText(document.RootElement);
+            return string.IsNullOrWhiteSpace(outputText)
+                ? CockpitAnalysisDigestAiResult.Failed("Gemini returned no analysis digest text output.")
+                : CockpitAnalysisDigestAiResult.Answered(NormalizeAssistantAnswer(outputText));
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return CockpitAnalysisDigestAiResult.Failed(ex.Message);
+        }
+    }
+
     private object CreateOpenAiRequestBody(string prompt) =>
         new
         {
@@ -340,6 +433,48 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
             },
         };
 
+    private object CreateAnalysisDigestOpenAiRequestBody(string cockpitContext) =>
+        new
+        {
+            model = _openAiModel,
+            store = false,
+            reasoning = new
+            {
+                effort = "low",
+            },
+            input = new object[]
+            {
+                new
+                {
+                    role = "system",
+                    content = new object[]
+                    {
+                        new
+                        {
+                            type = "input_text",
+                            text = AnalysisDigestSystemInstruction,
+                        },
+                    },
+                },
+                new
+                {
+                    role = "user",
+                    content = new object[]
+                    {
+                        new
+                        {
+                            type = "input_text",
+                            text = CreateAnalysisDigestPrompt(cockpitContext),
+                        },
+                    },
+                },
+            },
+            text = new
+            {
+                verbosity = "low",
+            },
+        };
+
     private object CreateGeminiRequestBody(string prompt) =>
         new
         {
@@ -410,6 +545,40 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
             },
         };
 
+    private object CreateAnalysisDigestGeminiRequestBody(string cockpitContext) =>
+        new
+        {
+            systemInstruction = new
+            {
+                parts = new object[]
+                {
+                    new
+                    {
+                        text = AnalysisDigestSystemInstruction,
+                    },
+                },
+            },
+            contents = new object[]
+            {
+                new
+                {
+                    role = "user",
+                    parts = new object[]
+                    {
+                        new
+                        {
+                            text = CreateAnalysisDigestPrompt(cockpitContext),
+                        },
+                    },
+                },
+            },
+            generationConfig = new
+            {
+                temperature = 0.2,
+                maxOutputTokens = 2048,
+            },
+        };
+
     private const string SystemInstruction = """
         Convert a user's natural-language request into a read-only Grid command for a job application cockpit.
 
@@ -453,6 +622,31 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
         When evidence is missing, say what is missing and suggest the next review step.
         """;
 
+    private const string AnalysisDigestSystemInstruction = """
+        You generate a read-only Analysis Digest for a selected job in a job-search signal cockpit.
+
+        Use only the cockpit context supplied by the app. Do not claim to have searched the web, queried databases, opened files, read routing_brief.md, read resume.md, checked LinkedIn, checked an ATS, sent applications, edited source data, or viewed secrets.
+        The page is read-only. Do not propose or imply that any database, filesystem, LinkedIn, ATS, resume, or CRM write was executed.
+        Separate evidence from inference. Never call a likely hiring manager confirmed. If direct evidence is missing, say it is missing.
+        The digest should help the user quickly decide what to inspect next, not replace linkedin-people, jd-loop-routing, resume-tailor, or apply flow.
+        Answer in Traditional Chinese by default, unless the context or user-facing language clearly requires English.
+        Keep the digest concise, source-backed, and under about 900 Chinese characters.
+        Use this shape:
+        **Analysis Digest**
+        結論：...
+        信心：High / Medium / Low，因為 ...
+        目前狀態：
+        - ...
+        為什麼重要：
+        - ...
+        風險與限制：
+        - ...
+        下一步：
+        - ...
+        已查證來源：
+        - ...
+        """;
+
     private static string CreateAssistantPrompt(string prompt, string cockpitContext) =>
         $"""
         Current cockpit context:
@@ -460,6 +654,14 @@ public sealed class CockpitSemanticGridAiParser(HttpClient httpClient, IConfigur
 
         User request:
         {prompt}
+        """;
+
+    private static string CreateAnalysisDigestPrompt(string cockpitContext) =>
+        $"""
+        Current selected-job cockpit context:
+        {cockpitContext}
+
+        Generate the Analysis Digest now.
         """;
 
     private static string NormalizeAssistantAnswer(string answer)

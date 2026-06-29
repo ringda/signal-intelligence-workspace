@@ -8,6 +8,7 @@ using SignalIntelligenceWorkspace.Services.ApplicationIntelligence;
 using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.Frontstage;
 using SignalIntelligenceWorkspace.Services.HubSpot;
+using SignalIntelligenceWorkspace.Services.HubSpotWorkflow;
 using SignalIntelligenceWorkspace.Services.PublicFeedback;
 using SignalIntelligenceWorkspace.Services.Scenarios;
 using SignalIntelligenceWorkspace.Services.Security;
@@ -63,6 +64,11 @@ builder.Services.AddScoped<CockpitDataService>();
 builder.Services.AddHttpClient<CockpitSemanticGridAiParser>();
 builder.Services.AddHttpClient<HubSpotCrmService>();
 builder.Services.AddHttpClient<HubSpotAssistantAiService>();
+builder.Services.AddScoped<HubSpotReadinessRules>();
+builder.Services.AddScoped<HubSpotWritebackPolicy>();
+builder.Services.AddScoped<HubSpotProposalBuilder>();
+builder.Services.AddScoped<HubSpotWorkflowAuditLog>();
+builder.Services.AddScoped<HubSpotWorkflowEngine>();
 
 // English default; Traditional Chinese available via the in-app toggle.
 var supportedCultures = new[] { "en", "zh-Hant" };
