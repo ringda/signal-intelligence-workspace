@@ -31,6 +31,19 @@ public sealed class BasicAuthMiddlewareTests
     }
 
     [Theory]
+    [InlineData("/")]
+    [InlineData("/home")]
+    public async Task InvokeAsync_AllowsPublicHeadRequestsWithoutCredentials(string path)
+    {
+        var context = CreateContext(path, HttpMethods.Head);
+        var middleware = CreateMiddleware(configured: false);
+
+        await middleware.InvokeAsync(context);
+
+        Assert.Equal(StatusCodes.Status204NoContent, context.Response.StatusCode);
+    }
+
+    [Theory]
     [InlineData("/cockpit")]
     [InlineData("/hubspot")]
     [InlineData("/governance")]
@@ -38,6 +51,20 @@ public sealed class BasicAuthMiddlewareTests
     public async Task InvokeAsync_RejectsPrivateRoutesWithoutCredentials(string path)
     {
         var context = CreateContext(path);
+        var middleware = CreateMiddleware();
+
+        await middleware.InvokeAsync(context);
+
+        Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+        Assert.Equal("Basic realm=\"Signal Intelligence Workspace\", charset=\"UTF-8\"", context.Response.Headers.WWWAuthenticate);
+    }
+
+    [Theory]
+    [InlineData("/cockpit")]
+    [InlineData("/hubspot")]
+    public async Task InvokeAsync_RejectsPrivateHeadRequestsWithoutCredentials(string path)
+    {
+        var context = CreateContext(path, HttpMethods.Head);
         var middleware = CreateMiddleware();
 
         await middleware.InvokeAsync(context);
@@ -97,9 +124,10 @@ public sealed class BasicAuthMiddlewareTests
             NullLogger<BasicAuthMiddleware>.Instance);
     }
 
-    private static DefaultHttpContext CreateContext(string path)
+    private static DefaultHttpContext CreateContext(string path, string method = "GET")
     {
         var context = new DefaultHttpContext();
+        context.Request.Method = method;
         context.Request.Path = path;
         return context;
     }

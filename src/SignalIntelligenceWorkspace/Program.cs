@@ -99,6 +99,8 @@ app.UseAntiforgery();
 
 app.MapPublicFeedbackEndpoints();
 app.MapControllers();
+app.MapMethods("/", new[] { HttpMethods.Head }, () => Results.Ok());
+app.MapMethods("/home", new[] { HttpMethods.Head }, () => Results.Ok());
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
