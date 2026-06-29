@@ -88,6 +88,7 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 
 app.UseHttpsRedirection();
 
+app.UseCanonicalHostRedirect();
 app.UseBasicAuthentication();
 
 app.UseRequestLocalization();
