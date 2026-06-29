@@ -1,6 +1,12 @@
 window.frontstageTracking = {
     watchSections: function (options) {
-        if (!options?.token || !options?.endpoint || !("IntersectionObserver" in window)) {
+        if (!options?.token) {
+            return;
+        }
+
+        this.watchClicks(options);
+
+        if (!options?.endpoint || !("IntersectionObserver" in window)) {
             return;
         }
 
@@ -57,5 +63,64 @@ window.frontstageTracking = {
         }
 
         window.__frontstageSectionObserver = observer;
+    },
+
+    watchClicks: function (options) {
+        if (!options?.token || !options?.clickEndpoint) {
+            return;
+        }
+
+        if (window.__frontstageClickHandler) {
+            document.removeEventListener("click", window.__frontstageClickHandler, true);
+        }
+
+        const trackedClicks = new Set();
+        const submit = function (eventKey, target) {
+            if (!eventKey) {
+                return;
+            }
+
+            const clickKey = `${eventKey}:${target || ""}`;
+            if (trackedClicks.has(clickKey)) {
+                return;
+            }
+
+            trackedClicks.add(clickKey);
+            const payload = JSON.stringify({
+                token: options.token,
+                eventKey,
+                target: target || null,
+                language: options.language || "en"
+            });
+
+            if (navigator.sendBeacon) {
+                const blob = new Blob([payload], { type: "application/json" });
+                navigator.sendBeacon(options.clickEndpoint, blob);
+                return;
+            }
+
+            fetch(options.clickEndpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: payload,
+                keepalive: true
+            }).catch(() => {});
+        };
+
+        const handler = function (event) {
+            const element = event.target?.closest?.("[data-frontstage-click]");
+            if (!element) {
+                return;
+            }
+
+            submit(
+                element.getAttribute("data-frontstage-click"),
+                element.getAttribute("href") || element.getAttribute("aria-label") || element.textContent?.trim());
+        };
+
+        document.addEventListener("click", handler, true);
+        window.__frontstageClickHandler = handler;
     }
 };

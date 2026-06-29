@@ -15,20 +15,12 @@
         <div class="hero-copy">
             <p class="eyebrow">Live GTM pipeline context</p>
             <h1 id="public-home-title">Candidate Go-to-Market Pipeline</h1>
-            @if (DeliveryCopy is not null)
-            {
-                <p id="frontstage-context" class="frontstage-context">@DeliveryCopy.ContextLabel</p>
-                <p class="lead">@DeliveryCopy.HeroLead</p>
-            }
-            else
-            {
-                <p class="lead">
-                    I use a Candidate Go-to-Market system to turn market signals, role context, and real
-                    conversations into <strong>clearer fit decisions, role-relevant proof, and context-aware
-                    follow-up</strong>. Each cycle sharpens the evidence and shows me what to learn next
-                    from the market.
-                </p>
-            }
+            <p class="lead">
+                I use a Candidate Go-to-Market system to turn market signals, role context, and real
+                conversations into <strong>clearer fit decisions, role-relevant proof, and context-aware
+                follow-up</strong>. Each cycle sharpens the evidence and shows me what to learn next
+                from the market.
+            </p>
 
             <div class="proof-strip" aria-label="System proof points" data-testid="public-kpi-strip">
                 <div class="proof">
@@ -121,19 +113,12 @@
             <div class="marketing-fit-copy">
                 <p class="section-kicker">Marketing Fit</p>
                 <h2 id="public-marketing-title">Why it matters for <span>Marketing / GTM analytics</span></h2>
-                @if (DeliveryCopy is not null)
-                {
-                    <p class="section-text">@DeliveryCopy.MarketingText</p>
-                }
-                else
-                {
-                    <p class="section-text">
-                        Good marketing analytics depends on the work that happens <span class="copy-emphasis">before the dashboard</span>:
-                        <strong>clean source context</strong>, <strong>meaningful audience logic</strong>,
-                        <strong>focused KPI questions</strong>, and handoffs that turn reporting into clearer
-                        <strong>campaign, channel, audience, or workflow decisions</strong>.
-                    </p>
-                }
+                <p class="section-text">
+                    Good marketing analytics depends on the work that happens <span class="copy-emphasis">before the dashboard</span>:
+                    <strong>clean source context</strong>, <strong>meaningful audience logic</strong>,
+                    <strong>focused KPI questions</strong>, and handoffs that turn reporting into clearer
+                    <strong>campaign, channel, audience, or workflow decisions</strong>.
+                </p>
                 <p class="section-text">
                     This pipeline practices that same pattern. Each role, company read, or conversation
                     becomes a small GTM signal system: define the context, map the source, check the claim,
@@ -187,18 +172,11 @@
             <p class="section-kicker">Conversation</p>
             <h2 id="public-conversation-title">Where this work could fit</h2>
             <div class="reply-box">
-                @if (DeliveryCopy is not null)
-                {
-                    <p class="section-text">@DeliveryCopy.ConversationText</p>
-                }
-                else
-                {
-                    <p class="section-text">
-                        If this way of working feels relevant to your team, I would value your read on where it fits
-                        best: marketing analytics, GTM operations, customer signal work, reporting handoff, or another
-                        part of the workflow.
-                    </p>
-                }
+                <p class="section-text">
+                    If this way of working feels relevant to your team, I would value your read on where it fits
+                    best: marketing analytics, GTM operations, customer signal work, reporting handoff, or another
+                    part of the workflow.
+                </p>
                 <div class="message reply-card" aria-label="Send a quick read">
                     <p>A small reply is enough.</p>
                     <div class="feedback-form">
@@ -234,12 +212,14 @@
                         {
                             <p class="feedback-status feedback-success" role="status">@FeedbackSuccess</p>
                         }
-                        <TelerikButton ButtonType="@ButtonType.Button"
-                                       Class="feedback-submit"
-                                       Enabled="@(!IsSubmittingFeedback)"
-                                       OnClick="@SubmitFeedbackAsync">
-                            @FeedbackButtonText
-                        </TelerikButton>
+                        <span data-frontstage-click="feedback-submit">
+                            <TelerikButton ButtonType="@ButtonType.Button"
+                                           Class="feedback-submit"
+                                           Enabled="@(!IsSubmittingFeedback)"
+                                           OnClick="@SubmitFeedbackAsync">
+                                @FeedbackButtonText
+                            </TelerikButton>
+                        </span>
                     </div>
                     <p>
                         Which part feels most useful, which part feels least relevant, or what kind of team
@@ -255,11 +235,11 @@
             <span>Johanna Fan · Marketing / GTM / Customer Signal Analytics</span>
             <div class="footer-actions" aria-label="Contact links">
                 <span>Open to a quick read on where this work fits best.</span>
-                <a class="contact-link" href="https://linkedin.com/in/xxu09" target="_blank" rel="noreferrer">
+                <a class="contact-link" href="https://linkedin.com/in/xxu09" target="_blank" rel="noreferrer" data-frontstage-click="linkedin">
                     <span class="contact-icon" aria-hidden="true">in</span>
                     <span>LinkedIn</span>
                 </a>
-                <a class="contact-link" href="mailto:xxfan9@gmail.com">
+                <a class="contact-link" href="mailto:xxfan9@gmail.com" data-frontstage-click="email">
                     <span class="contact-icon" aria-hidden="true">@@</span>
                     <span>Email</span>
                 </a>
@@ -288,9 +268,7 @@
 
     private string FeedbackButtonText => IsSubmittingFeedback ? "Sending..." : "Send a quick read";
 
-    private FrontstageDeliveryContext? DeliveryContext { get; set; }
-
-    private FrontstageDeliveryCopy? DeliveryCopy => DeliveryContext?.GetCopy(DeliveryLanguage);
+    private FrontstageTokenContext? DeliveryContext { get; set; }
 
     private string DeliveryLanguage { get; set; } = "en";
 
@@ -404,7 +382,8 @@
             new FrontstageTrackingClientRequest(
                 DeliveryToken,
                 DeliveryLanguage,
-                "/api/frontstage/section-view"));
+                "/api/frontstage/section-view",
+                "/api/frontstage/click"));
     }
 
     private string GetRequestedLanguage()
@@ -491,5 +470,6 @@
     private sealed record FrontstageTrackingClientRequest(
         string Token,
         string Language,
-        string Endpoint);
+        string Endpoint,
+        string ClickEndpoint);
 }

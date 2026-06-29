@@ -57,4 +57,22 @@ public sealed class FrontstageDeliveryResolverTests
         Assert.Equal(expectedResult, result);
         Assert.Equal(expectedSectionKey, sectionKey);
     }
+
+    [Theory]
+    [InlineData("linkedin", true, "linkedin")]
+    [InlineData("feedback-submit", true, "feedback-submit")]
+    [InlineData("Email", true, "email")]
+    [InlineData("raw token", false, "")]
+    [InlineData("../../private", false, "")]
+    [InlineData("", false, "")]
+    public void TryNormalizeClickEventKey_AllowsOnlyCompactPublicEventKeys(
+        string input,
+        bool expectedResult,
+        string expectedEventKey)
+    {
+        var result = PostgresFrontstageDeliveryResolver.TryNormalizeClickEventKey(input, out var eventKey);
+
+        Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedEventKey, eventKey);
+    }
 }

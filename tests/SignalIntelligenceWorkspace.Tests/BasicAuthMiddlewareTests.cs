@@ -13,6 +13,7 @@ public sealed class BasicAuthMiddlewareTests
     [InlineData("/home")]
     [InlineData("/r/ft_20260629_credit-one_test")]
     [InlineData("/api/frontstage/section-view")]
+    [InlineData("/api/frontstage/click")]
     [InlineData("/_framework/blazor.web.js")]
     [InlineData("/_content/Telerik.UI.for.Blazor/js/telerik-blazor.js")]
     [InlineData("/_blazor")]

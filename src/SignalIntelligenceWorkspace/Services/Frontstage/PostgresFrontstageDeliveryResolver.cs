@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using Npgsql;
@@ -16,11 +15,6 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         "reliability",
         "marketing-fit",
         "conversation",
-    };
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
     };
 
     private readonly IConfiguration configuration;
@@ -48,7 +42,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
             ?? "frontstage-dev-pepper-20260626";
     }
 
-    public async Task<FrontstageDeliveryContext?> ResolveAsync(
+    public async Task<FrontstageTokenContext?> ResolveAsync(
         FrontstageDeliveryRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -73,7 +67,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync(cancellationToken);
 
-            var context = await ResolveContextAsync(connection, tokenHash, cancellationToken);
+            var context = await ResolveTokenContextAsync(connection, tokenHash, cancellationToken);
             if (context is not null && request.LogVisit)
             {
                 await TryLogVisitAsync(connection, context, request, cancellationToken);
@@ -81,7 +75,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
 
             return context;
         }
-        catch (Exception exception) when (exception is NpgsqlException or JsonException or InvalidOperationException)
+        catch (Exception exception) when (exception is NpgsqlException or InvalidOperationException)
         {
             logger.LogWarning(exception, "Frontstage delivery fell back to the generic public page.");
             return null;
@@ -114,7 +108,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync(cancellationToken);
 
-            var context = await ResolveContextAsync(connection, tokenHash, cancellationToken);
+            var context = await ResolveTokenContextAsync(connection, tokenHash, cancellationToken);
             if (context is null)
             {
                 return false;
@@ -132,9 +126,60 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
 
             return true;
         }
-        catch (Exception exception) when (exception is NpgsqlException or JsonException or InvalidOperationException)
+        catch (Exception exception) when (exception is NpgsqlException or InvalidOperationException)
         {
             logger.LogWarning(exception, "Frontstage section view logging failed.");
+            return false;
+        }
+    }
+
+    public async Task<bool> LogClickAsync(
+        FrontstageClickRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Token) ||
+            !TryNormalizeClickEventKey(request.EventKey, out var eventKey))
+        {
+            return false;
+        }
+
+        var connectionString = configuration[connectionStringKey];
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            logger.LogWarning(
+                "Frontstage click event requested, but {ConnectionStringKey} is not configured.",
+                connectionStringKey);
+            return false;
+        }
+
+        var tokenHash = ComputeTokenHash(request.Token, tokenPepper);
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(connectionString);
+            await connection.OpenAsync(cancellationToken);
+
+            var context = await ResolveTokenContextAsync(connection, tokenHash, cancellationToken);
+            if (context is null)
+            {
+                return false;
+            }
+
+            await LogEventAsync(
+                connection,
+                context,
+                "click_event",
+                request.Language,
+                $"click:{eventKey}",
+                request.Referrer,
+                request.UserAgent,
+                cancellationToken);
+
+            return true;
+        }
+        catch (Exception exception) when (exception is NpgsqlException or InvalidOperationException)
+        {
+            logger.LogWarning(exception, "Frontstage click event logging failed.");
             return false;
         }
     }
@@ -229,7 +274,26 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
         return true;
     }
 
-    private async Task<FrontstageDeliveryContext?> ResolveContextAsync(
+    internal static bool TryNormalizeClickEventKey(string eventKey, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(eventKey))
+        {
+            return false;
+        }
+
+        var candidate = eventKey.Trim().ToLowerInvariant();
+        if (candidate.Length is < 2 or > 48 ||
+            !ClickEventKeyRegex().IsMatch(candidate))
+        {
+            return false;
+        }
+
+        normalized = candidate;
+        return true;
+    }
+
+    private async Task<FrontstageTokenContext?> ResolveTokenContextAsync(
         NpgsqlConnection connection,
         string tokenHash,
         CancellationToken cancellationToken)
@@ -241,13 +305,12 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
                 at.role_lens_key,
                 at.page_version,
                 at.content_variant_id,
-                cv.public_copy_json::text
+                at.hubspot_task_id,
+                at.outreach_attempt_key,
+                at.repo_jd_folder
             FROM {Quote(schemaName)}.audience_tokens at
-            INNER JOIN {Quote(schemaName)}.content_variants cv
-                ON cv.variant_id = at.content_variant_id
             WHERE at.token_hash = @tokenHash
                 AND at.status = 'active'
-                AND cv.status = 'approved'
                 AND (at.expires_at IS NULL OR at.expires_at > now())
             LIMIT 1
             """;
@@ -261,22 +324,20 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
             return null;
         }
 
-        var publicCopy = JsonSerializer.Deserialize<Dictionary<string, FrontstageDeliveryCopy>>(
-            reader.GetString(5),
-            JsonOptions) ?? [];
-
-        return new FrontstageDeliveryContext(
+        return new FrontstageTokenContext(
             reader.GetString(0),
             reader.GetString(1),
             reader.GetString(2),
             reader.GetString(3),
-            reader.GetString(4),
-            publicCopy);
+            reader.IsDBNull(4) ? null : reader.GetString(4),
+            reader.IsDBNull(5) ? null : reader.GetString(5),
+            reader.IsDBNull(6) ? null : reader.GetString(6),
+            reader.IsDBNull(7) ? null : reader.GetString(7));
     }
 
     private async Task TryLogVisitAsync(
         NpgsqlConnection connection,
-        FrontstageDeliveryContext context,
+        FrontstageTokenContext context,
         FrontstageDeliveryRequest request,
         CancellationToken cancellationToken)
     {
@@ -300,7 +361,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
 
     private async Task LogEventAsync(
         NpgsqlConnection connection,
-        FrontstageDeliveryContext context,
+        FrontstageTokenContext context,
         string eventType,
         string language,
         string? sectionKey,
@@ -344,4 +405,7 @@ public sealed partial class PostgresFrontstageDeliveryResolver : IFrontstageDeli
 
     [GeneratedRegex("^[a-zA-Z_][a-zA-Z0-9_]*$")]
     private static partial Regex IdentifierRegex();
+
+    [GeneratedRegex("^[a-z0-9][a-z0-9-]*$")]
+    private static partial Regex ClickEventKeyRegex();
 }
