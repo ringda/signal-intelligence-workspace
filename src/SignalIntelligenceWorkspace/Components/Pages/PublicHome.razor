@@ -62,8 +62,17 @@
                 to the role, backed by proof, sent through a credible path, and reviewed for what should
                 change next.
             </p>
-            <p class="section-text roadmap-lead">Operating rhythm</p>
-            <p class="cadence-note">Recent cadence is shown as presence, not volume.</p>
+            <div class="cadence-heading">
+                <div>
+                    <p class="section-text roadmap-lead">Operating rhythm</p>
+                    <p class="cadence-note">Recent cadence is shown as presence, not volume.</p>
+                </div>
+                <div class="cadence-legend" aria-label="Cadence activity legend">
+                    <span><i class="legend-dot is-present" aria-hidden="true"></i>Presence</span>
+                    <span><i class="legend-dot is-active" aria-hidden="true"></i>Active</span>
+                    <span><i class="legend-dot is-heavy" aria-hidden="true"></i>High</span>
+                </div>
+            </div>
 
             <div class="cadence-shell" aria-label="Operating rhythm across the candidate GTM loop">
                 <TelerikStepper Value="@CadenceStepperValue"
@@ -73,26 +82,26 @@
                     <StepperSteps>
                         @foreach (var step in PublicOperatingCadenceDefinitions.Steps)
                         {
-                            <StepperStep Label="@step.Label" />
+                            <StepperStep Label="@step.StepperLabel" />
                         }
                     </StepperSteps>
                 </TelerikStepper>
 
                 <TelerikGridLayout Class="cadence-grid"
-                                   ColumnSpacing="8px"
-                                   RowSpacing="8px">
+                                   ColumnSpacing="6px"
+                                   RowSpacing="6px">
                     <GridLayoutColumns>
-                        <GridLayoutColumn Width="minmax(145px, 1.35fr)" />
+                        <GridLayoutColumn Width="minmax(124px, 1.18fr)" />
                         @foreach (var day in CadenceDays)
                         {
                             <GridLayoutColumn Width="1fr" />
                         }
                     </GridLayoutColumns>
                     <GridLayoutRows>
-                        <GridLayoutRow Height="34px" />
+                        <GridLayoutRow Height="30px" />
                         @foreach (var row in CadenceRows)
                         {
-                            <GridLayoutRow Height="48px" />
+                            <GridLayoutRow Height="40px" />
                         }
                     </GridLayoutRows>
                     <GridLayoutItems>
@@ -132,7 +141,7 @@
 
                 <article class="cadence-writeback-note">
                     <span>Write-back</span>
-                    <p>Review notes feed back into source rules, proof boundaries, and next-action logic.</p>
+                    <p>Review notes update source rules, proof boundaries, and next-cycle focus.</p>
                 </article>
             </div>
         </div>

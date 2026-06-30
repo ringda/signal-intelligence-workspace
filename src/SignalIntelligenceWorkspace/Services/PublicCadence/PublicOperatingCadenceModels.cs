@@ -20,7 +20,7 @@ public sealed record PublicOperatingCadenceSnapshot(
         var rows = PublicOperatingCadenceDefinitions.DbBackedSteps
             .Select(step => new PublicOperatingCadenceRow(
                 step.StepKey,
-                step.Label,
+                step.CadenceLabel,
                 true,
                 days.Select(day => new PublicOperatingCadenceCell(
                     day.DayPosition,
@@ -53,18 +53,19 @@ public sealed record PublicOperatingCadenceCell(
 public sealed record PublicOperatingCadenceStep(
     int Order,
     string StepKey,
-    string Label);
+    string StepperLabel,
+    string CadenceLabel);
 
 public static class PublicOperatingCadenceDefinitions
 {
     public static readonly IReadOnlyList<PublicOperatingCadenceStep> Steps =
     [
-        new(1, "signal_scan", "Signal Scan"),
-        new(2, "role_context", "Role Context"),
-        new(3, "proof_build", "Proof Build"),
-        new(4, "release", "Release"),
-        new(5, "human_feedback", "Human Feedback"),
-        new(6, "write_back", "Write-back"),
+        new(1, "signal_scan", "Find the right role", "Signal Scan"),
+        new(2, "role_context", "Tailor the resume to the JD", "Role Context"),
+        new(3, "proof_build", "Prepare proof", "Proof Build"),
+        new(4, "release", "Apply", "Release"),
+        new(5, "human_feedback", "Connect with relevant people", "Human Feedback"),
+        new(6, "write_back", "Improve the next cycle", "Write-back"),
     ];
 
     public static readonly IReadOnlyList<PublicOperatingCadenceStep> DbBackedSteps =

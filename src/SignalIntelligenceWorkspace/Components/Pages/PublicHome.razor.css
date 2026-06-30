@@ -449,6 +449,18 @@ h2 {
     text-transform: uppercase;
 }
 
+.cadence-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-top: 20px;
+}
+
+.cadence-heading .roadmap-lead {
+    margin-top: 0;
+}
+
 .cadence-note {
     max-width: 560px;
     margin: 6px 0 0;
@@ -456,30 +468,98 @@ h2 {
     font-size: 0.94rem;
 }
 
+.cadence-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+    color: rgba(252, 250, 247, 0.56);
+    font-size: 0.72rem;
+    font-weight: 720;
+    text-transform: uppercase;
+}
+
+.cadence-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(240, 153, 123, 0.52);
+    box-shadow: 0 0 0 4px rgba(240, 153, 123, 0.08);
+}
+
+.legend-dot.is-active {
+    width: 10px;
+    height: 10px;
+    background: #f0997b;
+}
+
+.legend-dot.is-heavy {
+    width: 12px;
+    height: 12px;
+    background: #f3b097;
+}
+
 .cadence-shell {
     max-width: 100%;
-    margin-top: 26px;
+    margin-top: 24px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 2px 2px 4px;
+    padding: 2px 2px 6px;
+    scrollbar-color: rgba(240, 153, 123, 0.36) transparent;
 }
 
 .cadence-shell ::deep .cadence-stepper {
-    min-width: 720px;
-    margin-bottom: 28px;
+    min-width: 760px;
+    margin-bottom: 24px;
+}
+
+.cadence-shell ::deep .cadence-stepper .k-step-link {
+    box-shadow: none;
+    outline: none;
 }
 
 .cadence-shell ::deep .cadence-stepper .k-step-label {
-    color: var(--paper);
-    font-size: 0.82rem;
-    font-weight: 780;
+    max-width: 124px;
+    padding: 0 8px 6px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(252, 250, 247, 0.78);
+    font-size: 0.76rem;
+    font-weight: 760;
     letter-spacing: 0;
+    line-height: 1.22;
+    text-align: center;
+    white-space: normal;
+    text-wrap: balance;
+}
+
+.cadence-shell ::deep .cadence-stepper .k-step.k-focus .k-step-link,
+.cadence-shell ::deep .cadence-stepper .k-step-link:focus,
+.cadence-shell ::deep .cadence-stepper .k-step-link:focus-visible,
+.cadence-shell ::deep .cadence-stepper .k-step.k-focus .k-step-label,
+.cadence-shell ::deep .cadence-stepper .k-step-current .k-step-label {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.cadence-shell ::deep .cadence-stepper .k-step-text {
+    display: block;
+    overflow: visible;
+    text-overflow: clip;
     white-space: normal;
 }
 
 .cadence-shell ::deep .cadence-stepper .k-step-current .k-step-label,
 .cadence-shell ::deep .cadence-stepper .k-step-done .k-step-label {
-    color: #f3b097;
+    color: #f2b29d;
 }
 
 .cadence-shell ::deep .cadence-stepper .k-step-indicator {
@@ -488,8 +568,19 @@ h2 {
     color: #f3b097;
 }
 
+.cadence-shell ::deep .cadence-stepper .k-progressbar {
+    height: 2px;
+    border: 0;
+    background: rgba(240, 153, 123, 0.18);
+}
+
+.cadence-shell ::deep .cadence-stepper .k-progressbar .k-selected,
+.cadence-shell ::deep .cadence-stepper .k-progressbar .k-progressbar-value {
+    background: rgba(240, 153, 123, 0.72);
+}
+
 .cadence-shell ::deep .cadence-grid {
-    min-width: 720px;
+    min-width: 760px;
 }
 
 .cadence-shell ::deep .cadence-grid-corner,
@@ -497,16 +588,16 @@ h2 {
 .cadence-shell ::deep .cadence-row-label,
 .cadence-shell ::deep .cadence-cell {
     min-width: 0;
-    border-radius: 7px;
+    border-radius: 5px;
 }
 
 .cadence-shell ::deep .cadence-grid-corner,
 .cadence-shell ::deep .cadence-grid-header {
     display: grid;
     align-content: center;
-    min-height: 34px;
-    color: rgba(252, 250, 247, 0.68);
-    font-size: 0.75rem;
+    min-height: 30px;
+    color: rgba(252, 250, 247, 0.6);
+    font-size: 0.7rem;
     font-weight: 760;
     text-transform: uppercase;
 }
@@ -517,34 +608,34 @@ h2 {
 
 .cadence-shell ::deep .cadence-grid-header small {
     margin-top: 2px;
-    color: rgba(252, 250, 247, 0.46);
-    font-size: 0.68rem;
+    color: rgba(252, 250, 247, 0.4);
+    font-size: 0.64rem;
     font-weight: 650;
 }
 
 .cadence-shell ::deep .cadence-row-label {
     display: grid;
     align-items: center;
-    min-height: 48px;
-    padding: 0 12px;
-    border: 1px solid rgba(252, 250, 247, 0.1);
-    background: rgba(252, 250, 247, 0.045);
-    color: var(--paper);
-    font-size: 0.88rem;
+    min-height: 40px;
+    padding: 0 10px;
+    border: 1px solid rgba(252, 250, 247, 0.08);
+    background: rgba(252, 250, 247, 0.032);
+    color: rgba(252, 250, 247, 0.88);
+    font-size: 0.78rem;
     font-weight: 780;
 }
 
 .cadence-shell ::deep .cadence-cell {
     display: grid;
-    min-height: 48px;
+    min-height: 40px;
     place-items: center;
-    border: 1px solid rgba(252, 250, 247, 0.09);
-    background: rgba(252, 250, 247, 0.035);
+    border: 1px solid rgba(252, 250, 247, 0.065);
+    background: rgba(252, 250, 247, 0.024);
 }
 
 .cadence-shell ::deep .cadence-cell > span[aria-hidden="true"] {
-    width: 14px;
-    height: 14px;
+    width: 10px;
+    height: 10px;
     border-radius: 999px;
 }
 
@@ -555,46 +646,47 @@ h2 {
 
 .cadence-shell ::deep .cadence-cell.is-present > span[aria-hidden="true"] {
     background: rgba(240, 153, 123, 0.55);
-    box-shadow: 0 0 0 5px rgba(240, 153, 123, 0.08);
+    box-shadow: 0 0 0 4px rgba(240, 153, 123, 0.08);
 }
 
 .cadence-shell ::deep .cadence-cell.is-active > span[aria-hidden="true"] {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     background: #f0997b;
-    box-shadow: 0 0 0 6px rgba(240, 153, 123, 0.14);
+    box-shadow: 0 0 0 5px rgba(240, 153, 123, 0.13);
 }
 
 .cadence-shell ::deep .cadence-cell.is-heavy > span[aria-hidden="true"] {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     background: #f3b097;
-    box-shadow: 0 0 0 7px rgba(240, 153, 123, 0.18);
+    box-shadow: 0 0 0 6px rgba(240, 153, 123, 0.16);
 }
 
 .cadence-writeback-note {
     display: grid;
-    grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr);
-    gap: 16px;
-    min-width: 720px;
+    grid-template-columns: minmax(124px, 0.3fr) minmax(0, 1fr);
+    gap: 12px;
+    min-width: 760px;
     margin-top: 12px;
-    padding: 13px 16px;
-    border: 1px dashed rgba(252, 250, 247, 0.18);
-    border-radius: 7px;
-    background: rgba(252, 250, 247, 0.035);
+    padding: 10px 12px;
+    border: 1px dashed rgba(252, 250, 247, 0.15);
+    border-radius: 5px;
+    background: rgba(252, 250, 247, 0.024);
 }
 
 .cadence-writeback-note span {
     color: #f3b097;
-    font-size: 0.84rem;
+    font-size: 0.78rem;
     font-weight: 820;
+    text-transform: uppercase;
 }
 
 .cadence-writeback-note p {
     margin: 0;
-    color: rgba(252, 250, 247, 0.74);
-    font-size: 0.9rem;
-    line-height: 1.45;
+    color: rgba(252, 250, 247, 0.66);
+    font-size: 0.84rem;
+    line-height: 1.4;
 }
 
 .reply-box {
@@ -861,20 +953,31 @@ h2 {
         border-radius: 6px;
     }
 
+    .cadence-heading {
+        align-items: start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .cadence-legend {
+        justify-content: flex-start;
+    }
+
     .cadence-shell {
         margin-right: 0;
         padding-right: 0;
     }
 
     .cadence-shell ::deep .cadence-stepper,
-    .cadence-shell ::deep .cadence-grid,
-    .cadence-writeback-note {
-        min-width: 620px;
+    .cadence-shell ::deep .cadence-grid {
+        min-width: 700px;
     }
 
     .cadence-writeback-note {
         grid-template-columns: 1fr;
         gap: 6px;
+        min-width: 0;
+        width: 100%;
     }
 
 }
