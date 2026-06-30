@@ -9,6 +9,7 @@ using SignalIntelligenceWorkspace.Services.Cockpit;
 using SignalIntelligenceWorkspace.Services.Frontstage;
 using SignalIntelligenceWorkspace.Services.HubSpot;
 using SignalIntelligenceWorkspace.Services.HubSpotWorkflow;
+using SignalIntelligenceWorkspace.Services.PublicCadence;
 using SignalIntelligenceWorkspace.Services.PublicFeedback;
 using SignalIntelligenceWorkspace.Services.Scenarios;
 using SignalIntelligenceWorkspace.Services.Security;
@@ -52,10 +53,12 @@ builder.Services.AddSingleton(DksProposalScenario.Create());
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<PublicFeedbackOptions>(builder.Configuration.GetSection("PublicFeedback"));
 builder.Services.Configure<FrontstageDeliveryOptions>(builder.Configuration.GetSection("FrontstageDelivery"));
+builder.Services.Configure<PublicOperatingCadenceOptions>(builder.Configuration.GetSection("PublicOperatingCadence"));
 builder.Services.AddSingleton<PublicFeedbackInbox>();
 builder.Services.AddSingleton<IPublicFeedbackWriter, PostgresPublicFeedbackWriter>();
 builder.Services.AddSingleton<PublicFeedbackSchemaInitializer>();
 builder.Services.AddScoped<IFrontstageDeliveryResolver, PostgresFrontstageDeliveryResolver>();
+builder.Services.AddScoped<IPublicOperatingCadenceReader, PostgresPublicOperatingCadenceReader>();
 // Singleton so demo state (drafts, filter, audit) survives full-page navigation
 // between routes. This is a single-user demo; multi-user/per-session state is roadmap.
 builder.Services.AddSingleton<WorkspaceState>();

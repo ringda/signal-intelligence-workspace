@@ -4,6 +4,7 @@
 @layout PublicLayout
 @using SignalIntelligenceWorkspace.Services.Frontstage
 @inject IFrontstageDeliveryResolver FrontstageDelivery
+@inject IPublicOperatingCadenceReader OperatingCadenceReader
 @inject IHttpContextAccessor HttpContextAccessor
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -61,18 +62,78 @@
                 to the role, backed by proof, sent through a credible path, and reviewed for what should
                 change next.
             </p>
-            <p class="section-text roadmap-lead">Roadmap for each application</p>
+            <p class="section-text roadmap-lead">Operating rhythm</p>
+            <p class="cadence-note">Recent cadence is shown as presence, not volume.</p>
 
-            <div class="workflow" aria-label="Roadmap for each application">
-                @foreach (var step in WorkflowSteps)
-                {
-                    <article class="workflow-step">
-                        <span class="step-icon" aria-hidden="true">@WorkflowIcon(step.Number)</span>
-                        <span class="step-number">@step.Number.ToString("00")</span>
-                        <h3>@step.Title</h3>
-                        <span class="step-dot" aria-hidden="true"></span>
-                    </article>
-                }
+            <div class="cadence-shell" aria-label="Operating rhythm across the candidate GTM loop">
+                <TelerikStepper Value="@CadenceStepperValue"
+                                Linear="false"
+                                StepType="@StepperStepType.Labels"
+                                Class="cadence-stepper">
+                    <StepperSteps>
+                        @foreach (var step in PublicOperatingCadenceDefinitions.Steps)
+                        {
+                            <StepperStep Label="@step.Label" />
+                        }
+                    </StepperSteps>
+                </TelerikStepper>
+
+                <TelerikGridLayout Class="cadence-grid"
+                                   ColumnSpacing="8px"
+                                   RowSpacing="8px">
+                    <GridLayoutColumns>
+                        <GridLayoutColumn Width="minmax(145px, 1.35fr)" />
+                        @foreach (var day in CadenceDays)
+                        {
+                            <GridLayoutColumn Width="1fr" />
+                        }
+                    </GridLayoutColumns>
+                    <GridLayoutRows>
+                        <GridLayoutRow Height="34px" />
+                        @foreach (var row in CadenceRows)
+                        {
+                            <GridLayoutRow Height="48px" />
+                        }
+                    </GridLayoutRows>
+                    <GridLayoutItems>
+                        <GridLayoutItem Row="1" Column="1" Class="cadence-grid-corner">
+                            Recent
+                        </GridLayoutItem>
+                        @foreach (var day in CadenceDays)
+                        {
+                            <GridLayoutItem Row="1" Column="@(day.DayPosition + 1)" Class="cadence-grid-header">
+                                <span>@day.WeekdayLabel</span>
+                                @if (!string.IsNullOrWhiteSpace(day.DisplayDayKey))
+                                {
+                                    <small>@day.DisplayDayKey[5..]</small>
+                                }
+                            </GridLayoutItem>
+                        }
+                        @for (var rowIndex = 0; rowIndex < CadenceRows.Count; rowIndex++)
+                        {
+                            var row = CadenceRows[rowIndex];
+                            var gridRow = rowIndex + 2;
+                            <GridLayoutItem Row="@gridRow" Column="1" Class="cadence-row-label">
+                                @row.Label
+                            </GridLayoutItem>
+                            @foreach (var day in CadenceDays)
+                            {
+                                var cell = FindCadenceCell(row, day.DayPosition);
+                                <GridLayoutItem Row="@gridRow"
+                                                Column="@(day.DayPosition + 1)"
+                                                Class="@CadenceCellClass(cell.ActivityLevel)">
+                                    <span aria-hidden="true"></span>
+                                    <span class="sr-only">@row.Label @day.WeekdayLabel: @CadenceActivityLabel(cell.ActivityLevel)</span>
+                                </GridLayoutItem>
+                            }
+                        }
+                    </GridLayoutItems>
+                </TelerikGridLayout>
+
+                <article class="cadence-writeback-note">
+                    <span>Write-back</span>
+                    <p>Review notes feed back into source rules, proof boundaries, and next-action logic.</p>
+                </article>
             </div>
         </div>
     </section>
@@ -278,6 +339,31 @@
 
     private string? LastAnonymousPageViewKey { get; set; }
 
+    private PublicOperatingCadenceSnapshot? OperatingCadence { get; set; }
+
+    private IReadOnlyList<PublicOperatingCadenceDay> CadenceDays =>
+        OperatingCadence?.Days ?? PublicOperatingCadenceSnapshot.Fallback(DateTimeOffset.UtcNow).Days;
+
+    private IReadOnlyList<PublicOperatingCadenceRow> CadenceRows =>
+        OperatingCadence?.Rows ?? PublicOperatingCadenceSnapshot.Fallback(DateTimeOffset.UtcNow).Rows;
+
+    private int CadenceStepperValue
+    {
+        get
+        {
+            var latestActiveRow = CadenceRows
+                .Where(row => row.Cells.Any(cell => !string.Equals(cell.ActivityLevel, "none", StringComparison.Ordinal)))
+                .Select(row => PublicOperatingCadenceDefinitions.Steps
+                    .ToList()
+                    .FindIndex(step => string.Equals(step.StepKey, row.StepKey, StringComparison.Ordinal)))
+                .Where(index => index >= 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return latestActiveRow;
+        }
+    }
+
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
         new("most-useful", "Most useful"),
@@ -285,60 +371,37 @@
         new("best-fit-team", "Best-fit team")
     ];
 
-    private static readonly IReadOnlyList<PipelineStep> WorkflowSteps =
-    [
-        new(1, "Find the right role", "Screen the market for fit, constraints, audience, and proof density before spending tailoring time."),
-        new(2, "Tailor the resume to the JD", "Translate source-backed experience into the role's language without inventing claims."),
-        new(3, "Prepare proof", "Package work samples, metrics, and system evidence into a hiring-manager-readable story."),
-        new(4, "Apply", "Keep the official submission and status trail distinct from draft material and experiments."),
-        new(5, "Connect with relevant people", "Use low-pressure questions tied to real work objects, team context, or handoff reality."),
-        new(6, "Improve the next cycle", "Review what changed, what got a response, what was overfit, and what should be reused.")
-    ];
-
-    private static RenderFragment WorkflowIcon(int number) => number switch
+    private static PublicOperatingCadenceCell FindCadenceCell(PublicOperatingCadenceRow row, int dayPosition)
     {
-        1 => @<svg viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="7"></circle>
-            <path d="m20 20-3.5-3.5"></path>
-        </svg>,
-        2 => @<svg viewBox="0 0 24 24">
-            <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"></path>
-            <path d="M14 2v5h5"></path>
-            <path d="M8 13h8"></path>
-            <path d="M8 17h6"></path>
-        </svg>,
-        3 => @<svg viewBox="0 0 24 24">
-            <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7Z"></path>
-            <path d="M14 2v5h5"></path>
-            <path d="m9 15 2 2 4-5"></path>
-        </svg>,
-        4 => @<svg viewBox="0 0 24 24">
-            <path d="m22 2-7 20-4-9-9-4Z"></path>
-            <path d="M22 2 11 13"></path>
-        </svg>,
-        5 => @<svg viewBox="0 0 24 24">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9.5" cy="7" r="4"></circle>
-            <path d="M17 11h4"></path>
-            <path d="M19 9v4"></path>
-        </svg>,
-        6 => @<svg viewBox="0 0 24 24">
-            <path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path>
-            <path d="M21 3v5h-5"></path>
-            <path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path>
-            <path d="M3 21v-5h5"></path>
-        </svg>,
-        _ => @<svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="8"></circle>
-        </svg>
-    };
+        return row.Cells.FirstOrDefault(cell => cell.DayPosition == dayPosition)
+            ?? new PublicOperatingCadenceCell(dayPosition, string.Empty, string.Empty, "none");
+    }
 
-    private sealed record PipelineStep(int Number, string Title, string Detail);
+    private static string CadenceCellClass(string activityLevel)
+    {
+        var normalized = string.Equals(activityLevel, "present", StringComparison.Ordinal)
+            || string.Equals(activityLevel, "active", StringComparison.Ordinal)
+            || string.Equals(activityLevel, "heavy", StringComparison.Ordinal)
+            ? activityLevel
+            : "none";
+
+        return $"cadence-cell is-{normalized}";
+    }
+
+    private static string CadenceActivityLabel(string activityLevel) => activityLevel switch
+    {
+        "present" => "present",
+        "active" => "active",
+        "heavy" => "high activity",
+        _ => "no recent activity",
+    };
 
     private sealed record FeedbackOption(string Value, string Label);
 
     protected override async Task OnParametersSetAsync()
     {
+        await LoadOperatingCadenceOnceAsync();
+
         DeliveryLanguage = GetRequestedLanguage();
 
         if (string.IsNullOrWhiteSpace(DeliveryToken))
@@ -364,6 +427,16 @@
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Referer].ToString(),
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.UserAgent].ToString(),
             httpContext is not null && HttpMethods.IsGet(httpContext.Request.Method)));
+    }
+
+    private async Task LoadOperatingCadenceOnceAsync()
+    {
+        if (OperatingCadence is not null)
+        {
+            return;
+        }
+
+        OperatingCadence = await OperatingCadenceReader.ReadAsync();
     }
 
     private async Task LogAnonymousPageViewOnceAsync()
