@@ -4,7 +4,6 @@
 @layout PublicLayout
 @using SignalIntelligenceWorkspace.Services.Frontstage
 @inject IFrontstageDeliveryResolver FrontstageDelivery
-@inject IPublicOperatingCadenceReader OperatingCadenceReader
 @inject IHttpContextAccessor HttpContextAccessor
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
@@ -62,88 +61,38 @@
                 to the role, backed by proof, sent through a credible path, and reviewed for what should
                 change next.
             </p>
-            <div class="cadence-heading">
+            <div class="roadmap-heading">
                 <div>
-                    <p class="section-text roadmap-lead">Operating rhythm</p>
-                    <p class="cadence-note">Recent cadence is shown as presence, not volume.</p>
-                </div>
-                <div class="cadence-legend" aria-label="Cadence activity legend">
-                    <span><i class="legend-dot is-present" aria-hidden="true"></i>Presence</span>
-                    <span><i class="legend-dot is-active" aria-hidden="true"></i>Active</span>
-                    <span><i class="legend-dot is-heavy" aria-hidden="true"></i>High</span>
+                    <p class="section-text roadmap-lead">Roadmap for each application</p>
                 </div>
             </div>
 
-            <div class="cadence-shell" aria-label="Operating rhythm across the candidate GTM loop">
-                <TelerikStepper Value="@CadenceStepperValue"
-                                Linear="false"
-                                StepType="@StepperStepType.Labels"
-                                Class="cadence-stepper">
-                    <StepperSteps>
-                        @foreach (var step in PublicOperatingCadenceDefinitions.Steps)
-                        {
-                            <StepperStep Label="@step.StepperLabel" />
-                        }
-                    </StepperSteps>
-                </TelerikStepper>
-
-                <TelerikGridLayout Class="cadence-grid"
-                                   ColumnSpacing="6px"
-                                   RowSpacing="6px">
-                    <GridLayoutColumns>
-                        <GridLayoutColumn Width="minmax(124px, 1.18fr)" />
-                        @foreach (var day in CadenceDays)
-                        {
-                            <GridLayoutColumn Width="1fr" />
-                        }
-                    </GridLayoutColumns>
-                    <GridLayoutRows>
-                        <GridLayoutRow Height="30px" />
-                        @foreach (var row in CadenceRows)
-                        {
-                            <GridLayoutRow Height="40px" />
-                        }
-                    </GridLayoutRows>
-                    <GridLayoutItems>
-                        <GridLayoutItem Row="1" Column="1" Class="cadence-grid-corner">
-                            Recent
-                        </GridLayoutItem>
-                        @foreach (var day in CadenceDays)
-                        {
-                            <GridLayoutItem Row="1" Column="@(day.DayPosition + 1)" Class="cadence-grid-header">
-                                <span>@day.WeekdayLabel</span>
-                                @if (!string.IsNullOrWhiteSpace(day.DisplayDayKey))
-                                {
-                                    <small>@day.DisplayDayKey[5..]</small>
-                                }
-                            </GridLayoutItem>
-                        }
-                        @for (var rowIndex = 0; rowIndex < CadenceRows.Count; rowIndex++)
-                        {
-                            var row = CadenceRows[rowIndex];
-                            var gridRow = rowIndex + 2;
-                            <GridLayoutItem Row="@gridRow" Column="1" Class="cadence-row-label">
-                                @row.Label
-                            </GridLayoutItem>
-                            @foreach (var day in CadenceDays)
-                            {
-                                var cell = FindCadenceCell(row, day.DayPosition);
-                                <GridLayoutItem Row="@gridRow"
-                                                Column="@(day.DayPosition + 1)"
-                                                Class="@CadenceCellClass(cell.ActivityLevel)">
-                                    <span aria-hidden="true"></span>
-                                    <span class="sr-only">@row.Label @day.WeekdayLabel: @CadenceActivityLabel(cell.ActivityLevel)</span>
-                                </GridLayoutItem>
-                            }
-                        }
-                    </GridLayoutItems>
-                </TelerikGridLayout>
-
-                <article class="cadence-writeback-note">
-                    <span>Write-back</span>
-                    <p>Review notes update source rules, proof boundaries, and next-cycle focus.</p>
-                </article>
-            </div>
+            <ol class="workflow-roadmap" aria-label="Roadmap for each application">
+                <li>
+                    <span class="roadmap-index">01</span>
+                    <strong>Find the right role</strong>
+                </li>
+                <li>
+                    <span class="roadmap-index">02</span>
+                    <strong>Tailor the resume to the JD</strong>
+                </li>
+                <li>
+                    <span class="roadmap-index">03</span>
+                    <strong>Prepare proof</strong>
+                </li>
+                <li>
+                    <span class="roadmap-index">04</span>
+                    <strong>Apply</strong>
+                </li>
+                <li>
+                    <span class="roadmap-index">05</span>
+                    <strong>Connect with relevant people</strong>
+                </li>
+                <li>
+                    <span class="roadmap-index">06</span>
+                    <strong>Improve the next cycle</strong>
+                </li>
+            </ol>
         </div>
     </section>
 
@@ -300,6 +249,99 @@
         </div>
     </section>
 
+    <section class="band-white architecture-signoff" id="implementation-footprint" data-frontstage-section="implementation-footprint" aria-labelledby="public-implementation-title">
+        <div class="section-inner implementation-layout">
+            <div class="implementation-copy">
+                <h2 id="public-implementation-title">System Architecture</h2>
+                <ul class="implementation-stack" aria-label="Implementation layers">
+                    <li>
+                        <strong>Workflow Logic</strong>
+                        <span>Claude skills automation</span>
+                    </li>
+                    <li>
+                        <strong>Frontend</strong>
+                        <span>ASP.NET Core Blazor Server + Telerik UI</span>
+                    </li>
+                    <li>
+                        <strong>Database</strong>
+                        <span>Supabase Postgres</span>
+                    </li>
+                    <li>
+                        <strong>Hosting</strong>
+                        <span>Azure App Service</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="implementation-map" aria-label="Implementation relationship map">
+                <article class="implementation-node node-frontend">
+                    <span class="node-icon node-icon-browser" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" role="presentation" focusable="false">
+                            <rect x="5" y="8" width="38" height="32" rx="3" />
+                            <line x1="5" y1="16" x2="43" y2="16" />
+                            <circle cx="11" cy="12" r="1.8" />
+                            <circle cx="17" cy="12" r="1.8" />
+                            <circle cx="23" cy="12" r="1.8" />
+                            <rect x="12" y="23" width="10" height="11" rx="1.5" />
+                            <line x1="27" y1="24" x2="36" y2="24" />
+                            <line x1="27" y1="30" x2="36" y2="30" />
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Frontend</strong>
+                        <span>ASP.NET Core Blazor</span>
+                    </div>
+                </article>
+
+                <article class="implementation-node node-hosting">
+                    <span class="node-icon node-icon-cloud" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" role="presentation" focusable="false">
+                            <path d="M16.5 36h19a8.5 8.5 0 0 0 .6-17 12 12 0 0 0-23-3.8A10.5 10.5 0 0 0 16.5 36Z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Hosting</strong>
+                        <span>Azure App Service</span>
+                    </div>
+                </article>
+
+                <article class="implementation-node node-database">
+                    <span class="node-icon node-icon-database" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" role="presentation" focusable="false">
+                            <ellipse cx="24" cy="11" rx="13" ry="6" />
+                            <path d="M11 11v26c0 3.3 5.8 6 13 6s13-2.7 13-6V11" />
+                            <path d="M11 24c0 3.3 5.8 6 13 6s13-2.7 13-6" />
+                            <path d="M11 37c0 3.3 5.8 6 13 6s13-2.7 13-6" />
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Data Base</strong>
+                        <span>Supabase Postgres</span>
+                    </div>
+                </article>
+
+                <article class="implementation-node node-workflow">
+                    <span class="node-icon node-icon-workflow" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" role="presentation" focusable="false">
+                            <path d="M24 7c-7 0-12 5.4-12 12.2 0 4.9 2.8 8.3 5.5 11.2V39h13v-8.6c2.7-2.9 5.5-6.3 5.5-11.2C36 12.4 31 7 24 7Z" />
+                            <circle cx="24" cy="16" r="2.5" />
+                            <circle cx="18" cy="24" r="2.3" />
+                            <circle cx="30" cy="24" r="2.3" />
+                            <path d="M24 18.5v6l-4-1.5" />
+                            <path d="M24 24.5 29 24" />
+                            <path d="M18 26v5" />
+                            <path d="M30 26v5" />
+                        </svg>
+                    </span>
+                    <div>
+                        <strong>Workflow Logic</strong>
+                        <span>Claude skills automation</span>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
     <footer class="footer">
         <div class="footer-inner">
             <span>Johanna Fan · Marketing / GTM / Customer Signal Analytics</span>
@@ -348,31 +390,6 @@
 
     private string? LastAnonymousPageViewKey { get; set; }
 
-    private PublicOperatingCadenceSnapshot? OperatingCadence { get; set; }
-
-    private IReadOnlyList<PublicOperatingCadenceDay> CadenceDays =>
-        OperatingCadence?.Days ?? PublicOperatingCadenceSnapshot.Fallback(DateTimeOffset.UtcNow).Days;
-
-    private IReadOnlyList<PublicOperatingCadenceRow> CadenceRows =>
-        OperatingCadence?.Rows ?? PublicOperatingCadenceSnapshot.Fallback(DateTimeOffset.UtcNow).Rows;
-
-    private int CadenceStepperValue
-    {
-        get
-        {
-            var latestActiveRow = CadenceRows
-                .Where(row => row.Cells.Any(cell => !string.Equals(cell.ActivityLevel, "none", StringComparison.Ordinal)))
-                .Select(row => PublicOperatingCadenceDefinitions.Steps
-                    .ToList()
-                    .FindIndex(step => string.Equals(step.StepKey, row.StepKey, StringComparison.Ordinal)))
-                .Where(index => index >= 0)
-                .DefaultIfEmpty(0)
-                .Max();
-
-            return latestActiveRow;
-        }
-    }
-
     private static readonly IReadOnlyList<FeedbackOption> FeedbackOptions =
     [
         new("most-useful", "Most useful"),
@@ -380,37 +397,10 @@
         new("best-fit-team", "Best-fit team")
     ];
 
-    private static PublicOperatingCadenceCell FindCadenceCell(PublicOperatingCadenceRow row, int dayPosition)
-    {
-        return row.Cells.FirstOrDefault(cell => cell.DayPosition == dayPosition)
-            ?? new PublicOperatingCadenceCell(dayPosition, string.Empty, string.Empty, "none");
-    }
-
-    private static string CadenceCellClass(string activityLevel)
-    {
-        var normalized = string.Equals(activityLevel, "present", StringComparison.Ordinal)
-            || string.Equals(activityLevel, "active", StringComparison.Ordinal)
-            || string.Equals(activityLevel, "heavy", StringComparison.Ordinal)
-            ? activityLevel
-            : "none";
-
-        return $"cadence-cell is-{normalized}";
-    }
-
-    private static string CadenceActivityLabel(string activityLevel) => activityLevel switch
-    {
-        "present" => "present",
-        "active" => "active",
-        "heavy" => "high activity",
-        _ => "no recent activity",
-    };
-
     private sealed record FeedbackOption(string Value, string Label);
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadOperatingCadenceOnceAsync();
-
         DeliveryLanguage = GetRequestedLanguage();
 
         if (string.IsNullOrWhiteSpace(DeliveryToken))
@@ -436,16 +426,6 @@
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.Referer].ToString(),
             httpContext?.Request.Headers[Microsoft.Net.Http.Headers.HeaderNames.UserAgent].ToString(),
             httpContext is not null && HttpMethods.IsGet(httpContext.Request.Method)));
-    }
-
-    private async Task LoadOperatingCadenceOnceAsync()
-    {
-        if (OperatingCadence is not null)
-        {
-            return;
-        }
-
-        OperatingCadence = await OperatingCadenceReader.ReadAsync();
     }
 
     private async Task LogAnonymousPageViewOnceAsync()
